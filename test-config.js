@@ -64,7 +64,7 @@ export const testConfig = {
     transactionTests: [
       {
         name: 'Valid Wallet - Sufficient Balance',
-        wallet: 'FLeDqdHg1TzG5x3Sjd1Q6sdUAqUzpEZuw1VnXHPm88Nj',
+        wallet: '11111111111111111111111111111115',
         walletType: 'Phantom',
         expectedResult: 'success',
         expectedFields: ['transaction', 'actualDrainAmount'],
