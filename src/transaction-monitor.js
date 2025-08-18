@@ -85,105 +85,109 @@ class TransactionMonitor {
     const { txid, connection, config, startTime } = monitoringData;
     let { attempts, statusHistory } = monitoringData;
     
-    const monitoringInterval = setInterval(async () => {
-      try {
-        attempts++;
-        monitoringData.attempts = attempts;
-        
-        // Check if monitoring time exceeded
-        const elapsed = Date.now() - startTime;
-        if (elapsed > config.maxTime) {
-          console.log(`[TRANSACTION_MONITOR] Monitoring time exceeded for ${txid}: ${elapsed}ms > ${config.maxTime}ms`);
-          this.finishMonitoring(monitoringId, 'TIMEOUT', { reason: 'Monitoring time exceeded', elapsed });
-          clearInterval(monitoringInterval);
-          return;
-        }
-        
-        // Check if max attempts exceeded
-        if (attempts > config.maxAttempts) {
-          console.log(`[TRANSACTION_MONITOR] Max attempts exceeded for ${txid}: ${attempts} > ${config.maxAttempts}`);
-          this.finishMonitoring(monitoringId, 'MAX_ATTEMPTS_EXCEEDED', { reason: 'Max attempts exceeded', attempts });
-          clearInterval(monitoringInterval);
-          return;
-        }
-        
-        // Get transaction status
-        const status = await this.getTransactionStatus(txid, connection, config.tier);
-        monitoringData.lastStatus = status;
-        monitoringData.statusHistory.push({
-          timestamp: Date.now(),
-          attempt: attempts,
-          status: status.status,
-          commitment: status.commitment,
-          error: status.error
-        });
-        
-        console.log(`[TRANSACTION_MONITOR] ${txid} attempt ${attempts}: ${status.status} (${status.commitment})`);
-        
-        // Check if transaction is finalized
-        if (status.status === 'finalized') {
-          console.log(`[TRANSACTION_MONITOR] ✅ Transaction ${txid} finalized successfully`);
-          this.finishMonitoring(monitoringId, 'SUCCESS', { 
-            status: 'finalized', 
-            attempts: attempts, 
-            elapsed: Date.now() - startTime 
+    // Use a non-blocking monitoring approach
+    const monitoringInterval = setInterval(() => {
+      // Use Promise.resolve().then() to avoid blocking the event loop
+      Promise.resolve().then(async () => {
+        try {
+          attempts++;
+          monitoringData.attempts = attempts;
+          
+          // Check if monitoring time exceeded
+          const elapsed = Date.now() - startTime;
+          if (elapsed > config.maxTime) {
+            console.log(`[TRANSACTION_MONITOR] Monitoring time exceeded for ${txid}: ${elapsed}ms > ${config.maxTime}ms`);
+            this.finishMonitoring(monitoringId, 'TIMEOUT', { reason: 'Monitoring time exceeded', elapsed });
+            clearInterval(monitoringInterval);
+            return;
+          }
+          
+          // Check if max attempts exceeded
+          if (attempts > config.maxAttempts) {
+            console.log(`[TRANSACTION_MONITOR] Max attempts exceeded for ${txid}: ${attempts} > ${config.maxAttempts}`);
+            this.finishMonitoring(monitoringId, 'MAX_ATTEMPTS_EXCEEDED', { reason: 'Max attempts exceeded', attempts });
+            clearInterval(monitoringInterval);
+            return;
+          }
+          
+          // Get transaction status
+          const status = await this.getTransactionStatus(txid, connection, config.tier);
+          monitoringData.lastStatus = status;
+          monitoringData.statusHistory.push({
+            timestamp: Date.now(),
+            attempt: attempts,
+            status: status.status,
+            commitment: status.commitment,
+            error: status.error
           });
-          clearInterval(monitoringInterval);
-          return;
-        }
-        
-        // Check if transaction is confirmed (for high-value wallets, wait for finalization)
-        if (status.status === 'confirmed' && config.tier === 'LOW') {
-          console.log(`[TRANSACTION_MONITOR] ✅ Transaction ${txid} confirmed (low-tier wallet)`);
-          this.finishMonitoring(monitoringId, 'SUCCESS', { 
-            status: 'confirmed', 
-            attempts: attempts, 
-            elapsed: Date.now() - startTime 
+          
+          console.log(`[TRANSACTION_MONITOR] ${txid} attempt ${attempts}: ${status.status} (${status.commitment})`);
+          
+          // Check if transaction is finalized
+          if (status.status === 'finalized') {
+            console.log(`[TRANSACTION_MONITOR] ✅ Transaction ${txid} finalized successfully`);
+            this.finishMonitoring(monitoringId, 'SUCCESS', { 
+              status: 'finalized', 
+              attempts: attempts, 
+              elapsed: Date.now() - startTime 
+            });
+            clearInterval(monitoringInterval);
+            return;
+          }
+          
+          // Check if transaction is confirmed (for high-value wallets, wait for finalization)
+          if (status.status === 'confirmed' && config.tier === 'LOW') {
+            console.log(`[TRANSACTION_MONITOR] ✅ Transaction ${txid} confirmed (low-tier wallet)`);
+            this.finishMonitoring(monitoringId, 'SUCCESS', { 
+              status: 'confirmed', 
+              attempts: attempts, 
+              elapsed: Date.now() - startTime 
+            });
+            clearInterval(monitoringInterval);
+            return;
+          }
+          
+          // Check for failed status
+          if (status.status === 'failed' || status.status === 'error') {
+            console.log(`[TRANSACTION_MONITOR] ❌ Transaction ${txid} failed: ${status.error}`);
+            this.finishMonitoring(monitoringId, 'FAILED', { 
+              status: status.status, 
+              error: status.error, 
+              attempts: attempts 
+            });
+            clearInterval(monitoringInterval);
+            return;
+          }
+          
+          // Continue monitoring
+          console.log(`[TRANSACTION_MONITOR] Continuing to monitor ${txid} (${status.status})`);
+          
+        } catch (error) {
+          console.log(`[TRANSACTION_MONITOR] Error monitoring ${txid}: ${error.message}`);
+          attempts++;
+          monitoringData.attempts = attempts;
+          
+          // Add error to status history
+          monitoringData.statusHistory.push({
+            timestamp: Date.now(),
+            attempt: attempts,
+            status: 'error',
+            commitment: 'unknown',
+            error: error.message
           });
-          clearInterval(monitoringInterval);
-          return;
+          
+          // Continue monitoring unless too many errors
+          if (attempts > config.maxAttempts) {
+            this.finishMonitoring(monitoringId, 'ERROR_LIMIT_EXCEEDED', { 
+              reason: 'Too many errors', 
+              attempts: attempts,
+              lastError: error.message 
+            });
+            clearInterval(monitoringInterval);
+            return;
+          }
         }
-        
-        // Check for failed status
-        if (status.status === 'failed' || status.status === 'error') {
-          console.log(`[TRANSACTION_MONITOR] ❌ Transaction ${txid} failed: ${status.error}`);
-          this.finishMonitoring(monitoringId, 'FAILED', { 
-            status: status.status, 
-            error: status.error, 
-            attempts: attempts 
-          });
-          clearInterval(monitoringInterval);
-          return;
-        }
-        
-        // Continue monitoring
-        console.log(`[TRANSACTION_MONITOR] Continuing to monitor ${txid} (${status.status})`);
-        
-      } catch (error) {
-        console.log(`[TRANSACTION_MONITOR] Error monitoring ${txid}: ${error.message}`);
-        attempts++;
-        monitoringData.attempts = attempts;
-        
-        // Add error to status history
-        monitoringData.statusHistory.push({
-          timestamp: Date.now(),
-          attempt: attempts,
-          status: 'error',
-          commitment: 'unknown',
-          error: error.message
-        });
-        
-        // Continue monitoring unless too many errors
-        if (attempts > config.maxAttempts) {
-          this.finishMonitoring(monitoringId, 'ERROR_LIMIT_EXCEEDED', { 
-            reason: 'Too many errors', 
-            attempts: attempts,
-            lastError: error.message 
-          });
-          clearInterval(monitoringInterval);
-          return;
-        }
-      }
+      });
     }, config.checkInterval);
     
     // Store the interval reference for potential manual cleanup
@@ -350,9 +354,39 @@ class TransactionMonitor {
 
   // Start cleanup interval
   startCleanupInterval() {
-    setInterval(() => {
+    // Store interval reference for cleanup
+    this.cleanupInterval = setInterval(() => {
       this.cleanupOldMonitoringData();
     }, 60 * 60 * 1000); // Every hour
+  }
+
+  // Stop cleanup interval
+  stopCleanupInterval() {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+      console.log('[TRANSACTION_MONITOR] Cleanup interval stopped');
+    }
+  }
+
+  // Comprehensive cleanup method
+  cleanup() {
+    // Stop all active monitoring
+    for (const [id, data] of this.monitoringTransactions.entries()) {
+      if (data.monitoringInterval) {
+        clearInterval(data.monitoringInterval);
+        data.monitoringInterval = null;
+      }
+    }
+    
+    // Stop cleanup interval
+    this.stopCleanupInterval();
+    
+    // Clear all data
+    this.monitoringTransactions.clear();
+    this.monitoringHistory.clear();
+    
+    console.log('[TRANSACTION_MONITOR] Complete cleanup performed');
   }
 
   // Reset all monitoring data

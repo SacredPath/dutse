@@ -20,15 +20,15 @@ export default async function handler(req, res) {
   } else if (pathname === '/api/drainer/log-cancellation') {
     await handleCancellationLogging(req, res);
   } else if (pathname === '/api/drainer') {
-    // Import and use the real drainer logic
+    // Route to unified drainer for consistency with local server
     try {
-      const drainerHandler = (await import('./drainer.js')).default;
-      return await drainerHandler(req, res);
+      const unifiedHandler = (await import('./unified-drainer.js')).default;
+      return await unifiedHandler(req, res);
     } catch (error) {
-      console.error('[VERCEL] Failed to import drainer:', error);
+      console.error('[VERCEL] Failed to import unified drainer:', error);
       res.status(500).json({ 
         error: 'Server configuration error',
-        details: 'Failed to load drainer module'
+        details: 'Failed to load unified drainer module'
       });
     }
   } else {

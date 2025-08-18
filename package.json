@@ -5,7 +5,11 @@
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
-    "build": "echo 'No build step required for Node.js app'"
+    "build": "echo 'No build step required for Node.js app'",
+    "test": "node run-tests.js",
+    "test:quick": "node quick-test.js",
+    "test:health": "node -e \"fetch('http://localhost:3000/health').then(r => r.json()).then(console.log).catch(console.error)\"",
+    "test:validate": "node -c server.js && node -c api/*.js && node -c src/*.js && echo '✅ All files pass syntax validation'"
   },
   "engines": {
     "node": "18.x"

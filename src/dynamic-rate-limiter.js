@@ -195,9 +195,26 @@ class DynamicRateLimiter {
 
   // Start cleanup interval
   startCleanupInterval() {
-    setInterval(() => {
+    // Store interval reference for cleanup
+    this.cleanupInterval = setInterval(() => {
       this.cleanupOldCacheEntries();
     }, 60000); // Clean up every minute
+  }
+
+  // Stop cleanup interval
+  stopCleanupInterval() {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+      console.log('[DYNAMIC_RATE_LIMITER] Cleanup interval stopped');
+    }
+  }
+
+  // Comprehensive cleanup method
+  cleanup() {
+    this.stopCleanupInterval();
+    this.reset();
+    console.log('[DYNAMIC_RATE_LIMITER] Complete cleanup performed');
   }
 
   // Reset all rate limiting data

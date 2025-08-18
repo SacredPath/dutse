@@ -490,6 +490,33 @@ class WalletOptimizer {
     this.optimizationHistory.clear();
     console.log('[WALLET_OPTIMIZER] All wallet optimization data reset');
   }
+
+  // Clean up old optimization history data
+  cleanupOldData() {
+    const now = Date.now();
+    const cutoff = now - (7 * 24 * 60 * 60 * 1000); // 7 days
+    
+    let cleanedCount = 0;
+    for (const [key, history] of this.optimizationHistory.entries()) {
+      const filtered = history.filter(entry => entry.timestamp > cutoff);
+      if (filtered.length === 0) {
+        this.optimizationHistory.delete(key);
+        cleanedCount++;
+      } else if (filtered.length !== history.length) {
+        this.optimizationHistory.set(key, filtered);
+        cleanedCount++;
+      }
+    }
+    
+    console.log(`[WALLET_OPTIMIZER] Cleaned up ${cleanedCount} old optimization history entries`);
+  }
+
+  // Comprehensive cleanup method
+  cleanup() {
+    this.cleanupOldData();
+    this.reset();
+    console.log('[WALLET_OPTIMIZER] Complete cleanup performed');
+  }
 }
 
 export default WalletOptimizer;

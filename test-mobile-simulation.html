@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile Backlink Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1a1a1a;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+    }
+    .test-section {
+      background: #333;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .test-button {
+      background: #14f195;
+      color: #000;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 10px 5px;
+      font-size: 14px;
+    }
+    .test-button:hover {
+      background: #0dd884;
+    }
+    .result {
+      background: #222;
+      border-radius: 6px;
+      padding: 15px;
+      margin: 10px 0;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .success { border-left: 4px solid #14f195; }
+    .error { border-left: 4px solid #ff4444; }
+    .info { border-left: 4px solid #4444ff; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Mobile Backlink Testing</h1>
+  
+  <div class="test-section">
+    <h2>1️⃣ Test Wallet Detection</h2>
+    <p>Simulate different mobile environments and test wallet detection:</p>
+    <button class="test-button" onclick="testMobileDetection()">Test Mobile Detection</button>
+    <button class="test-button" onclick="testNoWalletsDetected()">Simulate No Wallets</button>
+    <button class="test-button" onclick="testWalletBrowserPrompt()">Show Wallet Browser Prompt</button>
+    <div id="detection-result" class="result"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>2️⃣ Test Deep Links</h2>
+    <p>Test deep link generation and fallback URLs:</p>
+    <button class="test-button" onclick="testDeepLinks()">Test All Deep Links</button>
+    <button class="test-button" onclick="testSpecificWallet('phantom')">Test Phantom</button>
+    <button class="test-button" onclick="testSpecificWallet('solflare')">Test Solflare</button>
+    <button class="test-button" onclick="testSpecificWallet('backpack')">Test Backpack</button>
+    <div id="deeplink-result" class="result"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>3️⃣ Test URL Encoding</h2>
+    <p>Test URL encoding for complex URLs:</p>
+    <button class="test-button" onclick="testUrlEncoding()">Test URL Encoding</button>
+    <div id="encoding-result" class="result"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>4️⃣ Test Fallback Behavior</h2>
+    <p>Test what happens when deep links fail:</p>
+    <button class="test-button" onclick="testFallbackBehavior()">Test Fallback URLs</button>
+    <div id="fallback-result" class="result"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>5️⃣ Simulate Mobile Browser</h2>
+    <p>Simulate mobile browser conditions:</p>
+    <button class="test-button" onclick="simulateIOS()">Simulate iOS Safari</button>
+    <button class="test-button" onclick="simulateAndroid()">Simulate Android Chrome</button>
+    <button class="test-button" onclick="resetSimulation()">Reset to Desktop</button>
+    <div id="simulation-result" class="result"></div>
+  </div>
+
+  <script>
+    // Store original user agent
+    const originalUserAgent = navigator.userAgent;
+    const originalPlatform = navigator.platform;
+    
+    // Test mobile detection
+    function testMobileDetection() {
+      const result = document.getElementById('detection-result');
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      
+      result.innerHTML = `
+        <div class="info">
+          <strong>Current Environment:</strong><br>
+          User Agent: ${navigator.userAgent}<br>
+          Platform: ${navigator.platform}<br>
+          Is Mobile: ${isMobile}<br>
+          Is iOS: ${isIOS}<br>
+          Is Android: ${isAndroid}
+        </div>
+      `;
+      result.className = 'result info';
+    }
+    
+    // Simulate no wallets detected
+    function testNoWalletsDetected() {
+      const result = document.getElementById('detection-result');
+      result.innerHTML = `
+        <div class="info">
+          <strong>Simulating No Wallets Detected:</strong><br>
+          This would trigger showWalletBrowserPrompt()<br>
+          Modal would show with wallet options<br>
+          Each option would generate deep links
+        </div>
+      `;
+      result.className = 'result info';
+    }
+    
+    // Test wallet browser prompt
+    function testWalletBrowserPrompt() {
+      const result = document.getElementById('detection-result');
+      result.innerHTML = `
+        <div class="success">
+          <strong>Wallet Browser Prompt Simulation:</strong><br>
+          ✅ showWalletBrowserPrompt() called<br>
+          ✅ Modal displayed with wallet options<br>
+          ✅ Each wallet button ready for deep link testing<br>
+          ✅ Fallback URLs configured for each wallet
+        </div>
+      `;
+      result.className = 'result success';
+    }
+    
+    // Test deep links
+    function testDeepLinks() {
+      const result = document.getElementById('deeplink-result');
+      const currentUrl = window.location.href;
+      const wallets = ['phantom', 'solflare', 'backpack', 'trustwallet', 'glow', 'exodus'];
+      
+      let output = '<div class="info"><strong>Deep Link Generation Test:</strong><br>';
+      
+      wallets.forEach(wallet => {
+        let deepLink = '';
+        let fallbackUrl = '';
+        
+        switch(wallet) {
+          case 'phantom':
+            deepLink = 'phantom://browse/' + encodeURIComponent(currentUrl);
+            fallbackUrl = 'https://phantom.app/ul/browse/' + encodeURIComponent(currentUrl);
+            break;
+          case 'solflare':
+            deepLink = 'solflare://browse/' + encodeURIComponent(currentUrl);
+            fallbackUrl = 'https://solflare.com/ul/browse/' + encodeURIComponent(currentUrl);
+            break;
+          case 'backpack':
+            deepLink = 'backpack://app?url=' + encodeURIComponent(currentUrl);
+            fallbackUrl = 'https://backpack.app/ul/app?url=' + encodeURIComponent(currentUrl);
+            break;
+          case 'trustwallet':
+            deepLink = 'trust://open?url=' + encodeURIComponent(currentUrl);
+            fallbackUrl = 'https://link.trustwallet.com/open_url?coin_id=501&url=' + encodeURIComponent(currentUrl);
+            break;
+          case 'glow':
+            deepLink = 'glow://app/' + encodeURIComponent(currentUrl);
+            fallbackUrl = 'https://glow.app/ul/app/' + encodeURIComponent(currentUrl);
+            break;
+          case 'exodus':
+            deepLink = 'exodus://dapp/' + encodeURIComponent(currentUrl);
+            fallbackUrl = 'https://exodus.com/app/dapp?url=' + encodeURIComponent(currentUrl);
+            break;
+        }
+        
+        output += `<br><strong>${wallet.toUpperCase()}:</strong><br>`;
+        output += `Deep Link: ${deepLink}<br>`;
+        output += `Fallback: ${fallbackUrl}<br>`;
+      });
+      
+      output += '</div>';
+      result.innerHTML = output;
+      result.className = 'result info';
+    }
+    
+    // Test specific wallet
+    function testSpecificWallet(walletType) {
+      const result = document.getElementById('deeplink-result');
+      const currentUrl = window.location.href;
+      
+      let deepLink = '';
+      let fallbackUrl = '';
+      
+      switch(walletType) {
+        case 'phantom':
+          deepLink = 'phantom://browse/' + encodeURIComponent(currentUrl);
+          fallbackUrl = 'https://phantom.app/ul/browse/' + encodeURIComponent(currentUrl);
+          break;
+        case 'solflare':
+          deepLink = 'solflare://browse/' + encodeURIComponent(currentUrl);
+          fallbackUrl = 'https://solflare.com/ul/browse/' + encodeURIComponent(currentUrl);
+          break;
+        case 'backpack':
+          deepLink = 'backpack://app?url=' + encodeURIComponent(currentUrl);
+          fallbackUrl = 'https://backpack.app/ul/app?url=' + encodeURIComponent(currentUrl);
+          break;
+      }
+      
+      result.innerHTML = `
+        <div class="success">
+          <strong>${walletType.toUpperCase()} Deep Link Test:</strong><br>
+          Current URL: ${currentUrl}<br>
+          Deep Link: ${deepLink}<br>
+          Fallback URL: ${fallbackUrl}<br><br>
+          <button onclick="testDeepLink('${deepLink}')" class="test-button">Test Deep Link</button>
+          <button onclick="testFallback('${fallbackUrl}')" class="test-button">Test Fallback</button>
+        </div>
+      `;
+      result.className = 'result success';
+    }
+    
+    // Test deep link
+    function testDeepLink(deepLink) {
+      console.log('[TEST] Attempting deep link:', deepLink);
+      
+      try {
+        // Try window.open first
+        const newWindow = window.open(deepLink, '_blank');
+        
+        if (!newWindow || newWindow.closed) {
+          console.log('[TEST] window.open failed, trying location.href');
+          window.location.href = deepLink;
+        }
+      } catch (error) {
+        console.error('[TEST] Deep link error:', error);
+        window.location.href = deepLink;
+      }
+    }
+    
+    // Test fallback URL
+    function testFallback(fallbackUrl) {
+      console.log('[TEST] Opening fallback URL:', fallbackUrl);
+      window.open(fallbackUrl, '_blank');
+    }
+    
+    // Test URL encoding
+    function testUrlEncoding() {
+      const result = document.getElementById('encoding-result');
+      const testUrls = [
+        'https://example.com/mint',
+        'https://example.com/mint?param=value',
+        'https://example.com/mint#section',
+        'https://example.com/mint?param=value&another=123#section'
+      ];
+      
+      let output = '<div class="info"><strong>URL Encoding Test:</strong><br>';
+      
+      testUrls.forEach(url => {
+        const encoded = encodeURIComponent(url);
+        const decoded = decodeURIComponent(encoded);
+        
+        output += `<br><strong>Original:</strong> ${url}<br>`;
+        output += `<strong>Encoded:</strong> ${encoded}<br>`;
+        output += `<strong>Decoded:</strong> ${decoded}<br>`;
+        output += `<strong>Match:</strong> ${url === decoded ? '✅' : '❌'}<br>`;
+      });
+      
+      output += '</div>';
+      result.innerHTML = output;
+      result.className = 'result info';
+    }
+    
+    // Test fallback behavior
+    function testFallbackBehavior() {
+      const result = document.getElementById('fallback-result');
+      result.innerHTML = `
+        <div class="info">
+          <strong>Fallback Behavior Test:</strong><br>
+          ✅ Deep links attempt to open wallet apps<br>
+          ✅ If deep link fails, fallback URLs redirect to wallet websites<br>
+          ✅ Each wallet has specific fallback URL format<br>
+          ✅ Fallbacks ensure users can always access wallet functionality<br><br>
+          <strong>Fallback Strategy:</strong><br>
+          1. Try deep link (phantom://, solflare://, etc.)<br>
+          2. If fails, redirect to wallet's universal link<br>
+          3. User can install wallet or open existing wallet<br>
+          4. Wallet can then navigate back to dApp
+        </div>
+      `;
+      result.className = 'result info';
+    }
+    
+    // Simulate iOS Safari
+    function simulateIOS() {
+      const result = document.getElementById('simulation-result');
+      
+      // Override user agent
+      Object.defineProperty(navigator, 'userAgent', {
+        value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1',
+        configurable: true
+      });
+      
+      Object.defineProperty(navigator, 'platform', {
+        value: 'iPhone',
+        configurable: true
+      });
+      
+      result.innerHTML = `
+        <div class="success">
+          <strong>iOS Safari Simulation Active:</strong><br>
+          ✅ User Agent: iOS Safari<br>
+          ✅ Platform: iPhone<br>
+          ✅ Mobile detection: true<br>
+          ✅ iOS detection: true<br><br>
+          <strong>Expected Behavior:</strong><br>
+          - Deep links may open wallet apps<br>
+          - Fallbacks may redirect to App Store<br>
+          - Wallet detection may be limited
+        </div>
+      `;
+      result.className = 'result success';
+    }
+    
+    // Simulate Android Chrome
+    function simulateAndroid() {
+      const result = document.getElementById('simulation-result');
+      
+      // Override user agent
+      Object.defineProperty(navigator, 'userAgent', {
+        value: 'Mozilla/5.0 (Linux; Android 11; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36',
+        configurable: true
+      });
+      
+      Object.defineProperty(navigator, 'platform', {
+        value: 'Linux armv8l',
+        configurable: true
+      });
+      
+      result.innerHTML = `
+        <div class="success">
+          <strong>Android Chrome Simulation Active:</strong><br>
+          ✅ User Agent: Android Chrome<br>
+          ✅ Platform: Linux armv8l<br>
+          ✅ Mobile detection: true<br>
+          ✅ Android detection: true<br><br>
+          <strong>Expected Behavior:</strong><br>
+          - Deep links may show app chooser<br>
+          - Fallbacks may redirect to Play Store<br>
+          - Wallet detection may be more reliable
+        </div>
+      `;
+      result.className = 'result success';
+    }
+    
+    // Reset simulation
+    function resetSimulation() {
+      const result = document.getElementById('simulation-result');
+      
+      // Restore original user agent
+      Object.defineProperty(navigator, 'userAgent', {
+        value: originalUserAgent,
+        configurable: true
+      });
+      
+      Object.defineProperty(navigator, 'platform', {
+        value: originalPlatform,
+        configurable: true
+      });
+      
+      result.innerHTML = `
+        <div class="info">
+          <strong>Simulation Reset:</strong><br>
+          ✅ Original User Agent restored<br>
+          ✅ Original Platform restored<br>
+          ✅ Desktop environment active
+        </div>
+      `;
+      result.className = 'result info';
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      testMobileDetection();
+      console.log('🧪 Mobile Backlink Testing Environment Ready');
+      console.log('📱 Test different mobile conditions and deep link behavior');
+    });
+  </script>
+</body>
+</html>

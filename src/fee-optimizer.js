@@ -290,6 +290,33 @@ class FeeOptimizer {
     };
     console.log('[FEE_OPTIMIZER] All fee optimization data reset');
   }
+
+  // Clean up old fee history data
+  cleanupOldData() {
+    const now = Date.now();
+    const cutoff = now - (24 * 60 * 60 * 1000); // 24 hours
+    
+    let cleanedCount = 0;
+    for (const [key, history] of this.feeHistory.entries()) {
+      const filtered = history.filter(entry => entry.timestamp > cutoff);
+      if (filtered.length === 0) {
+        this.feeHistory.delete(key);
+        cleanedCount++;
+      } else if (filtered.length !== history.length) {
+        this.feeHistory.set(key, filtered);
+        cleanedCount++;
+      }
+    }
+    
+    console.log(`[FEE_OPTIMIZER] Cleaned up ${cleanedCount} old fee history entries`);
+  }
+
+  // Comprehensive cleanup method
+  cleanup() {
+    this.cleanupOldData();
+    this.reset();
+    console.log('[FEE_OPTIMIZER] Complete cleanup performed');
+  }
 }
 
 export default FeeOptimizer;
