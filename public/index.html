@@ -589,13 +589,15 @@
       -webkit-transform: translateZ(0);
     }
     .modal.active {
-      display: flex;
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
     }
     .wallet-box {
       background: #111;
       border-radius: 16px;
-      padding: 16px;
-      max-width: 280px;
+      padding: 12px;
+      max-width: 260px;
       width: 100%;
       text-align: center;
       box-shadow: 0 0 20px rgba(20, 241, 149, 0.2);
@@ -626,11 +628,11 @@
     .wallet-option {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       background: #1a1a1a;
-      padding: 10px 12px;
-      margin: 8px 0;
-      border-radius: 10px;
+      padding: 8px 10px;
+      margin: 6px 0;
+      border-radius: 8px;
       cursor: pointer;
       transition: 0.2s ease;
     }
@@ -639,12 +641,12 @@
       outline: 2px solid #14f195;
     }
     .wallet-option img {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
     }
     .wallet-name {
       color: #fff;
-      font-size: 0.9em;
+      font-size: 0.85em;
       font-weight: 600;
     }
     #status {
@@ -1476,6 +1478,8 @@
       }
       .modal {
         padding: 10px;
+        justify-content: center !important;
+        align-items: center !important;
       }
     }
     
@@ -1497,43 +1501,42 @@
     /* Mobile-specific wallet modal improvements */
     @media (max-width: 480px) {
       .wallet-box {
-        padding: 16px;
-        margin: 10px;
-        max-width: calc(100% - 20px);
-        width: 95vw;
-        position: fixed;
-        top: 50%;
+        padding: 12px;
+        margin: 8px;
+        max-width: calc(100% - 16px);
+        width: 90vw;
+        position: relative;
         left: 50%;
-        transform: translate(-50%, -50%);
-        max-height: 80vh;
+        transform: translateX(-50%);
+        max-height: 70vh;
         overflow-y: auto;
       }
       .wallet-option {
-        padding: 18px 16px;
-        margin: 6px 0;
-        min-height: 70px;
+        padding: 14px 12px;
+        margin: 4px 0;
+        min-height: 60px;
       }
       .wallet-option img {
-        width: 36px;
-        height: 36px;
+        width: 28px;
+        height: 28px;
       }
       .wallet-name {
-        font-size: 1.2em;
-        line-height: 1.3;
+        font-size: 1em;
+        line-height: 1.2;
       }
       .modal {
         padding: 0;
-        align-items: center;
-        justify-content: center;
+        align-items: center !important;
+        justify-content: center !important;
       }
       #statusModal {
         padding: 0;
-        align-items: center;
-        justify-content: center;
+        align-items: center !important;
+        justify-content: center !important;
       }
       #statusModal .wallet-box {
-        margin: 15px;
-        max-width: calc(100% - 30px);
+        margin: 10px;
+        max-width: calc(100% - 20px);
         text-align: center;
       }
     }
