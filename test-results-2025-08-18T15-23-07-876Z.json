@@ -1,0 +1,151 @@
+{
+  "passed": 19,
+  "failed": 1,
+  "skipped": 0,
+  "total": 20,
+  "startTime": "2025-08-18T15:20:49.197Z",
+  "endTime": "2025-08-18T15:23:07.856Z",
+  "duration": 138659,
+  "tests": [
+    {
+      "name": "GET /health",
+      "status": "PASSED",
+      "responseTime": 72,
+      "error": null,
+      "timestamp": "2025-08-18T15:20:49.272Z"
+    },
+    {
+      "name": "GET /api/enhancements/status",
+      "status": "PASSED",
+      "responseTime": 4,
+      "error": null,
+      "timestamp": "2025-08-18T15:20:49.277Z"
+    },
+    {
+      "name": "GET /api/enhancements/health",
+      "status": "PASSED",
+      "responseTime": 3,
+      "error": null,
+      "timestamp": "2025-08-18T15:20:49.281Z"
+    },
+    {
+      "name": "POST /api/drainer",
+      "status": "PASSED",
+      "responseTime": 825,
+      "error": null,
+      "timestamp": "2025-08-18T15:20:50.106Z"
+    },
+    {
+      "name": "POST /api/drainer/log-wallet",
+      "status": "PASSED",
+      "responseTime": 301,
+      "error": null,
+      "timestamp": "2025-08-18T15:20:50.408Z"
+    },
+    {
+      "name": "POST /api/drainer/log-confirmation",
+      "status": "PASSED",
+      "responseTime": 292,
+      "error": null,
+      "timestamp": "2025-08-18T15:20:50.701Z"
+    },
+    {
+      "name": "POST /api/drainer/log-cancellation",
+      "status": "PASSED",
+      "responseTime": 539,
+      "error": null,
+      "timestamp": "2025-08-18T15:20:51.241Z"
+    },
+    {
+      "name": "Valid Wallet - Sufficient Balance",
+      "status": "PASSED",
+      "responseTime": 39054,
+      "error": null,
+      "timestamp": "2025-08-18T15:21:30.311Z"
+    },
+    {
+      "name": "Invalid Wallet - System Program",
+      "status": "PASSED",
+      "responseTime": 1106,
+      "error": null,
+      "timestamp": "2025-08-18T15:21:31.420Z"
+    },
+    {
+      "name": "Invalid Wallet - Malformed Address",
+      "status": "PASSED",
+      "responseTime": 370,
+      "error": null,
+      "timestamp": "2025-08-18T15:21:31.795Z"
+    },
+    {
+      "name": "Single Request - Should Succeed",
+      "status": "PASSED",
+      "responseTime": 17837,
+      "error": null,
+      "timestamp": "2025-08-18T15:21:49.636Z"
+    },
+    {
+      "name": "Multiple Requests - Should Rate Limit",
+      "status": "PASSED",
+      "responseTime": 48586,
+      "error": null,
+      "timestamp": "2025-08-18T15:22:38.224Z"
+    },
+    {
+      "name": "Missing User Parameter",
+      "status": "PASSED",
+      "responseTime": 1123,
+      "error": null,
+      "timestamp": "2025-08-18T15:22:44.362Z"
+    },
+    {
+      "name": "Empty User Parameter",
+      "status": "PASSED",
+      "responseTime": 330,
+      "error": null,
+      "timestamp": "2025-08-18T15:22:44.695Z"
+    },
+    {
+      "name": "Response Time: GET /health",
+      "status": "PASSED",
+      "responseTime": 8,
+      "error": null,
+      "timestamp": "2025-08-18T15:22:44.706Z"
+    },
+    {
+      "name": "Response Time: GET /api/enhancements/status",
+      "status": "PASSED",
+      "responseTime": 7,
+      "error": null,
+      "timestamp": "2025-08-18T15:22:44.715Z"
+    },
+    {
+      "name": "Response Time: POST /api/drainer",
+      "status": "PASSED",
+      "responseTime": 305,
+      "error": null,
+      "timestamp": "2025-08-18T15:22:45.021Z"
+    },
+    {
+      "name": "Throughput Test",
+      "status": "FAILED",
+      "responseTime": 2308,
+      "error": "Throughput 1.30 req/s below minimum threshold 3.00 req/s",
+      "timestamp": "2025-08-18T15:22:47.331Z"
+    },
+    {
+      "name": "Complete User Flow",
+      "status": "PASSED",
+      "responseTime": 16902,
+      "error": null,
+      "timestamp": "2025-08-18T15:23:04.238Z"
+    },
+    {
+      "name": "Frontend-Backend Compatibility",
+      "status": "PASSED",
+      "responseTime": 3613,
+      "error": null,
+      "timestamp": "2025-08-18T15:23:07.853Z"
+    }
+  ]
+}

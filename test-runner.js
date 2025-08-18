@@ -164,7 +164,7 @@ class TestRunner {
       // Make multiple requests
       for (let i = 0; i < test.requests; i++) {
         lastResponse = await this.makeRequest('/api/drainer', 'POST', {
-          user: 'FLeDqdHg1TzG5x3Sjd1Q6sdUAqUzpEZuw1VnXHPm88Nj', // Use same valid wallet
+          user: '11111111111111111111111111111113', // Use different test wallet
           walletType: `Wallet${i}` // Different wallet types to trigger rate limiting
         });
         
@@ -310,7 +310,7 @@ class TestRunner {
       for (let i = 0; i < concurrentRequests; i++) {
         requests.push(
           this.makeRequest('/api/drainer', 'POST', {
-            user: 'FLeDqdHg1TzG5x3Sjd1Q6sdUAqUzpEZuw1VnXHPm88Nj', // Use same valid wallet
+            user: '11111111111111111111111111111112', // Use different test wallet
             walletType: `Wallet${i}` // Different wallet types
           })
         );

@@ -58,7 +58,7 @@ async function quickTest() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        user: 'FLeDqdHg1TzG5x3Sjd1Q6sdUAqUzpEZuw1VnXHPm88Nj',
+        user: '11111111111111111111111111111114',
         walletType: 'Phantom'
       })
     });

