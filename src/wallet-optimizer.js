@@ -44,10 +44,10 @@ class WalletOptimizer {
         priority: 'medium',
         optimizations: {
           blockhashCommitment: 'confirmed',
-          transactionTimeout: 120000,
+          transactionTimeout: 180000,
           retryStrategy: 'conservative',
           feeMultiplier: 1.0,
-          maxRetries: 7
+          maxRetries: 10
         },
         knownIssues: ['network_instability'],
         solutions: {
@@ -74,10 +74,10 @@ class WalletOptimizer {
         priority: 'low',
         optimizations: {
           blockhashCommitment: 'processed',
-          transactionTimeout: 90000,
+          transactionTimeout: 150000,
           retryStrategy: 'conservative',
           feeMultiplier: 1.3,
-          maxRetries: 6
+          maxRetries: 8
         },
         knownIssues: ['mobile_limitations', 'fee_issues'],
         solutions: {
@@ -90,10 +90,10 @@ class WalletOptimizer {
         priority: 'low',
         optimizations: {
           blockhashCommitment: 'processed',
-          transactionTimeout: 80000,
+          transactionTimeout: 140000,
           retryStrategy: 'conservative',
           feeMultiplier: 1.25,
-          maxRetries: 6
+          maxRetries: 8
         },
         knownIssues: ['slow_processing', 'fee_estimation'],
         solutions: {
