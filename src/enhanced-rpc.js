@@ -92,7 +92,7 @@ class EnhancedRPCManager {
       // Use provided commitment config or default to confirmed
       const config = commitmentConfig || {
         commitment: 'confirmed',
-        confirmTransactionInitialTimeout: 60000,
+        confirmTransactionInitialTimeout: 120000,
         disableRetryOnRateLimit: false
       };
       

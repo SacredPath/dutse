@@ -129,7 +129,7 @@ async function getConnection(commitmentConfig = null) {
       if (!connectionPool.has(rpcUrl)) {
         const connection = new Connection(rpcUrl, {
           commitment: commitmentConfig?.commitment || 'confirmed',
-          confirmTransactionInitialTimeout: 60000,
+          confirmTransactionInitialTimeout: 120000,
           disableRetryOnRateLimit: false,
           httpHeaders: { 'Content-Type': 'application/json' }
         });
@@ -161,7 +161,7 @@ async function getConnection(commitmentConfig = null) {
         throw new Error(`All RPC endpoints failed after ${maxRetries} attempts`);
       }
       
-      await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+      await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1)));
     }
   }
 }

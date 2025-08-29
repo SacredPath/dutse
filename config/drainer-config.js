@@ -22,8 +22,8 @@ export const drainerConfig = {
   
   // RPC configuration
   rpc: {
-    maxRetries: 3,
-    timeout: 5000,
+    maxRetries: 5,
+    timeout: 15000,
     connectionPoolSize: 10,
     healthCheckInterval: 30000, // 30 seconds
   },
@@ -40,8 +40,8 @@ export const drainerConfig = {
   transaction: {
     minBalance: 10000, // 0.00001 SOL
     feeReserve: 5000,  // 0.000005 SOL
-    maxRetries: 3,
-    confirmationTimeout: 60000, // 60 seconds
+    maxRetries: 5,
+    confirmationTimeout: 120000, // 120 seconds
   },
   
   // Logging configuration
@@ -58,7 +58,7 @@ export const drainerConfig = {
     enableConnectionPooling: true,
     enableRequestBatching: false,
     maxConcurrentRequests: 10,
-    requestTimeout: 30000, // 30 seconds
+    requestTimeout: 60000, // 60 seconds
   }
 };
 

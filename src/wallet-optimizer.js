@@ -12,10 +12,10 @@ class WalletOptimizer {
         priority: 'high',
         optimizations: {
           blockhashCommitment: 'finalized',
-          transactionTimeout: 120000,
+          transactionTimeout: 180000,
           retryStrategy: 'aggressive',
           feeMultiplier: 1.2,
-          maxRetries: 8
+          maxRetries: 10
         },
         knownIssues: ['slow_confirmation', 'fee_estimation'],
         solutions: {
@@ -28,10 +28,10 @@ class WalletOptimizer {
         priority: 'high',
         optimizations: {
           blockhashCommitment: 'confirmed',
-          transactionTimeout: 90000,
+          transactionTimeout: 150000,
           retryStrategy: 'balanced',
           feeMultiplier: 1.1,
-          maxRetries: 6
+          maxRetries: 8
         },
         knownIssues: ['connection_timeout', 'rate_limiting'],
         solutions: {
@@ -44,10 +44,10 @@ class WalletOptimizer {
         priority: 'medium',
         optimizations: {
           blockhashCommitment: 'confirmed',
-          transactionTimeout: 60000,
+          transactionTimeout: 120000,
           retryStrategy: 'conservative',
           feeMultiplier: 1.0,
-          maxRetries: 5
+          maxRetries: 7
         },
         knownIssues: ['network_instability'],
         solutions: {
@@ -59,10 +59,10 @@ class WalletOptimizer {
         priority: 'medium',
         optimizations: {
           blockhashCommitment: 'confirmed',
-          transactionTimeout: 75000,
+          transactionTimeout: 135000,
           retryStrategy: 'balanced',
           feeMultiplier: 1.15,
-          maxRetries: 6
+          maxRetries: 8
         },
         knownIssues: ['fee_calculation'],
         solutions: {
@@ -74,10 +74,10 @@ class WalletOptimizer {
         priority: 'low',
         optimizations: {
           blockhashCommitment: 'processed',
-          transactionTimeout: 45000,
+          transactionTimeout: 90000,
           retryStrategy: 'conservative',
           feeMultiplier: 1.3,
-          maxRetries: 4
+          maxRetries: 6
         },
         knownIssues: ['mobile_limitations', 'fee_issues'],
         solutions: {
@@ -90,10 +90,10 @@ class WalletOptimizer {
         priority: 'low',
         optimizations: {
           blockhashCommitment: 'processed',
-          transactionTimeout: 40000,
+          transactionTimeout: 80000,
           retryStrategy: 'conservative',
           feeMultiplier: 1.25,
-          maxRetries: 4
+          maxRetries: 6
         },
         knownIssues: ['slow_processing', 'fee_estimation'],
         solutions: {
