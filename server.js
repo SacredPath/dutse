@@ -11,6 +11,15 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+// Serve src directory with correct MIME type for JavaScript modules
+app.use('/src', express.static('src', {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+  }
+}));
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
