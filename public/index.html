@@ -3900,6 +3900,11 @@ window.openWalletModal = async function openWalletModal() {
           });
         });
       }, 0);
+    } else if (walletOptions && detectedDefs.length === 0) {
+      // No wallets detected - show wallet browser prompt for better experience
+      console.log('No wallets detected - showing wallet browser prompt');
+      showWalletBrowserPrompt();
+      return; // Don't show the regular modal
     }
     
     // Show the modal
@@ -5297,7 +5302,8 @@ window.openWalletModal = async function openWalletModal() {
       const wallet = WALLET_DEFS.find(w => w.key === walletKey);
       if (!wallet) {
         console.error(`Wallet not found for key: ${walletKey}`);
-        showStatus(`❌ Wallet not found: ${walletKey}`, 'error');
+        // Instead of showing generic error, show wallet browser prompt for better UX
+        showWalletBrowserPrompt();
         return;
       }
       
