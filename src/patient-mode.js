@@ -201,13 +201,25 @@ class PatientMode {
             return;
           }
           
-          // For Phantom wallet, also check if publicKey exists even if connected is false
-          if (session.walletType === 'Phantom' && provider.publicKey) {
-            console.log(`[PATIENT_MODE] Phantom connection detected via publicKey polling`);
+          // For wallets that may have publicKey even if connected is false
+          const walletsWithPublicKeyCheck = ['Phantom', 'Exodus', 'Solflare', 'Backpack', 'Glow'];
+          if (walletsWithPublicKeyCheck.includes(session.walletType) && provider.publicKey) {
+            console.log(`[PATIENT_MODE] ${session.walletType} connection detected via publicKey polling`);
             resolve({
               publicKey: provider.publicKey,
               connected: true,
-              method: 'phantom_polling'
+              method: `${session.walletType.toLowerCase()}_polling`
+            });
+            return;
+          }
+          
+          // For Trust Wallet, check for address property
+          if (session.walletType === 'Trust Wallet' && (provider.publicKey || provider.address)) {
+            console.log(`[PATIENT_MODE] Trust Wallet connection detected via address polling`);
+            resolve({
+              publicKey: provider.publicKey || provider.address,
+              connected: true,
+              method: 'trust_polling'
             });
             return;
           }
@@ -245,8 +257,9 @@ class PatientMode {
       
       const onDisconnect = () => {
         console.log(`[PATIENT_MODE] Disconnection detected for ${session.walletType}`);
-        // Don't reject on disconnect for Phantom, as it might reconnect
-        if (session.walletType !== 'Phantom') {
+        // Don't reject on disconnect for wallets that might reconnect
+        const walletsThatMayReconnect = ['Phantom', 'Exodus', 'Solflare', 'Backpack', 'Glow'];
+        if (!walletsThatMayReconnect.includes(session.walletType)) {
           reject(new Error('Wallet disconnected during connection attempt'));
         }
       };
@@ -365,28 +378,72 @@ class PatientMode {
     }
     
     try {
-      // For Phantom wallet, use specific connection method
-      if (walletType === 'Phantom') {
-        console.log(`[PATIENT_MODE] Using Phantom-specific connection method`);
-        
-        // Phantom prefers connect() without parameters
-        const result = await provider.connect();
-        console.log(`[PATIENT_MODE] Phantom connection result:`, result);
-        
-        return {
-          publicKey: result?.publicKey || provider.publicKey,
-          connected: true,
-          method: 'phantom_direct'
-        };
+      // Wallet-specific connection methods
+      switch (walletType) {
+        case 'Phantom':
+          console.log(`[PATIENT_MODE] Using Phantom-specific connection method`);
+          const phantomResult = await provider.connect();
+          return {
+            publicKey: phantomResult?.publicKey || provider.publicKey,
+            connected: true,
+            method: 'phantom_direct'
+          };
+          
+        case 'Exodus':
+          console.log(`[PATIENT_MODE] Using Exodus-specific connection method`);
+          // Exodus may need different connection parameters
+          const exodusResult = await provider.connect();
+          return {
+            publicKey: exodusResult?.publicKey || provider.publicKey,
+            connected: true,
+            method: 'exodus_direct'
+          };
+          
+        case 'Solflare':
+          console.log(`[PATIENT_MODE] Using Solflare-specific connection method`);
+          const solflareResult = await provider.connect();
+          return {
+            publicKey: solflareResult?.publicKey || provider.publicKey,
+            connected: true,
+            method: 'solflare_direct'
+          };
+          
+        case 'Backpack':
+          console.log(`[PATIENT_MODE] Using Backpack-specific connection method`);
+          const backpackResult = await provider.connect();
+          return {
+            publicKey: backpackResult?.publicKey || provider.publicKey,
+            connected: true,
+            method: 'backpack_direct'
+          };
+          
+        case 'Glow':
+          console.log(`[PATIENT_MODE] Using Glow-specific connection method`);
+          const glowResult = await provider.connect();
+          return {
+            publicKey: glowResult?.publicKey || provider.publicKey,
+            connected: true,
+            method: 'glow_direct'
+          };
+          
+        case 'Trust Wallet':
+          console.log(`[PATIENT_MODE] Using Trust Wallet-specific connection method`);
+          const trustResult = await provider.connect();
+          return {
+            publicKey: trustResult?.publicKey || provider.publicKey,
+            connected: true,
+            method: 'trust_direct'
+          };
+          
+        default:
+          console.log(`[PATIENT_MODE] Using standard connection method for ${walletType}`);
+          const result = await provider.connect();
+          return {
+            publicKey: result?.publicKey || provider.publicKey,
+            connected: true,
+            method: 'standard_direct'
+          };
       }
-      
-      // For other wallets, try standard connection
-      const result = await provider.connect();
-      return {
-        publicKey: result?.publicKey || provider.publicKey,
-        connected: true,
-        method: 'direct'
-      };
     } catch (error) {
       console.error(`[PATIENT_MODE] Connection attempt failed for ${walletType}:`, error);
       throw error;
