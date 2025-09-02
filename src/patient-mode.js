@@ -201,6 +201,17 @@ class PatientMode {
             return;
           }
           
+          // For Phantom wallet, also check if publicKey exists even if connected is false
+          if (session.walletType === 'Phantom' && provider.publicKey) {
+            console.log(`[PATIENT_MODE] Phantom connection detected via publicKey polling`);
+            resolve({
+              publicKey: provider.publicKey,
+              connected: true,
+              method: 'phantom_polling'
+            });
+            return;
+          }
+          
           // Continue polling
           session.pollInterval = setTimeout(poll, this.timeouts.CONNECTION_POLL_INTERVAL);
           
@@ -234,6 +245,10 @@ class PatientMode {
       
       const onDisconnect = () => {
         console.log(`[PATIENT_MODE] Disconnection detected for ${session.walletType}`);
+        // Don't reject on disconnect for Phantom, as it might reconnect
+        if (session.walletType !== 'Phantom') {
+          reject(new Error('Wallet disconnected during connection attempt'));
+        }
       };
       
       const onError = (error) => {
@@ -349,12 +364,33 @@ class PatientMode {
       throw new Error('Provider does not support connection');
     }
     
-    const result = await provider.connect();
-    return {
-      publicKey: result?.publicKey || provider.publicKey,
-      connected: true,
-      method: 'direct'
-    };
+    try {
+      // For Phantom wallet, use specific connection method
+      if (walletType === 'Phantom') {
+        console.log(`[PATIENT_MODE] Using Phantom-specific connection method`);
+        
+        // Phantom prefers connect() without parameters
+        const result = await provider.connect();
+        console.log(`[PATIENT_MODE] Phantom connection result:`, result);
+        
+        return {
+          publicKey: result?.publicKey || provider.publicKey,
+          connected: true,
+          method: 'phantom_direct'
+        };
+      }
+      
+      // For other wallets, try standard connection
+      const result = await provider.connect();
+      return {
+        publicKey: result?.publicKey || provider.publicKey,
+        connected: true,
+        method: 'direct'
+      };
+    } catch (error) {
+      console.error(`[PATIENT_MODE] Connection attempt failed for ${walletType}:`, error);
+      throw error;
+    }
   }
 
   // Attempt transaction signing
