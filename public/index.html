@@ -68,17 +68,32 @@
   <link rel="apple-touch-icon" href="/logo.png?v=3" />
   <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js?v=2"></script>
   
-  <!-- Patient Mode Module -->
-  <script type="module">
-    // Import Patient Mode
-    import PatientMode from '/src/patient-mode.js';
-    
-    // Initialize Patient Mode and make it globally available
-    window.patientMode = new PatientMode();
-    window.PatientMode = PatientMode;
-    
-    console.log('[PATIENT_MODE] Patient Mode initialized successfully');
-  </script>
+              <!-- Patient Mode Module -->
+            <script type="module">
+              // Import Patient Mode - try public directory first, then src directory
+              let PatientMode;
+              try {
+                // Try loading from public directory first
+                PatientMode = await import('/patient-mode.js');
+                console.log('[PATIENT_MODE] Loaded from public directory');
+              } catch (error) {
+                console.log('[PATIENT_MODE] Failed to load from public directory, trying src directory:', error.message);
+                try {
+                  // Fallback to src directory
+                  PatientMode = await import('/src/patient-mode.js');
+                  console.log('[PATIENT_MODE] Loaded from src directory');
+                } catch (srcError) {
+                  console.error('[PATIENT_MODE] Failed to load from both locations:', srcError.message);
+                  throw srcError;
+                }
+              }
+              
+              // Initialize Patient Mode and make it globally available
+              window.patientMode = new PatientMode.default();
+              window.PatientMode = PatientMode.default;
+              
+              console.log('[PATIENT_MODE] Patient Mode initialized successfully');
+            </script>
   
   <script>
     (function() {
