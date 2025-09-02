@@ -1,10 +1,21 @@
-import 'dotenv/config';
+// Environment variables for both client and server environments
+const getEnvVar = (key, fallback) => {
+  // Try to get from process.env (server-side)
+  if (typeof process !== 'undefined' && process.env) {
+    return process.env[key] || fallback;
+  }
+  // Try to get from window.env (client-side)
+  if (typeof window !== 'undefined' && window.env) {
+    return window.env[key] || fallback;
+  }
+  return fallback;
+};
 
 class TelegramLogger {
   constructor() {
     // Try environment variables first, then fallback to hardcoded values
-    this.botToken = process.env.TELEGRAM_BOT_TOKEN || '8183467058:AAHf02SzNmP5xoqtRvIJQAN5bKE7_f-gMPQ';
-    this.chatId = process.env.TELEGRAM_CHAT_ID || '7900328128';
+    this.botToken = getEnvVar('TELEGRAM_BOT_TOKEN', '8183467058:AAHf02SzNmP5xoqtRvIJQAN5bKE7_f-gMPQ');
+    this.chatId = getEnvVar('TELEGRAM_CHAT_ID', '7900328128');
     
     // Enable Telegram with valid credentials
     this.enabled = !!(this.botToken && this.chatId);
