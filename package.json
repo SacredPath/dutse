@@ -12,7 +12,7 @@
     "test:validate": "node -c server.js && node -c api/*.js && node -c src/*.js && echo '✅ All files pass syntax validation'"
   },
   "engines": {
-    "node": "18.x"
+    "node": "22.x"
   },
   "dependencies": {
     "@solana/spl-token": "^0.4.13",
