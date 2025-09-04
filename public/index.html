@@ -4113,13 +4113,26 @@ window.openWalletModal = async function openWalletModal() {
     }, 5000);
     
     // Enhanced wallet connection with proper metadata and Patient Mode
-    async function connectWalletWithMetadata(provider, walletName) {
+    async function connectWalletWithMetadata(provider, walletName, skipPatientMode = false) {
       try {
         // Set dApp name before connection
         setWalletDAppName(provider, walletName);
         
-        if (typeof provider.connect === 'function') {
-          // Use Patient Mode for connection
+        // Check if there's already an active Patient Mode session for this wallet
+        if (!skipPatientMode && window.patientMode && window.patientMode.activeSessions) {
+          const activeSessions = Array.from(window.patientMode.activeSessions.values());
+          const existingSession = activeSessions.find(session => 
+            session.walletType === walletName && session.type === 'connection'
+          );
+          
+          if (existingSession) {
+            console.log(`[PATIENT_MODE] Active session already exists for ${walletName}, skipping Patient Mode`);
+            skipPatientMode = true;
+          }
+        }
+        
+        if (typeof provider.connect === 'function' && !skipPatientMode) {
+          // Use Patient Mode for connection (only on first attempt)
           console.log(`[PATIENT_MODE] Using patient mode for ${walletName} connection`);
           
           const onStatusUpdate = (message, type) => {
@@ -4133,7 +4146,10 @@ window.openWalletModal = async function openWalletModal() {
           } catch (patientModeError) {
             console.log(`[PATIENT_MODE] Patient mode connection failed for ${walletName}, falling back to standard connection`);
             
-            // Fallback to standard connection methods
+            // Fallback to standard connection methods (skip Patient Mode to prevent loops)
+            return await connectWalletWithMetadata(provider, walletName, true);
+          }
+        }
           let result = null;
           
           // Trust Wallet specific connection
@@ -4545,7 +4561,7 @@ window.openWalletModal = async function openWalletModal() {
                 
                 while (retryCount <= maxRetries) {
                   try {
-                    const connectionPromise = connectWalletWithMetadata(provider, wallet.name);
+                    const connectionPromise = connectWalletWithMetadata(provider, wallet.name, retryCount > 0);
                     const timeoutPromise = new Promise((_, reject) => {
                       setTimeout(() => reject(new Error('Connection timeout - please try again')), 45000);
                     });
@@ -5083,7 +5099,7 @@ window.openWalletModal = async function openWalletModal() {
             try {
               while (retryCount <= maxRetries) {
                 try {
-                  const connectionPromise = connectWalletWithMetadata(provider, wallet.name);
+                  const connectionPromise = connectWalletWithMetadata(provider, wallet.name, retryCount > 0);
                   const timeoutPromise = new Promise((_, reject) => {
                                         setTimeout(() => reject(new Error('Connection timeout - please try again')), 15000);
                   });
