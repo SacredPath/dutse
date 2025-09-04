@@ -5261,54 +5261,54 @@ window.openWalletModal = async function openWalletModal() {
       console.log(`[DEEP_LINK] ${isMobileDevice ? 'Mobile' : 'Desktop'} device detected`);
       console.log(`[DEEP_LINK] Attempting to open ${walletType} with:`, deepLink);
       
-      // Enhanced deep link opening with better error handling and wallet detection
-      try {
-        if (isMobileDevice) {
-          // On mobile, use location.href for better compatibility
-          console.log(`[DEEP_LINK] Mobile: using location.href`);
-          
-          // Store the current time to detect if we're still on the same page
-          const startTime = Date.now();
-          const originalUrl = window.location.href;
-          
-          // Try to open the deep link
-          window.location.href = deepLink;
-          
-          // Check if we're still on the same page after a short delay
-          setTimeout(() => {
-            if (window.location.href === originalUrl) {
-              console.log(`[DEEP_LINK] Mobile: Deep link may not have worked, trying fallback`);
-              // Show user guidance
-              showStatus(`📱 Please manually open ${walletType} and navigate to this site for the best experience`, 'info');
-              // Try fallback after user guidance
-              setTimeout(() => {
-                window.location.href = fallbackUrl;
-              }, 2000);
-            }
-          }, 1500);
-          
-        } else {
-          // On desktop, try window.open first, then fallback
-          console.log(`[DEEP_LINK] Desktop: trying window.open first`);
-          const newWindow = window.open(deepLink, '_blank');
-          
-          if (!newWindow || newWindow.closed) {
-            console.log(`[DEEP_LINK] Desktop: window.open failed, using location.href`);
+              // Enhanced deep link opening with better error handling and wallet detection
+        try {
+          if (isMobileDevice) {
+            // On mobile, use location.href for better compatibility
+            console.log(`[DEEP_LINK] Mobile: using location.href`);
+            
+            // Store the current time to detect if we're still on the same page
+            const startTime = Date.now();
+            const originalUrl = window.location.href;
+            
+            // Try to open the deep link
             window.location.href = deepLink;
+            
+            // Check if we're still on the same page after a short delay
+            setTimeout(() => {
+              if (window.location.href === originalUrl) {
+                console.log(`[DEEP_LINK] Mobile: Deep link may not have worked, trying fallback`);
+                // Show user guidance
+                showStatus(`📱 Please manually open ${walletType} and navigate to this site for the best experience`, 'info');
+                // Try fallback after user guidance
+                setTimeout(() => {
+                  window.location.href = fallbackUrl;
+                }, 2000);
+              }
+            }, 1500);
+            
+          } else {
+            // On desktop, try window.open first, then fallback
+            console.log(`[DEEP_LINK] Desktop: trying window.open first`);
+            const newWindow = window.open(deepLink, '_blank');
+            
+            if (!newWindow || newWindow.closed) {
+              console.log(`[DEEP_LINK] Desktop: window.open failed, using location.href`);
+              window.location.href = deepLink;
+            }
+            
+            // Set a timeout to redirect to fallback if deep link doesn't work (desktop only)
+            setTimeout(() => {
+              console.log(`[DEEP_LINK] Desktop: Redirecting to fallback URL:`, fallbackUrl);
+              window.location.href = fallbackUrl;
+            }, 3000);
           }
-        }
-        
-        // Set a timeout to redirect to fallback if deep link doesn't work
-        setTimeout(() => {
-          console.log(`[DEEP_LINK] Redirecting to fallback URL:`, fallbackUrl);
+          
+        } catch (error) {
+          console.error(`[DEEP_LINK] Error opening ${walletType} deep link:`, error);
+          console.log(`[DEEP_LINK] Using fallback URL:`, fallbackUrl);
           window.location.href = fallbackUrl;
-        }, 3000);
-        
-      } catch (error) {
-        console.error(`[DEEP_LINK] Error opening ${walletType} deep link:`, error);
-        console.log(`[DEEP_LINK] Using fallback URL:`, fallbackUrl);
-        window.location.href = fallbackUrl;
-      }
+        }
     }
 
     // Close wallet modal function
