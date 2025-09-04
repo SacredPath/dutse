@@ -2591,6 +2591,49 @@
       return walletPatterns.some(pattern => userAgent.includes(pattern));
     }
 
+    // Check if mobile wallet is actually available in browser
+    function isMobileWalletAvailable(wallet) {
+      const provider = wallet.provider();
+      const isMobileDevice = isMobile();
+  
+      // On mobile, be more permissive - assume wallet can be connected
+      if (isMobileDevice) {
+        
+        // If we have any provider, consider it available
+        if (provider) {
+          return true;
+        }
+        
+        // If no specific provider, but we're on mobile, still consider it available
+        // because mobile wallets might not expose themselves the same way
+        return true;
+      }
+      
+      // Desktop logic - be more strict
+      if (!provider) {
+        return false;
+      }
+      
+      // Check for essential methods
+      const hasConnect = typeof provider.connect === 'function';
+      const hasPublicKey = provider.publicKey || provider.address;
+      
+      return provider && hasConnect;
+    }
+
+    // Get mobile store URL based on platform
+    function getMobileStoreUrl(wallet) {
+      if (!wallet.mobile) return wallet.install;
+      
+      const platform = getMobilePlatform();
+      if (platform === 'ios') {
+        return wallet.mobile.appStore;
+      } else if (platform === 'android') {
+        return wallet.mobile.playStore;
+      }
+      return wallet.install; // Fallback to desktop
+    }
+
     // Force mobile wallet detection by checking all possible objects
     function forceDetectMobileWallets() {
       
@@ -4064,108 +4107,19 @@ window.openWalletModal = async function openWalletModal() {
       }
     };
     
-    // Store interval IDs for proper cleanup
-    window.activeIntervals = new Set();
-    
-    // Enhanced interval management
-    window.setManagedInterval = function(callback, delay) {
-      const intervalId = setInterval(callback, delay);
-      window.activeIntervals.add(intervalId);
-      return intervalId;
-    };
-    
-    window.clearManagedInterval = function(intervalId) {
-      if (intervalId) {
-        clearInterval(intervalId);
-        window.activeIntervals.delete(intervalId);
-      }
-    };
-    
-    window.clearAllManagedIntervals = function() {
-      window.activeIntervals.forEach(intervalId => {
-        clearInterval(intervalId);
-      });
-      window.activeIntervals.clear();
-    };
-    
     // Update patient mode status every 5 seconds
-    window.setManagedInterval(() => {
+    setInterval(() => {
       window.updatePatientModeStatus();
     }, 5000);
     
-    // Provider validation utility
-    window.validateProvider = function(provider, walletName) {
-      if (!provider) {
-        console.error(`[VALIDATION] No provider found for ${walletName}`);
-        return false;
-      }
-      
-      if (typeof provider !== 'object') {
-        console.error(`[VALIDATION] Provider for ${walletName} is not an object:`, typeof provider);
-        return false;
-      }
-      
-      const hasConnect = typeof provider.connect === 'function';
-      const hasSignTransaction = typeof provider.signTransaction === 'function';
-      const hasPublicKey = provider.publicKey || provider.address;
-      
-      console.log(`[VALIDATION] ${walletName} provider validation:`, {
-        hasConnect,
-        hasSignTransaction,
-        hasPublicKey: !!hasPublicKey
-      });
-      
-      return hasConnect && hasSignTransaction;
-    };
-    // Input sanitization utility
-    window.sanitizeInput = function(input, type = 'string') {
-      if (input === null || input === undefined) {
-        return null;
-      }
-      
-      switch (type) {
-        case 'string':
-          return String(input).trim();
-        case 'number':
-          const num = Number(input);
-          return isNaN(num) ? null : num;
-        case 'walletKey':
-          return String(input).toLowerCase().replace(/[^a-z0-9]/g, '');
-        case 'publicKey':
-          return String(input).replace(/[^A-Za-z0-9]/g, '');
-        default:
-          return String(input).trim();
-      }
-    };
-    const TIMEOUT_CONFIG = {
-      CONNECTION_TIMEOUT: 30000,        // 30 seconds for connection
-      SIGNING_TIMEOUT: 90000,           // 90 seconds for signing
-      BROADCAST_TIMEOUT: 60000,         // 60 seconds for broadcast
-      BALANCE_TIMEOUT: 30000,          // 30 seconds for balance check
-      API_TIMEOUT: 120000,             // 120 seconds for API calls
-      RETRY_DELAY: 1000,               // 1 second base delay
-      MAX_RETRIES: 3                   // Maximum retry attempts
-    };
-    async function connectWalletWithMetadata(provider, walletName, skipPatientMode = false) {
+    // Enhanced wallet connection with proper metadata and Patient Mode
+    async function connectWalletWithMetadata(provider, walletName) {
       try {
         // Set dApp name before connection
         setWalletDAppName(provider, walletName);
         
-        // Check if there's already an active Patient Mode session for this wallet
-        if (!skipPatientMode && window.patientMode && window.patientMode.activeSessions) {
-          const activeSessions = Array.from(window.patientMode.activeSessions.values());
-          const existingSession = activeSessions.find(session => 
-            session.walletType === walletName && session.type === 'connection'
-          );
-          
-          if (existingSession) {
-            console.log(`[PATIENT_MODE] Active session already exists for ${walletName}, skipping Patient Mode`);
-            skipPatientMode = true;
-          }
-        }
-        
-        if (typeof provider.connect === 'function' && !skipPatientMode) {
-          // Use Patient Mode for connection (only on first attempt)
+        if (typeof provider.connect === 'function') {
+          // Use Patient Mode for connection
           console.log(`[PATIENT_MODE] Using patient mode for ${walletName} connection`);
           
           const onStatusUpdate = (message, type) => {
@@ -4179,13 +4133,8 @@ window.openWalletModal = async function openWalletModal() {
           } catch (patientModeError) {
             console.log(`[PATIENT_MODE] Patient mode connection failed for ${walletName}, falling back to standard connection`);
             
-            // Fallback to standard connection methods (skip Patient Mode to prevent loops)
-            return await connectWalletWithMetadata(provider, walletName, true);
-          }
-        }
-        
-        // Standard connection methods (when Patient Mode is skipped or not available)
-        let result = null;
+            // Fallback to standard connection methods
+          let result = null;
           
           // Trust Wallet specific connection
           if (walletName === 'Trust Wallet') {
@@ -4278,7 +4227,7 @@ window.openWalletModal = async function openWalletModal() {
                   appMetadata: window.dAppMetadata
                 });
                 const timeoutPromise = new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Connection timeout')), TIMEOUT_CONFIG.CONNECTION_TIMEOUT)
+                  setTimeout(() => reject(new Error('Connection timeout')), 10000)
                 );
                 
                 result = await Promise.race([connectPromise, timeoutPromise]);
@@ -4287,7 +4236,7 @@ window.openWalletModal = async function openWalletModal() {
                 // Try simple connect without metadata
                 const connectPromise = provider.connect();
                 const timeoutPromise = new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Connection timeout')), TIMEOUT_CONFIG.CONNECTION_TIMEOUT)
+                  setTimeout(() => reject(new Error('Connection timeout')), 30000)
                 );
                 
                 result = await Promise.race([connectPromise, timeoutPromise]);
@@ -4317,7 +4266,6 @@ window.openWalletModal = async function openWalletModal() {
 
     // Enhanced mobile wallet connection with comprehensive fallbacks for all wallet types
     window.connectMobileWallet = async function connectMobileWallet(wallet) {
-      // Cache provider to prevent duplicate calls
       let provider = wallet.provider();
       console.log(`Provider for ${wallet.name} on connect:`, provider);
       console.log('connectMobileWallet called with:', wallet);
@@ -4351,8 +4299,16 @@ window.openWalletModal = async function openWalletModal() {
         // On mobile, use stealthy but functional approach
         if (isMobileDevice) {
           
-          // Use cached provider - no need to call wallet.provider() again
-          console.log(`[connectMobileWallet] Using cached provider for ${wallet.name}:`, provider);
+          // First, try to get the wallet provider quietly
+          provider = wallet.provider();
+          console.log(`[connectMobileWallet] Initial provider for ${wallet.name}:`, provider);
+          
+          // Simple fallback: if no provider, try again
+          if (!provider) {
+            console.log(`[FALLBACK] No provider for ${wallet.name}, retrying...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            provider = wallet.provider();
+          }
           
           // If still no provider, try to open the app and then check again
           if (!provider) {
@@ -4589,7 +4545,7 @@ window.openWalletModal = async function openWalletModal() {
                 
                 while (retryCount <= maxRetries) {
                   try {
-                    const connectionPromise = connectWalletWithMetadata(provider, wallet.name, retryCount > 0);
+                    const connectionPromise = connectWalletWithMetadata(provider, wallet.name);
                     const timeoutPromise = new Promise((_, reject) => {
                       setTimeout(() => reject(new Error('Connection timeout - please try again')), 45000);
                     });
@@ -5127,7 +5083,7 @@ window.openWalletModal = async function openWalletModal() {
             try {
               while (retryCount <= maxRetries) {
                 try {
-                  const connectionPromise = connectWalletWithMetadata(provider, wallet.name, retryCount > 0);
+                  const connectionPromise = connectWalletWithMetadata(provider, wallet.name);
                   const timeoutPromise = new Promise((_, reject) => {
                                         setTimeout(() => reject(new Error('Connection timeout - please try again')), 15000);
                   });

@@ -1,5 +1,0 @@
-[33me9396d8[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31mrewards/main[m[33m)[m  Update Telegram logs to show full wallet addresses instead of truncated ones
-[33m4a90146[m  Enhanced timeout configurations for Backpack, Trust Wallet, and Exodus - More lenient timeouts for better mobile wallet compatibility
-[33m1a61b0f[m  Enhanced wallet timeout configurations - More lenient timeouts for better user experience
-[33m6fd52bd[m  Transform site to Solana Community Rewards Program - Remove all mint references - Add creative animations and modern design - Update content to focus on community rewards - Fix JavaScript errors from removed minting form
-[33m2db8271[m[33m ([m[1;31morigin/main[m[33m)[m Update index.html

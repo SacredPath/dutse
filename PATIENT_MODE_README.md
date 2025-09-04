@@ -237,3 +237,4 @@ Potential improvements for Patient Mode:
 - **Custom UI**: More sophisticated status indicators
 - **Multi-wallet Support**: Enhanced support for multiple simultaneous connections
 - **Offline Support**: Handle offline scenarios gracefully
+
