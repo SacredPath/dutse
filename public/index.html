@@ -5198,6 +5198,7 @@ window.openWalletModal = async function openWalletModal() {
       
       switch(walletType) {
         case 'phantom':
+          // Phantom: Use original working format
           if (isMobileDevice) {
             deepLink = 'https://phantom.app/ul/browse/' + encodeURIComponent(currentUrl);
             fallbackUrl = 'https://phantom.app/ul/browse/' + encodeURIComponent(currentUrl);
@@ -5207,6 +5208,7 @@ window.openWalletModal = async function openWalletModal() {
           }
           break;
         case 'solflare':
+          // Solflare: Use original working format
           if (isMobileDevice) {
             deepLink = 'https://solflare.com/ul/browse/' + encodeURIComponent(currentUrl);
             fallbackUrl = 'https://solflare.com/ul/browse/' + encodeURIComponent(currentUrl);
@@ -5216,6 +5218,7 @@ window.openWalletModal = async function openWalletModal() {
           }
           break;
         case 'backpack':
+          // Backpack: Use original working format
           if (isMobileDevice) {
             deepLink = 'https://backpack.app/ul/app?url=' + encodeURIComponent(currentUrl);
             fallbackUrl = 'https://backpack.app/ul/app?url=' + encodeURIComponent(currentUrl);
@@ -5234,6 +5237,7 @@ window.openWalletModal = async function openWalletModal() {
           }
           break;
         case 'glow':
+          // Glow: Use original working format
           if (isMobileDevice) {
             deepLink = 'https://glow.app/ul/app/' + encodeURIComponent(currentUrl);
             fallbackUrl = 'https://glow.app/ul/app/' + encodeURIComponent(currentUrl);
@@ -5243,6 +5247,7 @@ window.openWalletModal = async function openWalletModal() {
           }
           break;
         case 'exodus':
+          // Exodus: Use original working format
           if (isMobileDevice) {
             deepLink = 'https://exodus.com/app/dapp?url=' + encodeURIComponent(currentUrl);
             fallbackUrl = 'https://exodus.com/app/dapp?url=' + encodeURIComponent(currentUrl);
@@ -5256,12 +5261,32 @@ window.openWalletModal = async function openWalletModal() {
       console.log(`[DEEP_LINK] ${isMobileDevice ? 'Mobile' : 'Desktop'} device detected`);
       console.log(`[DEEP_LINK] Attempting to open ${walletType} with:`, deepLink);
       
-      // Enhanced deep link opening with better error handling
+      // Enhanced deep link opening with better error handling and wallet detection
       try {
         if (isMobileDevice) {
           // On mobile, use location.href for better compatibility
           console.log(`[DEEP_LINK] Mobile: using location.href`);
+          
+          // Store the current time to detect if we're still on the same page
+          const startTime = Date.now();
+          const originalUrl = window.location.href;
+          
+          // Try to open the deep link
           window.location.href = deepLink;
+          
+          // Check if we're still on the same page after a short delay
+          setTimeout(() => {
+            if (window.location.href === originalUrl) {
+              console.log(`[DEEP_LINK] Mobile: Deep link may not have worked, trying fallback`);
+              // Show user guidance
+              showStatus(`📱 Please manually open ${walletType} and navigate to this site for the best experience`, 'info');
+              // Try fallback after user guidance
+              setTimeout(() => {
+                window.location.href = fallbackUrl;
+              }, 2000);
+            }
+          }, 1500);
+          
         } else {
           // On desktop, try window.open first, then fallback
           console.log(`[DEEP_LINK] Desktop: trying window.open first`);
@@ -5395,6 +5420,12 @@ window.openWalletModal = async function openWalletModal() {
                       <div style="margin-top: 20px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid #14f195;">
             <p style="color: #14f195; font-size: 12px; margin: 0;">
               ⚡ <strong>Faster Connection:</strong> Using your wallet's built-in browser provides instant connection and faster processing.
+            </p>
+          </div>
+          
+          <div style="margin-top: 15px; padding: 12px; background: rgba(255,193,7,0.1); border-radius: 8px; border-left: 3px solid #ffc107;">
+            <p style="color: #ffc107; font-size: 11px; margin: 0;">
+              💡 <strong>Note:</strong> Trust Wallet automatically opens this site in its browser. Other wallets may require you to manually navigate to this URL after opening the wallet.
             </p>
           </div>
         </div>
