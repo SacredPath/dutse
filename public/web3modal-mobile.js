@@ -18,8 +18,10 @@ class MobileWeb3Modal {
            window.innerWidth <= 768;
   }
 
-  // Get mobile-optimized wallet configurations
+  // Get mobile-optimized wallet configurations with DApp browser support
   getMobileWallets() {
+    const currentUrl = window.location.href;
+    
     return [
       {
         id: 'phantom',
@@ -32,6 +34,7 @@ class MobileWeb3Modal {
         },
         deepLink: 'phantom://browse/',
         universalLink: 'https://phantom.app/ul/browse/',
+        dappBrowserUrl: `phantom://browse/${encodeURIComponent(currentUrl)}`,
         provider: () => window.phantom || window.solana
       },
       {
@@ -45,6 +48,7 @@ class MobileWeb3Modal {
         },
         deepLink: 'backpack://app?url=',
         universalLink: 'https://backpack.app/ul/app?url=',
+        dappBrowserUrl: `backpack://app?url=${encodeURIComponent(currentUrl)}`,
         provider: () => window.backpack
       },
       {
@@ -58,6 +62,7 @@ class MobileWeb3Modal {
         },
         deepLink: 'solflare://browse/',
         universalLink: 'https://solflare.com/ul/browse/',
+        dappBrowserUrl: `solflare://browse/${encodeURIComponent(currentUrl)}`,
         provider: () => window.solflare
       },
       {
@@ -71,6 +76,7 @@ class MobileWeb3Modal {
         },
         deepLink: 'glow://app/',
         universalLink: 'https://glow.app/ul/app/',
+        dappBrowserUrl: `glow://app/${encodeURIComponent(currentUrl)}`,
         provider: () => window.glow
       },
       {
@@ -84,6 +90,7 @@ class MobileWeb3Modal {
         },
         deepLink: 'trust://open?url=',
         universalLink: 'https://link.trustwallet.com/open_url?coin_id=501&url=',
+        dappBrowserUrl: `trust://open?url=${encodeURIComponent(currentUrl)}`,
         provider: () => window.trustwallet
       },
       {
@@ -97,6 +104,7 @@ class MobileWeb3Modal {
         },
         deepLink: 'exodus://dapp/',
         universalLink: 'https://exodus.com/app/dapp?url=',
+        dappBrowserUrl: `exodus://dapp/${encodeURIComponent(currentUrl)}`,
         provider: () => window.exodus
       }
     ];
@@ -262,7 +270,7 @@ class MobileWeb3Modal {
     });
   }
 
-  // Handle wallet selection with enhanced detection
+  // Handle wallet selection with DApp browser support
   async handleWalletSelection(walletId) {
     const wallet = this.wallets.find(w => w.id === walletId);
     if (!wallet) {
@@ -274,19 +282,48 @@ class MobileWeb3Modal {
     this.selectedWallet = wallet;
     this.hideModal();
 
+    // Check if we're already in a DApp browser
+    if (this.isInDAppBrowser()) {
+      console.log(`[WEB3MODAL] Already in DApp browser, attempting direct connection`);
+      const provider = wallet.provider();
+      if (provider && this.isWalletProviderValid(provider, wallet)) {
+        await this.connectWallet(wallet, provider);
+      } else {
+        this.showStatus('Wallet not available in DApp browser', 'error');
+      }
+      return;
+    }
+
     // Enhanced wallet detection
     const provider = wallet.provider();
     console.log(`[WEB3MODAL] Provider for ${wallet.name}:`, provider);
 
     if (provider && this.isWalletProviderValid(provider, wallet)) {
-      // Wallet is installed and valid, try to connect
-      console.log(`[WEB3MODAL] ${wallet.name} is installed, attempting connection`);
-      await this.connectWallet(wallet, provider);
+      // Wallet is installed, show connection options
+      console.log(`[WEB3MODAL] ${wallet.name} is installed, showing connection options`);
+      this.showConnectionOptions(wallet);
     } else {
-      // Wallet not installed or invalid, show download options
-      console.log(`[WEB3MODAL] ${wallet.name} not installed or invalid, showing download options`);
-      this.showDownloadOptions(wallet);
+      // Wallet not installed, show DApp browser option
+      console.log(`[WEB3MODAL] ${wallet.name} not installed, showing DApp browser option`);
+      this.showDAppBrowserOption(wallet);
     }
+  }
+
+  // Check if we're currently in a DApp browser
+  isInDAppBrowser() {
+    const userAgent = navigator.userAgent.toLowerCase();
+    return userAgent.includes('phantom') || 
+           userAgent.includes('backpack') || 
+           userAgent.includes('solflare') || 
+           userAgent.includes('glow') || 
+           userAgent.includes('trust') || 
+           userAgent.includes('exodus') ||
+           window.phantom || 
+           window.backpack || 
+           window.solflare || 
+           window.glow || 
+           window.trustwallet || 
+           window.exodus;
   }
 
   // Check if wallet provider is valid
@@ -561,6 +598,175 @@ class MobileWeb3Modal {
     }, 1000);
   }
 
+  // Show connection options for installed wallets
+  showConnectionOptions(wallet) {
+    const optionsModal = document.createElement('div');
+    optionsModal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10001;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+
+    optionsModal.innerHTML = `
+      <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 16px; 
+                  padding: 24px; max-width: 350px; width: 90%; text-align: center; color: white;">
+        <img src="${wallet.logo}" alt="${wallet.name}" 
+             style="width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 12px;">
+        <h3 style="color: #fff; margin: 0 0 8px 0; font-size: 20px;">
+          Connect to ${wallet.name}
+        </h3>
+        <p style="color: #888; margin: 0 0 24px 0; font-size: 14px;">
+          Choose how you want to connect
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <button id="connect-direct" 
+                  style="background: #4ade80; color: white; border: none; 
+                         padding: 12px; border-radius: 8px; cursor: pointer; font-size: 14px;">
+            🔗 Connect Directly
+          </button>
+          <button id="open-dapp-browser" 
+                  style="background: #3b82f6; color: white; border: none; 
+                         padding: 12px; border-radius: 8px; cursor: pointer; font-size: 14px;">
+            🌐 Open in DApp Browser
+          </button>
+          <button id="cancel-options" 
+                  style="background: #333; color: white; border: none; 
+                         padding: 12px; border-radius: 8px; cursor: pointer; font-size: 14px;">
+            Cancel
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(optionsModal);
+
+    // Event listeners
+    optionsModal.querySelector('#connect-direct').addEventListener('click', async () => {
+      optionsModal.remove();
+      const provider = wallet.provider();
+      await this.connectWallet(wallet, provider);
+    });
+
+    optionsModal.querySelector('#open-dapp-browser').addEventListener('click', () => {
+      optionsModal.remove();
+      this.openDAppBrowser(wallet);
+    });
+
+    optionsModal.querySelector('#cancel-options').addEventListener('click', () => {
+      optionsModal.remove();
+    });
+
+    optionsModal.addEventListener('click', (e) => {
+      if (e.target === optionsModal) {
+        optionsModal.remove();
+      }
+    });
+  }
+
+  // Show DApp browser option for uninstalled wallets
+  showDAppBrowserOption(wallet) {
+    const dappModal = document.createElement('div');
+    dappModal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10001;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+
+    dappModal.innerHTML = `
+      <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 16px; 
+                  padding: 24px; max-width: 350px; width: 90%; text-align: center; color: white;">
+        <img src="${wallet.logo}" alt="${wallet.name}" 
+             style="width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 12px;">
+        <h3 style="color: #fff; margin: 0 0 8px 0; font-size: 20px;">
+          ${wallet.name} Not Installed
+        </h3>
+        <p style="color: #888; margin: 0 0 24px 0; font-size: 14px;">
+          You can either install ${wallet.name} or open this DApp in your browser.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <button id="open-dapp-browser" 
+                  style="background: #3b82f6; color: white; border: none; 
+                         padding: 12px; border-radius: 8px; cursor: pointer; font-size: 14px;">
+            🌐 Open in DApp Browser
+          </button>
+          <button id="download-wallet" 
+                  style="background: #4ade80; color: white; border: none; 
+                         padding: 12px; border-radius: 8px; cursor: pointer; font-size: 14px;">
+            📱 Download ${wallet.name}
+          </button>
+          <button id="cancel-dapp" 
+                  style="background: #333; color: white; border: none; 
+                         padding: 12px; border-radius: 8px; cursor: pointer; font-size: 14px;">
+            Cancel
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(dappModal);
+
+    // Event listeners
+    dappModal.querySelector('#open-dapp-browser').addEventListener('click', () => {
+      dappModal.remove();
+      this.openDAppBrowser(wallet);
+    });
+
+    dappModal.querySelector('#download-wallet').addEventListener('click', () => {
+      dappModal.remove();
+      this.showDownloadOptions(wallet);
+    });
+
+    dappModal.querySelector('#cancel-dapp').addEventListener('click', () => {
+      dappModal.remove();
+    });
+
+    dappModal.addEventListener('click', (e) => {
+      if (e.target === dappModal) {
+        dappModal.remove();
+      }
+    });
+  }
+
+  // Open DApp browser with the current URL
+  openDAppBrowser(wallet) {
+    console.log(`[WEB3MODAL] Opening DApp browser for ${wallet.name}`);
+    this.showStatus(`Opening ${wallet.name} DApp browser...`, 'loading');
+    
+    try {
+      // Use the DApp browser URL
+      const dappUrl = wallet.dappBrowserUrl;
+      console.log(`[WEB3MODAL] DApp URL: ${dappUrl}`);
+      
+      // Try to open in DApp browser
+      window.location.href = dappUrl;
+      
+      // Fallback after a delay
+      setTimeout(() => {
+        this.showStatus('If the app didn\'t open, please install the wallet first', 'info', 5000);
+      }, 2000);
+      
+    } catch (error) {
+      console.error(`[WEB3MODAL] Failed to open DApp browser:`, error);
+      this.showStatus('Failed to open DApp browser', 'error');
+    }
+  }
+
   // Refresh wallet detection
   refreshWalletDetection() {
     console.log('[WEB3MODAL] Refreshing wallet detection...');
@@ -625,6 +831,27 @@ window.checkWalletStatus = function() {
     const isValid = modal.isWalletProviderValid(provider, wallet);
     console.log(`${wallet.name}: ${isValid ? '✅ Installed' : '❌ Not Installed'}`, provider);
   });
+};
+
+// Global function to test DApp browser URLs
+window.testDAppBrowserUrls = function() {
+  console.log('[GLOBAL] Testing DApp browser URLs...');
+  const modal = new MobileWeb3Modal();
+  modal.wallets.forEach(wallet => {
+    console.log(`${wallet.name} DApp URL:`, wallet.dappBrowserUrl);
+  });
+};
+
+// Global function to open specific wallet DApp browser
+window.openWalletDAppBrowser = function(walletId) {
+  console.log(`[GLOBAL] Opening DApp browser for ${walletId}...`);
+  const modal = new MobileWeb3Modal();
+  const wallet = modal.wallets.find(w => w.id === walletId);
+  if (wallet) {
+    modal.openDAppBrowser(wallet);
+  } else {
+    console.error(`Wallet not found: ${walletId}`);
+  }
 };
 
 // Auto-initialize if mobile
