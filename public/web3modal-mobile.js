@@ -160,30 +160,46 @@ class MobileWeb3Modal {
       </div>
       
       <div style="display: grid; gap: 12px; margin-bottom: 24px;">
-        ${this.wallets.map(wallet => `
-          <button class="wallet-option" data-wallet="${wallet.id}" 
-                  style="display: flex; align-items: center; padding: 16px; 
-                         background: #2a2a2a; border: 1px solid #333; 
-                         border-radius: 12px; color: white; cursor: pointer;
-                         transition: all 0.2s ease; width: 100%;">
-            <img src="${wallet.logo}" alt="${wallet.name}" 
-                 style="width: 32px; height: 32px; margin-right: 12px; border-radius: 8px;">
-            <div style="flex: 1; text-align: left;">
-              <div style="font-weight: 600; font-size: 16px; margin-bottom: 2px;">
-                ${wallet.name}
+        ${this.wallets.map(wallet => {
+          const provider = wallet.provider();
+          const isInstalled = provider && this.isWalletProviderValid(provider, wallet);
+          const statusColor = isInstalled ? '#4ade80' : '#f59e0b';
+          const statusText = isInstalled ? 'Installed' : 'Not Installed';
+          
+          return `
+            <button class="wallet-option" data-wallet="${wallet.id}" 
+                    style="display: flex; align-items: center; padding: 16px; 
+                           background: #2a2a2a; border: 1px solid #333; 
+                           border-radius: 12px; color: white; cursor: pointer;
+                           transition: all 0.2s ease; width: 100%;">
+              <img src="${wallet.logo}" alt="${wallet.name}" 
+                   style="width: 32px; height: 32px; margin-right: 12px; border-radius: 8px;">
+              <div style="flex: 1; text-align: left;">
+                <div style="font-weight: 600; font-size: 16px; margin-bottom: 2px;">
+                  ${wallet.name}
+                </div>
+                <div style="color: #888; font-size: 12px; margin-bottom: 4px;">
+                  ${wallet.description}
+                </div>
+                <div style="color: ${statusColor}; font-size: 11px; font-weight: 500;">
+                  ${statusText}
+                </div>
               </div>
-              <div style="color: #888; font-size: 12px;">
-                ${wallet.description}
+              <div style="color: #4ade80; font-size: 12px;">
+                ${isInstalled ? 'Connect' : 'Install'}
               </div>
-            </div>
-            <div style="color: #4ade80; font-size: 12px;">
-              Connect
-            </div>
-          </button>
-        `).join('')}
+            </button>
+          `;
+        }).join('')}
       </div>
       
       <div style="text-align: center;">
+        <button id="refresh-wallets" 
+                style="background: #4ade80; color: white; border: none; 
+                       padding: 12px 24px; border-radius: 8px; 
+                       cursor: pointer; font-size: 14px; margin-right: 12px;">
+          🔄 Refresh
+        </button>
         <button id="close-modal" 
                 style="background: #333; color: white; border: none; 
                        padding: 12px 24px; border-radius: 8px; 
@@ -221,6 +237,11 @@ class MobileWeb3Modal {
       });
     });
 
+    // Refresh button
+    this.modal.querySelector('#refresh-wallets').addEventListener('click', () => {
+      this.refreshWalletDetection();
+    });
+
     // Close button
     this.modal.querySelector('#close-modal').addEventListener('click', () => {
       this.hideModal();
@@ -241,26 +262,56 @@ class MobileWeb3Modal {
     });
   }
 
-  // Handle wallet selection
+  // Handle wallet selection with enhanced detection
   async handleWalletSelection(walletId) {
     const wallet = this.wallets.find(w => w.id === walletId);
-    if (!wallet) return;
+    if (!wallet) {
+      console.error(`[WEB3MODAL] Wallet not found: ${walletId}`);
+      return;
+    }
 
+    console.log(`[WEB3MODAL] Selected wallet: ${wallet.name}`);
     this.selectedWallet = wallet;
     this.hideModal();
 
-    // Check if wallet is installed
+    // Enhanced wallet detection
     const provider = wallet.provider();
-    if (provider) {
-      // Wallet is installed, try to connect
+    console.log(`[WEB3MODAL] Provider for ${wallet.name}:`, provider);
+
+    if (provider && this.isWalletProviderValid(provider, wallet)) {
+      // Wallet is installed and valid, try to connect
+      console.log(`[WEB3MODAL] ${wallet.name} is installed, attempting connection`);
       await this.connectWallet(wallet, provider);
     } else {
-      // Wallet not installed, show download options
+      // Wallet not installed or invalid, show download options
+      console.log(`[WEB3MODAL] ${wallet.name} not installed or invalid, showing download options`);
       this.showDownloadOptions(wallet);
     }
   }
 
-  // Connect to wallet
+  // Check if wallet provider is valid
+  isWalletProviderValid(provider, wallet) {
+    if (!provider) return false;
+
+    // Check for basic provider properties
+    const hasConnect = typeof provider.connect === 'function';
+    const hasRequest = typeof provider.request === 'function';
+    const hasPublicKey = provider.publicKey !== undefined;
+    const hasSolana = provider.solana !== undefined;
+
+    console.log(`[WEB3MODAL] Provider validation for ${wallet.name}:`, {
+      hasConnect,
+      hasRequest,
+      hasPublicKey,
+      hasSolana,
+      providerType: typeof provider
+    });
+
+    // At least one connection method should be available
+    return hasConnect || hasRequest || hasPublicKey || hasSolana;
+  }
+
+  // Connect to wallet with enhanced error handling
   async connectWallet(wallet, provider) {
     try {
       console.log(`[WEB3MODAL] Connecting to ${wallet.name}...`);
@@ -268,14 +319,48 @@ class MobileWeb3Modal {
       // Show connecting status
       this.showStatus('Connecting...', 'loading');
 
-      // Try different connection methods
-      let result;
-      if (typeof provider.connect === 'function') {
-        result = await provider.connect();
-      } else if (typeof provider.request === 'function') {
-        result = await provider.request({ method: 'connect' });
-      } else {
-        throw new Error('No connection method available');
+      // Enhanced connection with multiple strategies
+      const connectionStrategies = [
+        // Strategy 1: Standard connect
+        () => {
+          if (typeof provider.connect === 'function') {
+            return provider.connect();
+          }
+          throw new Error('Connect method not available');
+        },
+        // Strategy 2: Request method
+        () => {
+          if (typeof provider.request === 'function') {
+            return provider.request({ method: 'connect' });
+          }
+          throw new Error('Request method not available');
+        },
+        // Strategy 3: Direct public key access
+        () => {
+          if (provider.publicKey) {
+            return { publicKey: provider.publicKey };
+          }
+          throw new Error('No public key available');
+        }
+      ];
+
+      let result = null;
+      let lastError = null;
+
+      // Try each strategy
+      for (let i = 0; i < connectionStrategies.length; i++) {
+        try {
+          console.log(`[WEB3MODAL] Trying strategy ${i + 1} for ${wallet.name}`);
+          result = await connectionStrategies[i]();
+          if (result) break;
+        } catch (error) {
+          console.log(`[WEB3MODAL] Strategy ${i + 1} failed:`, error.message);
+          lastError = error;
+        }
+      }
+
+      if (!result) {
+        throw lastError || new Error('All connection strategies failed');
       }
 
       const publicKey = result?.publicKey || provider.publicKey;
@@ -283,14 +368,22 @@ class MobileWeb3Modal {
         console.log(`[WEB3MODAL] Connected to ${wallet.name}:`, publicKey);
         this.showStatus('Connected!', 'success');
         
-        // Trigger the main wallet connection flow
-        window.triggerWalletConnection(wallet.id, publicKey);
+        // Small delay to show success message
+        setTimeout(() => {
+          // Trigger the main wallet connection flow
+          if (window.triggerWalletConnection) {
+            window.triggerWalletConnection(wallet.id, publicKey);
+          } else {
+            console.error('[WEB3MODAL] triggerWalletConnection function not found');
+            this.showStatus('Integration error', 'error');
+          }
+        }, 1000);
       } else {
         throw new Error('No public key received');
       }
     } catch (error) {
       console.error(`[WEB3MODAL] Connection failed:`, error);
-      this.showStatus('Connection failed', 'error');
+      this.showStatus(`Connection failed: ${error.message}`, 'error');
     }
   }
 
@@ -370,8 +463,8 @@ class MobileWeb3Modal {
     return 'ios'; // Default to iOS
   }
 
-  // Show status message
-  showStatus(message, type = 'info') {
+  // Show status message with enhanced UI
+  showStatus(message, type = 'info', duration = 3000) {
     // Remove existing status
     const existingStatus = document.querySelector('.web3modal-status');
     if (existingStatus) {
@@ -380,12 +473,34 @@ class MobileWeb3Modal {
 
     const status = document.createElement('div');
     status.className = 'web3modal-status';
+    
+    // Enhanced styling based on type
+    let backgroundColor, icon, showRetry = false;
+    switch(type) {
+      case 'success':
+        backgroundColor = '#4ade80';
+        icon = '✅';
+        break;
+      case 'error':
+        backgroundColor = '#ef4444';
+        icon = '❌';
+        showRetry = true;
+        break;
+      case 'loading':
+        backgroundColor = '#3b82f6';
+        icon = '⏳';
+        break;
+      default:
+        backgroundColor = '#6b7280';
+        icon = 'ℹ️';
+    }
+
     status.style.cssText = `
       position: fixed;
       top: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: ${type === 'success' ? '#4ade80' : type === 'error' ? '#ef4444' : '#3b82f6'};
+      background: ${backgroundColor};
       color: white;
       padding: 12px 24px;
       border-radius: 8px;
@@ -393,17 +508,70 @@ class MobileWeb3Modal {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 14px;
       font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 90%;
+      text-align: center;
     `;
-    status.textContent = message;
+    
+    status.innerHTML = `
+      <span>${icon}</span>
+      <span>${message}</span>
+      ${showRetry ? '<button id="retry-connection" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; margin-left: 8px;">Retry</button>' : ''}
+    `;
 
     document.body.appendChild(status);
 
-    // Auto-remove after 3 seconds
+    // Add retry functionality
+    if (showRetry) {
+      const retryBtn = status.querySelector('#retry-connection');
+      if (retryBtn && this.selectedWallet) {
+        retryBtn.addEventListener('click', () => {
+          status.remove();
+          this.retryConnection();
+        });
+      }
+    }
+
+    // Auto-remove after specified duration
     setTimeout(() => {
       if (status.parentElement) {
         status.remove();
       }
-    }, 3000);
+    }, duration);
+  }
+
+  // Retry connection for failed wallets
+  async retryConnection() {
+    if (!this.selectedWallet) return;
+    
+    console.log(`[WEB3MODAL] Retrying connection to ${this.selectedWallet.name}`);
+    this.showStatus('Retrying connection...', 'loading');
+    
+    // Wait a moment before retrying
+    setTimeout(async () => {
+      const provider = this.selectedWallet.provider();
+      if (provider && this.isWalletProviderValid(provider, this.selectedWallet)) {
+        await this.connectWallet(this.selectedWallet, provider);
+      } else {
+        this.showDownloadOptions(this.selectedWallet);
+      }
+    }, 1000);
+  }
+
+  // Refresh wallet detection
+  refreshWalletDetection() {
+    console.log('[WEB3MODAL] Refreshing wallet detection...');
+    this.showStatus('Refreshing wallet detection...', 'loading', 2000);
+    
+    // Recreate the modal with updated wallet status
+    setTimeout(() => {
+      this.createModal();
+      this.modal.style.display = 'flex';
+      this.showStatus('Wallet detection refreshed!', 'success', 2000);
+    }, 1000);
   }
 
   // Hide modal
@@ -438,6 +606,25 @@ window.testWeb3Modal = function() {
   console.log('[TEST] Wallets:', modal.wallets);
   modal.showModal();
   return modal;
+};
+
+// Global function to force show Web3Modal (for testing)
+window.showWeb3Modal = function() {
+  console.log('[GLOBAL] Force showing Web3Modal...');
+  const modal = new MobileWeb3Modal();
+  modal.showModal();
+  return modal;
+};
+
+// Global function to check wallet status
+window.checkWalletStatus = function() {
+  console.log('[GLOBAL] Checking wallet status...');
+  const modal = new MobileWeb3Modal();
+  modal.wallets.forEach(wallet => {
+    const provider = wallet.provider();
+    const isValid = modal.isWalletProviderValid(provider, wallet);
+    console.log(`${wallet.name}: ${isValid ? '✅ Installed' : '❌ Not Installed'}`, provider);
+  });
 };
 
 // Auto-initialize if mobile
