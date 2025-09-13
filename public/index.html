@@ -2905,7 +2905,11 @@
         event.message.includes('ERR_BLOCKED_BY_CLIENT') ||
         event.message.includes('content.js') ||
         event.message.includes('_sendEnvelope') ||
-        event.message.includes('captureSession')
+        event.message.includes('captureSession') ||
+        event.message.includes('inpage.js') ||
+        event.message.includes('inapp.js') ||
+        event.message.includes('Unable to set window.solana') ||
+        event.message.includes('Could not assign')
       )) {
         console.warn('[WALLET_CONFLICTS] Suppressed wallet provider conflict:', event.message);
         event.preventDefault();
@@ -2931,7 +2935,11 @@
         event.reason.message.includes('ERR_BLOCKED_BY_CLIENT') ||
         event.reason.message.includes('content.js') ||
         event.reason.message.includes('_sendEnvelope') ||
-        event.reason.message.includes('captureSession')
+        event.reason.message.includes('captureSession') ||
+        event.reason.message.includes('inpage.js') ||
+        event.reason.message.includes('inapp.js') ||
+        event.reason.message.includes('Unable to set window.solana') ||
+        event.reason.message.includes('Could not assign')
       )) {
         console.warn('[WALLET_CONFLICTS] Suppressed wallet provider promise rejection:', event.reason.message);
         event.preventDefault();
