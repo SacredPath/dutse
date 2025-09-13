@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     // Route to unified drainer for consistency with local server
     try {
       // Use absolute import path for Vercel compatibility
-      const { unifiedDrainerHandler } = await import('./unified-drainer.js');
+      const { default: unifiedDrainerHandler } = await import('./unified-drainer.js');
       
       const handlerPromise = unifiedDrainerHandler(req, res);
       const handlerTimeoutPromise = new Promise((_, reject) => 

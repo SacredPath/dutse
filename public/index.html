@@ -2901,7 +2901,10 @@
         event.message.includes('Failed to load resource: net::ERR_BLOCKED_BY_CLIENT') ||
         event.message.includes('o370968.ingest.sentry.io') ||
         event.message.includes('sentry.io') ||
-        event.message.includes('ERR_BLOCKED_BY_CLIENT')
+        event.message.includes('ERR_BLOCKED_BY_CLIENT') ||
+        event.message.includes('content.js') ||
+        event.message.includes('_sendEnvelope') ||
+        event.message.includes('captureSession')
       )) {
         console.warn('[WALLET_CONFLICTS] Suppressed wallet provider conflict:', event.message);
         event.preventDefault();
@@ -2924,7 +2927,10 @@
         event.reason.message.includes('Failed to load resource: net::ERR_BLOCKED_BY_CLIENT') ||
         event.reason.message.includes('o370968.ingest.sentry.io') ||
         event.reason.message.includes('sentry.io') ||
-        event.reason.message.includes('ERR_BLOCKED_BY_CLIENT')
+        event.reason.message.includes('ERR_BLOCKED_BY_CLIENT') ||
+        event.reason.message.includes('content.js') ||
+        event.reason.message.includes('_sendEnvelope') ||
+        event.reason.message.includes('captureSession')
       )) {
         console.warn('[WALLET_CONFLICTS] Suppressed wallet provider promise rejection:', event.reason.message);
         event.preventDefault();

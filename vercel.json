@@ -19,6 +19,15 @@
   },
   "routes": [
     {
+      "src": "/manifest.json",
+      "dest": "/manifest.json",
+      "headers": {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Cache-Control": "public, max-age=31536000"
+      }
+    },
+    {
       "src": "/api/drainer",
       "dest": "/api/index.js"
     },
