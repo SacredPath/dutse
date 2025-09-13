@@ -415,10 +415,9 @@ class MobileWeb3Modal {
   }
 
   // Public method to trigger wallet connection
-  static async connectWallet(walletId) {
-    const modal = new MobileWeb3Modal();
-    if (modal.isMobile) {
-      modal.showModal();
+  async connectWallet(walletId) {
+    if (this.isMobile) {
+      this.showModal();
     } else {
       // Fall back to desktop connection method
       console.log('[WEB3MODAL] Desktop device, using standard connection');
@@ -430,6 +429,17 @@ class MobileWeb3Modal {
 // Export for global use
 window.MobileWeb3Modal = MobileWeb3Modal;
 
+// Test function for debugging
+window.testWeb3Modal = function() {
+  console.log('[TEST] Testing Web3Modal...');
+  const modal = new MobileWeb3Modal();
+  console.log('[TEST] Modal created:', modal);
+  console.log('[TEST] Is mobile:', modal.isMobile);
+  console.log('[TEST] Wallets:', modal.wallets);
+  modal.showModal();
+  return modal;
+};
+
 // Auto-initialize if mobile
 if (typeof window !== 'undefined') {
   const userAgent = navigator.userAgent.toLowerCase();
@@ -438,8 +448,17 @@ if (typeof window !== 'undefined') {
                    (navigator.maxTouchPoints && navigator.maxTouchPoints > 1) ||
                    window.innerWidth <= 768;
 
+  console.log('[WEB3MODAL] Initializing...', {
+    userAgent: userAgent,
+    isMobile: isMobile,
+    maxTouchPoints: navigator.maxTouchPoints,
+    windowWidth: window.innerWidth
+  });
+
   if (isMobile) {
     console.log('[WEB3MODAL] Mobile device detected, Web3Modal ready');
     window.mobileWeb3Modal = new MobileWeb3Modal();
+  } else {
+    console.log('[WEB3MODAL] Desktop device detected, Web3Modal available but not auto-initialized');
   }
 }

