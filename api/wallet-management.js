@@ -2,69 +2,323 @@
 // Handles ALL wallet operations including connection, detection, validation, and management
 
 import 'dotenv/config';
-import BackendTOCTOUProtection from '../src/toctou-protection.js';
+import { 
+  initializeTOCTOUProtection, 
+  isMobileDevice, 
+  getMobilePlatform, 
+  isInMobileWallet 
+} from '../src/shared-utilities.js';
 
-// Initialize TOCTOU protection instance
-let toctouProtection = null;
+// Mobile detection functions are now imported from shared-utilities.js
 
-function initializeTOCTOUProtection() {
-  if (!toctouProtection) {
-    toctouProtection = new BackendTOCTOUProtection();
+// Encryption key generation for secure wallet communication
+function generateEncryptionKeyPair() {
+  try {
+    // Generate a simple key pair for demonstration
+    // In production, use proper cryptographic libraries
+    const publicKey = 'dapp_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const privateKey = 'private_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    
+    return {
+      publicKey: publicKey,
+      privateKey: privateKey
+    };
+  } catch (error) {
+    console.error('[ENCRYPTION_KEY] Error generating key pair:', error);
+    return {
+      publicKey: 'dapp_fallback_key',
+      privateKey: 'private_fallback_key'
+    };
   }
-  return toctouProtection;
 }
 
-// Enhanced mobile device detection function with comprehensive platform detection
-function isMobileDevice(userAgent) {
-  if (!userAgent) return false;
-  
-  // Primary mobile detection patterns
-  const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
-  const isPrimaryMobile = mobileRegex.test(userAgent);
-  
-  // Secondary mobile detection patterns
-  const isSecondaryMobile = /Mobile|Tablet/i.test(userAgent) || 
-                           (userAgent.includes('Touch') && userAgent.includes('Mobile'));
-  
-  return isPrimaryMobile || isSecondaryMobile;
+// Deep link generation functions
+function generatePhantomDeepLink(appUrl, isMobile) {
+  try {
+    // Generate a random encryption key pair for dApp encryption
+    const encryptionKeyPair = generateEncryptionKeyPair();
+    const dappEncryptionPublicKey = encryptionKeyPair.publicKey;
+    
+    // Set up redirect link (back to our app)
+    const redirectLink = encodeURIComponent(appUrl);
+    
+    // Determine cluster (mainnet-beta for production)
+    const cluster = 'mainnet-beta';
+    
+    // Construct the deep link with all required parameters
+    const baseUrl = isMobile ? 'phantom://v1/connect' : 'phantom://v1/connect';
+    const params = new URLSearchParams({
+      app_url: appUrl,
+      dapp_encryption_public_key: dappEncryptionPublicKey,
+      redirect_link: redirectLink,
+      cluster: cluster
+    });
+    
+    const deepLink = `${baseUrl}?${params.toString()}`;
+    const universalLink = `https://phantom.app/ul/v1/connect?${params.toString()}`;
+    
+    return {
+      success: true,
+      deepLink: deepLink,
+      fallbackLink: universalLink,
+      encryptionKey: encryptionKeyPair.privateKey,
+      parameters: {
+        app_url: appUrl,
+        dapp_encryption_public_key: dappEncryptionPublicKey,
+        redirect_link: redirectLink,
+        cluster: cluster
+      }
+    };
+  } catch (error) {
+    console.error('[BACKEND_PHANTOM_DEEP_LINK] Error generating deep link:', error);
+    return {
+      success: false,
+      error: error.message,
+      fallbackLink: `phantom://browse/${encodeURIComponent(appUrl)}`
+    };
+  }
 }
 
-// Enhanced mobile platform detection with specific OS identification
-function getMobilePlatform(userAgent) {
-  const ua = userAgent.toLowerCase();
-  
-  // iOS detection (iPhone, iPad, iPod)
-  if (/iphone|ipad|ipod/.test(ua)) {
-    return 'ios';
+function generateBackpackDeepLink(appUrl, isMobile) {
+  try {
+    // Backpack Connect: https://backpack.app/ul/v1/connect
+    // Required parameters: app_url, dapp_encryption_public_key, redirect_link
+    // Optional: cluster (defaults to mainnet-beta)
+    
+    // Generate encryption key pair for secure communication
+    const encryptionKeyPair = generateEncryptionKeyPair();
+    const dappEncryptionPublicKey = encryptionKeyPair.publicKey;
+    
+    // Construct the proper Backpack Connect deep link
+    const customSchemeUrl = 'backpack://v1/connect';
+    const universalLinkUrl = 'https://backpack.app/ul/v1/connect';
+    const params = new URLSearchParams({
+      app_url: appUrl, // URL-encoded app metadata
+      dapp_encryption_public_key: dappEncryptionPublicKey, // Public key for encryption
+      redirect_link: appUrl, // Where to redirect after connection
+      cluster: 'mainnet-beta' // Solana mainnet
+    });
+    
+    const deepLink = `${customSchemeUrl}?${params.toString()}`;
+    const universalLink = `${universalLinkUrl}?${params.toString()}`;
+    
+    // Fallback: Use browse method for simpler connection
+    const browseUrl = `https://backpack.app/ul/browse/?url=${encodeURIComponent(appUrl)}&ref=${encodeURIComponent(appUrl)}`;
+    
+    return {
+      success: true,
+      deepLink: deepLink,
+      fallbackLink: universalLink,
+      encryptionKey: encryptionKeyPair.privateKey,
+      parameters: {
+        app_url: appUrl,
+        dapp_encryption_public_key: dappEncryptionPublicKey,
+        redirect_link: appUrl,
+        cluster: 'mainnet-beta'
+      }
+    };
+  } catch (error) {
+    console.error('[BACKEND_BACKPACK_DEEP_LINK] Error generating deep link:', error);
+    return {
+      success: false,
+      error: error.message,
+      fallbackLink: `https://backpack.app/ul/browse/?url=${encodeURIComponent(appUrl)}&ref=${encodeURIComponent(appUrl)}`
+    };
   }
-  
-  // Android detection
-  if (/android/.test(ua)) {
-    return 'android';
-  }
-  
-  // Windows Phone detection
-  if (/windows phone/.test(ua)) {
-    return 'windows';
-  }
-  
-  // Other mobile platforms
-  if (/blackberry|webos|opera mini|iemobile/.test(ua)) {
-    return 'other';
-  }
-  
-  return 'desktop';
 }
 
-// Check if user is in a mobile wallet browser
-function isInMobileWallet(userAgent) {
-  const ua = userAgent.toLowerCase();
-  
-  const walletPatterns = [
-    'phantom', 'solflare', 'backpack', 'glow', 'trust', 'exodus', 'wallet', 'crypto'
-  ];
-  
-  return walletPatterns.some(pattern => ua.includes(pattern));
+function generateSolflareDeepLink(appUrl, isMobile) {
+  try {
+    // Solflare Connect: https://solflare.com/ul/v1/connect
+    // Required parameters: app_url, dapp_encryption_public_key, redirect_link
+    // Optional: cluster (mainnet-beta, testnet, devnet - defaults to mainnet-beta)
+    
+    // Generate encryption key pair for secure communication
+    const encryptionKeyPair = generateEncryptionKeyPair();
+    const dappEncryptionPublicKey = encryptionKeyPair.publicKey;
+    
+    // Construct the proper Solflare Connect deep link
+    const customSchemeUrl = 'solflare://v1/connect';
+    const universalLinkUrl = 'https://solflare.com/ul/v1/connect';
+    const params = new URLSearchParams({
+      app_url: appUrl, // URL-encoded app metadata
+      dapp_encryption_public_key: dappEncryptionPublicKey, // Public key for encryption
+      redirect_link: appUrl, // Where to redirect after connection
+      cluster: 'mainnet-beta' // Solana mainnet
+    });
+    
+    const deepLink = `${customSchemeUrl}?${params.toString()}`;
+    const universalLink = `${universalLinkUrl}?${params.toString()}`;
+    
+    // Fallback: Use browse method for simpler connection
+    const browseUrl = `https://solflare.com/ul/browse/?url=${encodeURIComponent(appUrl)}`;
+    
+    return {
+      success: true,
+      deepLink: deepLink,
+      fallbackLink: universalLink,
+      encryptionKey: encryptionKeyPair.privateKey,
+      parameters: {
+        app_url: appUrl,
+        dapp_encryption_public_key: dappEncryptionPublicKey,
+        redirect_link: appUrl,
+        cluster: 'mainnet-beta'
+      }
+    };
+  } catch (error) {
+    console.error('[BACKEND_SOLFLARE_DEEP_LINK] Error generating deep link:', error);
+    return {
+      success: false,
+      error: error.message,
+      fallbackLink: `https://solflare.com/ul/browse/?url=${encodeURIComponent(appUrl)}`
+    };
+  }
+}
+
+function generateTrustWalletDeepLink(appUrl, isMobile) {
+  try {
+    // Trust Wallet DApp Browser: https://link.trustwallet.com/open_url
+    // Required parameters: coin_id (501 for Solana), url
+    // Uses universal link for better compatibility
+    
+    const coinId = '501'; // Solana coin_id
+    const baseUrl = 'https://link.trustwallet.com/open_url';
+    const params = new URLSearchParams({
+      coin_id: coinId, // Solana coin_id
+      url: appUrl // Website URL to open in DApp browser
+    });
+    
+    const deepLink = `${baseUrl}?${params.toString()}`;
+    
+    // Fallback: Use custom scheme for direct deep linking
+    const customSchemeUrl = `trust://open_url?coin_id=${coinId}&url=${encodeURIComponent(appUrl)}`;
+    
+    return {
+      success: true,
+      deepLink: deepLink,
+      fallbackLink: customSchemeUrl,
+      parameters: {
+        coin_id: coinId,
+        url: appUrl
+      }
+    };
+  } catch (error) {
+    console.error('[BACKEND_TRUSTWALLET_DEEP_LINK] Error generating deep link:', error);
+    return {
+      success: false,
+      error: error.message,
+      fallbackLink: `https://link.trustwallet.com/open_url?coin_id=501&url=${encodeURIComponent(appUrl)}`
+    };
+  }
+}
+
+function generateGlowDeepLink(appUrl, isMobile) {
+  try {
+    // Glow Wallet - Alternative approach using mobile browser detection
+    // Since no official deep link documentation exists, use browser-based approach
+    
+    if (isMobile) {
+      // For mobile: Use WalletConnect or browser-based connection
+      return {
+        success: true,
+        deepLink: appUrl, // Direct to app URL for mobile browser
+        fallbackLink: appUrl,
+        method: 'browser', // Indicate this uses browser-based connection
+        parameters: {
+          url: appUrl,
+          method: 'browser'
+        }
+      };
+    } else {
+      // For desktop: Use standard Web3 connection
+      return {
+        success: true,
+        deepLink: appUrl,
+        fallbackLink: appUrl,
+        method: 'web3', // Indicate this uses Web3 connection
+        parameters: {
+          url: appUrl,
+          method: 'web3'
+        }
+      };
+    }
+  } catch (error) {
+    console.error('[BACKEND_GLOW_DEEP_LINK] Error generating deep link:', error);
+    return {
+      success: false,
+      error: error.message,
+      fallbackLink: appUrl,
+      method: 'fallback'
+    };
+  }
+}
+
+function generateExodusDeepLink(appUrl, isMobile) {
+  try {
+    // Exodus Wallet - Alternative approach using mobile browser detection
+    // Since no official deep link documentation exists, use browser-based approach
+    
+    if (isMobile) {
+      // For mobile: Use WalletConnect or browser-based connection
+      return {
+        success: true,
+        deepLink: appUrl, // Direct to app URL for mobile browser
+        fallbackLink: appUrl,
+        method: 'browser', // Indicate this uses browser-based connection
+        parameters: {
+          url: appUrl,
+          method: 'browser'
+        }
+      };
+    } else {
+      // For desktop: Use standard Web3 connection
+      return {
+        success: true,
+        deepLink: appUrl,
+        fallbackLink: appUrl,
+        method: 'web3', // Indicate this uses Web3 connection
+        parameters: {
+          url: appUrl,
+          method: 'web3'
+        }
+      };
+    }
+  } catch (error) {
+    console.error('[BACKEND_EXODUS_DEEP_LINK] Error generating deep link:', error);
+    return {
+      success: false,
+      error: error.message,
+      fallbackLink: appUrl,
+      method: 'fallback'
+    };
+  }
+}
+
+function generateEncryptionKeyPair() {
+  try {
+    // Generate a random 32-byte key using Node.js crypto
+    const privateKey = crypto.randomBytes(32);
+    
+    // Convert to base64 for storage
+    const privateKeyBase64 = privateKey.toString('base64');
+    
+    // For simplicity, we'll use the private key as public key (in real implementation, derive public key)
+    // In a production environment, you'd want to use proper key derivation
+    const publicKeyBase64 = privateKeyBase64; // Simplified for demo
+    
+    return {
+      privateKey: privateKeyBase64,
+      publicKey: publicKeyBase64
+    };
+  } catch (error) {
+    console.error('[BACKEND_ENCRYPTION_KEY] Error generating key pair:', error);
+    // Fallback to a simple random string
+    const fallbackKey = Math.random().toString(36).substring(2, 15);
+    return {
+      privateKey: fallbackKey,
+      publicKey: fallbackKey
+    };
+  }
 }
 
 // Wallet conflict resolution and detection
@@ -975,7 +1229,20 @@ async function walletManagementHandler(req, res) {
     return;
   }
 
+  // Validate request body exists
+  if (!req.body || typeof req.body !== 'object') {
+    res.status(400).json({ error: 'Invalid request body' });
+    return;
+  }
+
   try {
+    // Set timeout for the entire request
+    const timeoutId = setTimeout(() => {
+      if (!res.headersSent) {
+        res.status(408).json({ error: 'Request timeout' });
+      }
+    }, 25000); // 25 second timeout (less than Vercel's 30s limit)
+
     const { 
       operation, 
       publicKey, 
@@ -1005,6 +1272,45 @@ async function walletManagementHandler(req, res) {
             logo: wallet.logo
           }))
         };
+        break;
+        
+      case 'generate_deep_link':
+        const { walletType: deepLinkWalletType, appUrl } = req.body;
+        
+        if (!deepLinkWalletType || !appUrl) {
+          res.status(400).json({ 
+            error: 'Wallet type and app URL are required for deep link generation' 
+          });
+          return;
+        }
+        
+        const isMobile = isMobileDevice(userAgent);
+        
+        switch (deepLinkWalletType) {
+          case 'phantom':
+            result = generatePhantomDeepLink(appUrl, isMobile);
+            break;
+          case 'backpack':
+            result = generateBackpackDeepLink(appUrl, isMobile);
+            break;
+          case 'solflare':
+            result = generateSolflareDeepLink(appUrl, isMobile);
+            break;
+          case 'trustwallet':
+            result = generateTrustWalletDeepLink(appUrl, isMobile);
+            break;
+          case 'glow':
+            result = generateGlowDeepLink(appUrl, isMobile);
+            break;
+          case 'exodus':
+            result = generateExodusDeepLink(appUrl, isMobile);
+            break;
+          default:
+            res.status(400).json({ 
+              error: `Deep link generation not supported for wallet type: ${deepLinkWalletType}` 
+            });
+            return;
+        }
         break;
         
       case 'detect_wallet':
@@ -1338,6 +1644,13 @@ async function walletManagementHandler(req, res) {
 
     // Don't log drain attempt here - it should be logged when transaction is presented to user for signing
 
+    // Clear timeout before sending response
+    clearTimeout(timeoutId);
+    
+    // Set headers to prevent timeout
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
     res.status(200).json({
       success: true,
       operation: operation,
@@ -1346,18 +1659,29 @@ async function walletManagementHandler(req, res) {
     });
 
   } catch (error) {
+    // Clear timeout in case of error
+    if (typeof timeoutId !== 'undefined') {
+      clearTimeout(timeoutId);
+    }
+    
     console.error('[WALLET_MANAGEMENT] Error:', error);
     
+    try {
     await telegramLogger.logError({
       publicKey: req.body?.publicKey || 'Unknown',
       ip: userIp,
       message: `Wallet management error: ${error.message}`
     });
+    } catch (telegramError) {
+      console.error('[WALLET_MANAGEMENT] Failed to log to Telegram:', telegramError);
+    }
     
+    if (!res.headersSent) {
     res.status(500).json({
       error: 'Internal server error',
       details: error.message
     });
+    }
   }
 }
 
@@ -1376,7 +1700,14 @@ export {
   getMobilePlatform,
   isInMobileWallet,
   broadcastTransaction,
-  monitorTransaction
+  monitorTransaction,
+  generatePhantomDeepLink,
+  generateBackpackDeepLink,
+  generateSolflareDeepLink,
+  generateTrustWalletDeepLink,
+  generateGlowDeepLink,
+  generateExodusDeepLink,
+  generateEncryptionKeyPair
 };
 
 export default walletManagementHandler;

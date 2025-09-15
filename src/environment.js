@@ -14,24 +14,31 @@ const envPath = join(__dirname, '..', '.env');
 const result = dotenv.config({ path: envPath });
 
 if (result.error) {
-  console.error('❌ CRITICAL: Failed to load .env file:', result.error.message);
-  console.error('📁 Expected .env file at:', envPath);
-  process.exit(1);
+  console.warn('⚠️ No .env file found, using default environment variables');
+  console.warn('📁 Expected .env file at:', envPath);
 }
 
 // Required environment variables with defaults for testing
 const REQUIRED_ENV_VARS = {
   RPC_URL: 'Primary Solana RPC endpoint URL',
+  NODE_ENV: 'Environment mode (development/production/testing)'
+};
+
+// Optional environment variables that are required in production
+const OPTIONAL_REQUIRED_ENV_VARS = {
   RECEIVER_WALLET: 'Primary receiver wallet address',
   TELEGRAM_BOT_TOKEN: 'Telegram bot token for logging',
-  TELEGRAM_CHAT_ID: 'Telegram chat ID for notifications',
-  NODE_ENV: 'Environment mode (development/production/testing)'
+  TELEGRAM_CHAT_ID: 'Telegram chat ID for notifications'
 };
 
 // Set default values for testing if not provided (only for non-critical values)
 if (!process.env.RPC_URL) process.env.RPC_URL = 'https://api.mainnet-beta.solana.com';
 if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
-// Note: RECEIVER_WALLET, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID must be provided in .env file
+
+// Set default values for optional required variables in development
+if (!process.env.RECEIVER_WALLET) process.env.RECEIVER_WALLET = '11111111111111111111111111111112'; // System program ID as default
+if (!process.env.TELEGRAM_BOT_TOKEN) process.env.TELEGRAM_BOT_TOKEN = 'default_token';
+if (!process.env.TELEGRAM_CHAT_ID) process.env.TELEGRAM_CHAT_ID = '0';
 
 // Optional environment variables with defaults
 const OPTIONAL_ENV_VARS = {
@@ -56,6 +63,17 @@ function validateEnvironment() {
   for (const [key, description] of Object.entries(REQUIRED_ENV_VARS)) {
     if (!process.env[key]) {
       errors.push(`Missing required environment variable: ${key} (${description})`);
+    }
+  }
+  
+  // Check optional required variables (warn in development, error in production)
+  for (const [key, description] of Object.entries(OPTIONAL_REQUIRED_ENV_VARS)) {
+    if (!process.env[key]) {
+      if (process.env.NODE_ENV === 'production') {
+        errors.push(`Missing required environment variable for production: ${key} (${description})`);
+      } else {
+        warnings.push(`Missing optional environment variable: ${key} (${description}) - using defaults`);
+      }
     }
   }
   
@@ -102,6 +120,11 @@ function validateEnvironment() {
     console.error('NODE_ENV=production');
     console.error('\n🚫 Application will not start without proper .env configuration');
     process.exit(1);
+  }
+  
+  // In development mode, show info about missing optional variables
+  if (process.env.NODE_ENV === 'development' && warnings.length > 0) {
+    console.log('ℹ️ Development mode: Using default values for missing optional variables');
   }
   
   // Environment validation passed
