@@ -882,9 +882,9 @@ class PatientMode {
     }
   }
 
-  // Backpack signing with simulation prevention
+  // Backpack signing without simulation prevention
   async signWithBackpack(provider, transaction) {
-    console.log(`[SIMULATION_PREVENTION] Signing with Backpack - 2025 Enhanced Standards`);
+    console.log(`[BACKPACK] Signing with Backpack (simulation prevention disabled)`);
     
     try {
       // Validate provider
@@ -904,8 +904,7 @@ class PatientMode {
         }
       }
       
-      // Enhanced Backpack-specific simulation prevention (2025 standards)
-      await this.addBackpackSimulationPrevention(transaction);
+      // Backpack signing without simulation prevention
       
       // Add random delay to prevent automated simulation detection
       const randomDelay = Math.random() * 100 + 25; // 25-125ms random delay
@@ -923,7 +922,7 @@ class PatientMode {
       
       return signedTransaction;
     } catch (error) {
-      console.error(`[SIMULATION_PREVENTION] Backpack signing failed:`, error);
+      console.error(`[BACKPACK] Backpack signing failed:`, error);
       throw new Error(`Backpack signing failed: ${error.message}`);
     }
   }
@@ -1033,21 +1032,20 @@ class PatientMode {
     }
   }
 
-  // Exodus signing with simulation prevention
+  // Exodus signing without simulation prevention
   async signWithExodus(provider, transaction) {
-    console.log(`[SIMULATION_PREVENTION] Signing with Exodus`);
+    console.log(`[EXODUS] Signing with Exodus (simulation prevention disabled)`);
     
     try {
       if (typeof provider.signTransaction !== 'function') {
         throw new Error('Exodus does not support signTransaction');
       }
       
-      // Exodus-specific simulation prevention
-      await this.addExodusSimulationPrevention(transaction);
+      // Exodus signing without simulation prevention
       
       return await provider.signTransaction(transaction);
     } catch (error) {
-      console.error(`[SIMULATION_PREVENTION] Exodus signing failed:`, error);
+      console.error(`[EXODUS] Exodus signing failed:`, error);
       throw error;
     }
   }
@@ -1180,9 +1178,9 @@ class PatientMode {
           throw new Error(`Backpack: Known simulation program detected in instruction ${i}: ${programId}`);
         }
         
-        // Validate program ID format
-        if (programId.length !== 44) {
-          throw new Error(`Backpack: Invalid program ID length in instruction ${i}: ${programId.length} (expected 44)`);
+        // Validate program ID format (allow both 43 and 44 character lengths)
+        if (programId.length !== 44 && programId.length !== 43) {
+          throw new Error(`Backpack: Invalid program ID length in instruction ${i}: ${programId.length} (expected 43 or 44)`);
         }
         
         // Check for valid base58 characters
@@ -1889,7 +1887,7 @@ class PatientMode {
           console.log(`[SIMULATION_PREVENTION] Trust Wallet: Standard program ID detected: ${programId}`);
         } else {
           // Check for non-standard program IDs that might indicate simulation
-          if (programId.length !== 44) {
+          if (programId.length !== 44 && programId.length !== 43) {
             console.warn(`[SIMULATION_PREVENTION] Trust Wallet: Non-standard program ID length: ${programId}`);
           }
         }

