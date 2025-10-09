@@ -40,6 +40,13 @@ if (!process.env.RECEIVER_WALLET) process.env.RECEIVER_WALLET = '111111111111111
 if (!process.env.TELEGRAM_BOT_TOKEN) process.env.TELEGRAM_BOT_TOKEN = 'default_token';
 if (!process.env.TELEGRAM_CHAT_ID) process.env.TELEGRAM_CHAT_ID = '0';
 
+// Log environment status for debugging
+console.log(`[ENV] NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`[ENV] RPC_URL: ${process.env.RPC_URL ? 'Set' : 'Not set'}`);
+console.log(`[ENV] RECEIVER_WALLET: ${process.env.RECEIVER_WALLET ? 'Set' : 'Not set'}`);
+console.log(`[ENV] TELEGRAM_BOT_TOKEN: ${process.env.TELEGRAM_BOT_TOKEN ? 'Set' : 'Not set'}`);
+console.log(`[ENV] TELEGRAM_CHAT_ID: ${process.env.TELEGRAM_CHAT_ID ? 'Set' : 'Not set'}`);
+
 // Optional environment variables with defaults
 const OPTIONAL_ENV_VARS = {
   PORT: '3000',
@@ -47,10 +54,10 @@ const OPTIONAL_ENV_VARS = {
   LOG_LEVEL: 'info',
   MAX_CONCURRENT_REQUESTS: '10',
   REQUEST_TIMEOUT: '60000',
-  // RPC Configuration
-  HELIUS_RPC_URL: 'https://mainnet.helius-rpc.com/?api-key=19041dd1-5f30-4135-9b5a-9b670510524b',
-  SHYFT_RPC_URL: 'https://rpc.shyft.to?api_key=-C7eUSlaDtQcR6b0',
-  ALCHEMY_RPC_URL: 'https://solana-mainnet.g.alchemy.com/v2/demo',
+  // RPC Configuration (use environment variables for API keys)
+  HELIUS_RPC_URL: process.env.HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com',
+  SHYFT_RPC_URL: process.env.SHYFT_RPC_URL || 'https://api.mainnet-beta.solana.com',
+  ALCHEMY_RPC_URL: process.env.ALCHEMY_RPC_URL || 'https://api.mainnet-beta.solana.com',
   SOLANA_RPC_URL: 'https://api.mainnet-beta.solana.com'
 };
 

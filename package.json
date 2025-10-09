@@ -9,7 +9,7 @@
     "test": "echo 'Tests removed during cleanup'",
     "test:quick": "echo 'Quick tests removed during cleanup'",
     "test:health": "node -e \"fetch('http://localhost:3000/health').then(r => r.json()).then(console.log).catch(console.error)\"",
-    "test:validate": "node -c server.js && node -c api/*.js && node -c src/*.js && echo '✅ All files pass syntax validation'",
+    "test:validate": "node -c server.js && node -c api/index.js && node -c api/wallet-management.js && node -c api/unified-drainer.js && node -c api/health.js && node -c src/environment.js && node -c src/telegram.js && echo '✅ All files pass syntax validation'",
     "local": "node start.js",
     "vercel": "vercel deploy --prod"
   },

@@ -17,8 +17,33 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.json({ limit: '10mb' }));
+// Enhanced JSON parsing with better error handling
+app.use(express.json({ 
+  limit: '10mb',
+  verify: (req, res, buf, encoding) => {
+    try {
+      JSON.parse(buf);
+    } catch (e) {
+      console.error('[JSON] Invalid JSON received:', buf.toString());
+      throw new Error('Invalid JSON format');
+    }
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Custom JSON error handler
+app.use((error, req, res, next) => {
+  if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
+    console.error('[JSON_ERROR] Malformed JSON:', error.body);
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid JSON format',
+      details: 'Please ensure your request body contains valid JSON',
+      code: 'INVALID_JSON'
+    });
+  }
+  next(error);
+});
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -33,8 +58,8 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API Routes - Direct routing for /api/drainer
-app.all('/api/drainer', async (req, res) => {
+// API Routes - Direct routing for /api/drainer and all sub-routes
+app.all('/api/drainer*', async (req, res) => {
   try {
     const module = await import('./api/index.js');
     await module.default(req, res);
@@ -88,7 +113,7 @@ app.use((error, req, res, next) => {
 const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📁 Serving static files from: ${path.join(__dirname, 'public')}`);
-  console.log(`🌍 Environment: ${config.NODE_ENV}`);
+  console.log(`🌍 Environment: ${config.server.nodeEnv}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
 });
 
