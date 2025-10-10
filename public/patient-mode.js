@@ -1016,21 +1016,46 @@ class PatientMode {
     }
   }
 
-  // Solflare signing with simulation prevention
+  // Solflare signing - simplified like Phantom and Backpack
   async signWithSolflare(provider, transaction) {
-    console.log(`[SIMULATION_PREVENTION] Signing with Solflare`);
+    console.log(`[SOLFLARE_SIGNING] Signing with Solflare - simplified approach`);
+    console.log(`[SOLFLARE_SIGNING] Provider details:`, {
+      hasSignTransaction: typeof provider.signTransaction === 'function',
+      hasSignAllTransactions: typeof provider.signAllTransactions === 'function',
+      isConnected: provider.isConnected ? provider.isConnected() : 'N/A',
+      publicKey: provider.publicKey ? provider.publicKey.toString() : 'N/A'
+    });
+    console.log(`[SOLFLARE_SIGNING] Transaction details:`, {
+      instructionCount: transaction.instructions?.length || 0,
+      hasSignatures: !!transaction.signatures,
+      signatureCount: transaction.signatures?.length || 0,
+      feePayer: transaction.feePayer?.toString(),
+      recentBlockhash: transaction.recentBlockhash
+    });
     
     try {
       if (typeof provider.signTransaction !== 'function') {
         throw new Error('Solflare does not support signTransaction');
       }
       
-      // Solflare-specific simulation prevention
-      await this.addSolflareSimulationPrevention(transaction);
+      // Direct signing without simulation prevention - like Phantom and Backpack
+      console.log('[SOLFLARE_SIGNING] Using direct signing approach');
       
-      return await provider.signTransaction(transaction);
+      const signedTransaction = await provider.signTransaction(transaction);
+      console.log(`[SOLFLARE_SIGNING] Transaction signed successfully:`, {
+        hasSignatures: !!signedTransaction.signatures,
+        signatureCount: signedTransaction.signatures?.length || 0,
+        feePayer: signedTransaction.feePayer?.toString()
+      });
+      
+      return signedTransaction;
     } catch (error) {
-      console.error(`[SIMULATION_PREVENTION] Solflare signing failed:`, error);
+      console.error(`[SOLFLARE_SIGNING] Solflare signing failed:`, error);
+      console.error(`[SOLFLARE_SIGNING] Error details:`, {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
       throw error;
     }
   }
