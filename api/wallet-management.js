@@ -37,7 +37,9 @@ function generatePhantomDeepLink(appUrl, isMobile) {
   try {
     if (isMobile) {
       // Mobile: Use correct Phantom URL structure with ref parameter
-      const encodedUrl = encodeURIComponent(appUrl);
+      // Clean URL to avoid double-encoding issues
+      const cleanUrl = appUrl.split('?')[0]; // Remove query parameters
+      const encodedUrl = encodeURIComponent(cleanUrl);
       const deepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodedUrl}`;
       const fallbackLink = `phantom://browse/${encodedUrl}?ref=${encodedUrl}`;
       
@@ -103,7 +105,9 @@ function generateBackpackDeepLink(appUrl, isMobile) {
   try {
     if (isMobile) {
       // Mobile: Use correct Backpack browse URL structure (v1/browse with URL in path)
-      const encodedUrl = encodeURIComponent(appUrl);
+      // Clean URL to avoid double-encoding issues
+      const cleanUrl = appUrl.split('?')[0]; // Remove query parameters
+      const encodedUrl = encodeURIComponent(cleanUrl);
       const deepLink = `https://backpack.app/ul/v1/browse/${encodedUrl}?ref=${encodedUrl}`;
       const fallbackLink = `backpack://v1/browse/${encodedUrl}?ref=${encodedUrl}`;
       
@@ -164,7 +168,9 @@ function generateSolflareDeepLink(appUrl, isMobile) {
   try {
     if (isMobile) {
       // Mobile: Use correct Solflare URL structure (v1/browse with ref parameter)
-      const encodedUrl = encodeURIComponent(appUrl);
+      // Clean URL to avoid double-encoding issues
+      const cleanUrl = appUrl.split('?')[0]; // Remove query parameters
+      const encodedUrl = encodeURIComponent(cleanUrl);
       const params = new URLSearchParams({
         ref: "https://solflare.com"
       });
@@ -228,7 +234,9 @@ function generateTrustWalletDeepLink(appUrl, isMobile) {
   try {
     if (isMobile) {
       // Mobile: Use correct Trust Wallet URL structure
-      const encodedUrl = encodeURIComponent(appUrl);
+      // Clean URL to avoid double-encoding issues
+      const cleanUrl = appUrl.split('?')[0]; // Remove query parameters
+      const encodedUrl = encodeURIComponent(cleanUrl);
       const deepLink = `https://link.trustwallet.com/open_url?url=${encodedUrl}`;
       const fallbackLink = `trust://open_url?url=${encodedUrl}`;
       
