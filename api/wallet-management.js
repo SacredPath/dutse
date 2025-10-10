@@ -172,35 +172,17 @@ function generateSolflareDeepLink(appUrl, isMobile) {
       const cleanUrl = appUrl.split('?')[0]; // Remove query parameters
       const encodedUrl = encodeURIComponent(cleanUrl);
       
-      // Detect if this is Android (we can't detect user agent in backend, so use a different approach)
-      // For now, we'll generate both formats and let the frontend choose
-      const redirectLink = encodeURIComponent(cleanUrl);
-      
-      // Android format with redirect_link
-      const androidParams = new URLSearchParams({
-        redirect_link: redirectLink
-      });
-      const androidDeepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?${androidParams.toString()}`;
-      const androidFallbackLink = `solflare://v1/browse/${encodedUrl}?${androidParams.toString()}`;
-      
-      // iOS format with ref (correct format - dApp URL as ref)
-      const iosParams = new URLSearchParams({
-        ref: cleanUrl
-      });
-      const iosDeepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?${iosParams.toString()}`;
-      const iosFallbackLink = `solflare://v1/browse/${encodedUrl}?${iosParams.toString()}`;
+      // Use the simplest format - no parameters
+      const deepLink = `https://solflare.com/ul/browse/${encodedUrl}`;
+      const fallbackLink = `solflare://browse/${encodedUrl}`;
       
       return {
         success: true,
-        deepLink: androidDeepLink, // Default to Android format
-        fallbackLink: androidFallbackLink,
-        iosDeepLink: iosDeepLink,
-        iosFallbackLink: iosFallbackLink,
+        deepLink: deepLink,
+        fallbackLink: fallbackLink,
         parameters: {
           url: appUrl,
-          encodedUrl: encodedUrl,
-          redirectLink: redirectLink,
-          ref: cleanUrl
+          encodedUrl: encodedUrl
         }
       };
     } else {

