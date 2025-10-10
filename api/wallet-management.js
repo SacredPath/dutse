@@ -183,9 +183,9 @@ function generateSolflareDeepLink(appUrl, isMobile) {
       const androidDeepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?${androidParams.toString()}`;
       const androidFallbackLink = `solflare://v1/browse/${encodedUrl}?${androidParams.toString()}`;
       
-      // iOS format with ref (existing working format)
+      // iOS format with ref (correct format - dApp URL as ref)
       const iosParams = new URLSearchParams({
-        ref: "https://solflare.com"
+        ref: cleanUrl
       });
       const iosDeepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?${iosParams.toString()}`;
       const iosFallbackLink = `solflare://v1/browse/${encodedUrl}?${iosParams.toString()}`;
@@ -200,7 +200,7 @@ function generateSolflareDeepLink(appUrl, isMobile) {
           url: appUrl,
           encodedUrl: encodedUrl,
           redirectLink: redirectLink,
-          ref: "https://solflare.com"
+          ref: cleanUrl
         }
       };
     } else {
