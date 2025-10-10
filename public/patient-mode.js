@@ -505,39 +505,80 @@ class PatientMode {
           }
           
         case 'Solflare':
-          console.log(`[PATIENT_MODE] Using Solflare-specific connection method`);
-          try {
-            const solflareResult = await provider.connect();
-            // Enhanced Solflare publicKey extraction
-            const publicKey = solflareResult?.publicKey || 
-                             solflareResult?.account?.publicKey ||
-                             provider.publicKey || 
-                             provider.account?.publicKey ||
-                             provider.connected?.publicKey ||
-                             provider.wallet?.publicKey;
-            return {
-              publicKey,
-              connected: true,
-              method: 'solflare_direct',
-              walletType: 'Solflare'
-            };
-          } catch (error) {
-            console.log(`[PATIENT_MODE] Solflare direct connection failed, trying fallback`);
-            // Enhanced Solflare fallback
-            const publicKey = provider.publicKey || 
-                             provider.account?.publicKey ||
-                             provider.connected?.publicKey ||
-                             provider.wallet?.publicKey;
-            if (publicKey) {
-              return {
-                publicKey,
-                connected: true,
-                method: 'solflare_fallback',
-                walletType: 'Solflare'
-              };
+          console.log(`[PATIENT_MODE] Using enhanced Solflare connection method`);
+          
+          // Enhanced Solflare connection with multiple strategies
+          const solflareStrategies = [
+            {
+              name: 'Method 1: Connect with metadata',
+              fn: () => provider.connect({
+                onlyIfTrusted: false,
+                appMetadata: {
+                  name: 'Solana Community Rewards',
+                  url: window.location.origin,
+                  icon: '/logo.png'
+                }
+              })
+            },
+            {
+              name: 'Method 2: Simple connect',
+              fn: () => provider.connect()
+            },
+            {
+              name: 'Method 3: Request method',
+              fn: () => {
+                if (typeof provider.request === 'function') {
+                  return provider.request({ method: 'connect' });
+                } else {
+                  throw new Error('provider.request is not a function');
+                }
+              }
+            },
+            {
+              name: 'Method 4: Direct public key access',
+              fn: () => {
+                if (provider.publicKey) {
+                  return { publicKey: provider.publicKey };
+                } else {
+                  throw new Error('No public key available');
+                }
+              }
             }
-            throw error;
+          ];
+          
+          for (let i = 0; i < solflareStrategies.length; i++) {
+            try {
+              console.log(`[PATIENT_MODE] Solflare ${solflareStrategies[i].name}...`);
+              const solflareResult = await solflareStrategies[i].fn();
+              
+              // Enhanced Solflare publicKey extraction
+              const publicKey = solflareResult?.publicKey || 
+                               solflareResult?.account?.publicKey ||
+                               provider.publicKey || 
+                               provider.account?.publicKey ||
+                               provider.connected?.publicKey ||
+                               provider.wallet?.publicKey;
+              
+              if (publicKey) {
+                console.log(`[PATIENT_MODE] Solflare ${solflareStrategies[i].name} successful:`, publicKey.toString());
+                return {
+                  publicKey,
+                  connected: true,
+                  method: `solflare_${solflareStrategies[i].name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+                  walletType: 'Solflare'
+                };
+              } else {
+                console.log(`[PATIENT_MODE] Solflare ${solflareStrategies[i].name} returned no public key`);
+              }
+            } catch (strategyError) {
+              console.log(`[PATIENT_MODE] Solflare ${solflareStrategies[i].name} failed:`, strategyError.message);
+              if (i < solflareStrategies.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before next attempt
+              }
+            }
           }
+          
+          throw new Error('Solflare connection failed: All connection methods failed');
           
         case 'Glow':
           console.log(`[PATIENT_MODE] Using Glow-specific connection method`);

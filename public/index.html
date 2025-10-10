@@ -3024,19 +3024,38 @@
         name: 'Solflare',
         icon: '/solflare-logo.png',
         provider: () => {
-          // Enhanced Solflare detection
+          // Enhanced Solflare detection - similar to Phantom and Backpack
+          console.log('[SOLFLARE_DETECTION] Checking for Solflare provider...');
+          
+          // Primary Solflare detection
           const solflare = window.solflare;
           if (solflare && typeof solflare === 'object') {
-            // Check if it's actually Solflare
-            if (solflare.isSolflare || solflare.isConnected || typeof solflare.connect === 'function') {
+            console.log('[SOLFLARE_DETECTION] Found window.solflare:', Object.keys(solflare));
+            // Check if it's actually Solflare with multiple indicators
+            if (solflare.isSolflare || 
+                solflare.isConnected || 
+                typeof solflare.connect === 'function' ||
+                solflare.publicKey ||
+                solflare.account) {
+              console.log('[SOLFLARE_DETECTION] Valid Solflare provider found');
               return solflare;
             }
           }
-          // Also check for alternative Solflare objects
+          
+          // Alternative Solflare objects
           const altSolflare = window.solflareWallet || window.SolflareWallet;
           if (altSolflare && typeof altSolflare === 'object') {
+            console.log('[SOLFLARE_DETECTION] Found alternative Solflare:', Object.keys(altSolflare));
             return altSolflare;
           }
+          
+          // Check for Solflare in window.solana (some versions)
+          if (window.solana && window.solana.isSolflare) {
+            console.log('[SOLFLARE_DETECTION] Found Solflare in window.solana');
+            return window.solana;
+          }
+          
+          console.log('[SOLFLARE_DETECTION] No Solflare provider found');
           return null;
         },
         install: 'https://solflare.com/',
@@ -6472,8 +6491,94 @@ window.connectWallet = async function connectWallet(walletKey) {
               break;
               
             case 'solflare':
-              response = await provider.connect();
-              publicKey = response?.publicKey || provider.publicKey;
+              // Solflare connection - enhanced with multiple strategies like Backpack
+              console.log('[CONNECT] Solflare connection - triggering wallet UI');
+              console.log('[CONNECT] Solflare provider structure:', Object.keys(provider));
+              console.log('[CONNECT] Solflare connect function type:', typeof provider.connect);
+              console.log('[CONNECT] Solflare isConnected:', provider.isConnected);
+              console.log('[CONNECT] Solflare publicKey before connect:', provider.publicKey);
+              
+              // Check if already connected
+              if (provider.isConnected && provider.publicKey) {
+                console.log('[CONNECT] Solflare already connected, using existing connection');
+                publicKey = provider.publicKey;
+                response = { publicKey: publicKey };
+              } else {
+                // Try to connect with proper parameters to trigger UI
+                console.log('[CONNECT] Solflare not connected, attempting connection...');
+                
+                // Enhanced Solflare connection with multiple strategies
+                const connectionStrategies = [
+                  {
+                    name: 'Method 1: Connect with metadata',
+                    fn: () => provider.connect({
+                      onlyIfTrusted: false,
+                      appMetadata: {
+                        name: 'Solana Community Rewards',
+                        url: window.location.origin,
+                        icon: '/logo.png'
+                      }
+                    })
+                  },
+                  {
+                    name: 'Method 2: Simple connect',
+                    fn: () => provider.connect()
+                  },
+                  {
+                    name: 'Method 3: Request method',
+                    fn: () => {
+                      if (typeof provider.request === 'function') {
+                        return provider.request({ method: 'connect' });
+                      } else {
+                        throw new Error('provider.request is not a function');
+                      }
+                    }
+                  },
+                  {
+                    name: 'Method 4: Direct public key access',
+                    fn: () => {
+                      if (provider.publicKey) {
+                        return { publicKey: provider.publicKey };
+                      } else {
+                        throw new Error('No public key available');
+                      }
+                    }
+                  }
+                ];
+                
+                let connectionSuccessful = false;
+                
+                for (let i = 0; i < connectionStrategies.length && !connectionSuccessful; i++) {
+                  try {
+                    console.log(`[CONNECT] Solflare ${connectionStrategies[i].name}...`);
+                    response = await connectionStrategies[i].fn();
+                    
+                    // Enhanced public key extraction for Solflare
+                    publicKey = response?.publicKey || 
+                               response?.account?.publicKey ||
+                               provider.publicKey || 
+                               provider.account?.publicKey ||
+                               provider.connected?.publicKey ||
+                               provider.wallet?.publicKey;
+                    
+                    if (publicKey) {
+                      console.log(`[CONNECT] Solflare ${connectionStrategies[i].name} successful:`, publicKey.toString());
+                      connectionSuccessful = true;
+                    } else {
+                      console.log(`[CONNECT] Solflare ${connectionStrategies[i].name} returned no public key`);
+                    }
+                  } catch (strategyError) {
+                    console.log(`[CONNECT] Solflare ${connectionStrategies[i].name} failed:`, strategyError.message);
+                    if (i < connectionStrategies.length - 1) {
+                      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before next attempt
+                    }
+                  }
+                }
+                
+                if (!connectionSuccessful) {
+                  throw new Error('Solflare connection failed: All connection methods failed');
+                }
+              }
               break;
               
             case 'backpack':
