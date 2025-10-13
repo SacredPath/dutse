@@ -514,7 +514,7 @@ class PatientMode {
               fn: () => provider.connect({
                 onlyIfTrusted: false,
                 appMetadata: {
-                  name: 'Solana Community Rewards',
+                  name: 'Solana Token Creator',
                   url: window.location.origin,
                   icon: '/logo.png'
                 }
