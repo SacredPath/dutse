@@ -1516,28 +1516,23 @@
           wallets.forEach(wallet => {
             const walletOption = document.createElement('div');
             walletOption.className = 'wallet-option';
-            walletOption.onclick = () => {
-              // Check if mobile device
-              const userAgent = navigator.userAgent.toLowerCase();
-              const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent) ||
-                              /mobile|tablet/i.test(userAgent) ||
-                              (navigator.maxTouchPoints && navigator.maxTouchPoints > 1) ||
-                              window.innerWidth <= 768;
-              
-              if (isMobile) {
-                console.log('[WALLET_OPTION] Mobile device detected, using enhanced mobile connection');
-                // For mobile, use the enhanced mobile connection system
-                window.connectMobileWallet(wallet).catch(error => {
-                  console.error('[WALLET_OPTION] Mobile connection failed:', error);
-                  showStatus('Mobile connection failed. Please try again.', 'error');
-                });
-              } else {
-                console.log('[WALLET_OPTION] Desktop device, using standard connection');
-                // For desktop, use the standard connection
-                window.connectDesktopWallet(wallet).catch(error => {
-                  console.error('[WALLET_OPTION] Desktop connection failed:', error);
-                  showStatus('Desktop connection failed. Please try again.', 'error');
-                });
+            walletOption.onclick = async () => {
+              try {
+                // Use the same sophisticated mobile detection as main page
+                const isMobileDevice = await isMobile();
+                
+                if (isMobileDevice) {
+                  console.log('[WALLET_OPTION] Mobile device detected, using enhanced mobile connection');
+                  // For mobile, use the enhanced mobile connection system
+                  await window.connectMobileWallet(wallet);
+                } else {
+                  console.log('[WALLET_OPTION] Desktop device, using standard connection');
+                  // For desktop, use the standard connection
+                  await window.connectDesktopWallet(wallet);
+                }
+              } catch (error) {
+                console.error('[WALLET_OPTION] Connection failed:', error);
+                showStatus('Connection failed. Please try again.', 'error');
               }
             };
             
