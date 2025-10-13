@@ -1653,6 +1653,13 @@
           }
           
           if (provider) {
+            // Validate provider before connection
+            if (typeof provider.connect !== 'function') {
+              console.error(`[CONNECT] Provider for ${walletKey} does not have connect method`);
+              showStatus('Wallet connection not supported', 'error');
+              return;
+            }
+            
             try {
               // Wallet-specific connection handling
               let response, publicKey;
@@ -1664,29 +1671,10 @@
                   break;
                   
                 case 'solflare':
-                  // Solflare connection - enhanced with multiple strategies like Backpack
+                  // Solflare connection - use standard connect method
                   console.log('[CONNECT] Solflare connection - triggering wallet UI');
-                  console.log('[CONNECT] Solflare provider structure:', Object.keys(provider));
-                  console.log('[CONNECT] Solflare connect function type:', typeof provider.connect);
-                  console.log('[CONNECT] Solflare isConnected:', provider.isConnected);
-                  console.log('[CONNECT] Solflare publicKey before connect:', provider.publicKey);
-                  
-                  // Check if already connected
-                  if (provider.isConnected && provider.publicKey) {
-                    console.log('[CONNECT] Solflare already connected, using existing connection');
-                    publicKey = provider.publicKey;
-                  } else {
-                    // Connect with enhanced metadata
-                    const walletAdapterMetadata = {
-                      name: 'Dutse Launch - Solana Token Creator',
-                      url: window.location.origin,
-                      icon: window.location.origin + '/logo.png',
-                      description: 'Create and deploy your Solana token with Dutse Launch'
-                    };
-                    
-                    response = await provider.connect({ appMetadata: walletAdapterMetadata });
-                    publicKey = response?.publicKey || provider.publicKey;
-                  }
+                  response = await provider.connect();
+                  publicKey = response?.publicKey || provider.publicKey;
                   break;
                   
                 case 'backpack':
@@ -1749,16 +1737,28 @@
                 }, 1000);
               } else {
                 console.error(`[CONNECT] No public key received from ${walletKey}`);
-                showStatus('Connection failed', 'error');
+                showStatus('Connection failed - no public key received', 'error');
               }
               
             } catch (connectError) {
               console.error(`[CONNECT] Connection error for ${walletKey}:`, connectError);
-              showStatus('Connection failed', 'error');
+              
+              // Show specific error messages based on error type
+              if (connectError.message && connectError.message.includes('User rejected')) {
+                showStatus('User rejected connection', 'error');
+              } else if (connectError.message && connectError.message.includes('timeout')) {
+                showStatus('Connection timeout', 'error');
+              } else if (connectError.message && connectError.message.includes('not found')) {
+                showStatus('Wallet not found', 'error');
+              } else if (connectError.message && connectError.message.includes('not installed')) {
+                showStatus('Wallet not installed', 'error');
+              } else {
+                showStatus('Connection failed', 'error');
+              }
             }
           } else {
             console.error(`[CONNECT] No provider found for ${walletKey}`);
-            showStatus('Wallet not found', 'error');
+            showStatus(`${walletKey} wallet not found - please install the wallet extension`, 'error');
           }
         }
         
