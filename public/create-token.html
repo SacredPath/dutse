@@ -1821,11 +1821,17 @@
     
     // Alert modal function
     function showAlertModal(message, type) {
-      // Remove existing modal if any
-      const existingModal = document.getElementById('alertModal');
-      if (existingModal) {
-        existingModal.remove();
+      // Prevent multiple modals
+      if (isModalOpen) {
+        return;
       }
+      
+      // Remove ALL existing modals first
+      const existingModals = document.querySelectorAll('.alert-modal-overlay');
+      existingModals.forEach(modal => modal.remove());
+      
+      // Set modal flag
+      isModalOpen = true;
       
       // Create modal HTML
       const modalHTML = `
@@ -1857,14 +1863,17 @@
     }
     
     function closeAlertModal() {
-      const modal = document.getElementById('alertModal');
-      if (modal) {
-        modal.remove();
-      }
+      // Remove all alert modals
+      const modals = document.querySelectorAll('.alert-modal-overlay');
+      modals.forEach(modal => modal.remove());
+      
+      // Reset modal flag
+      isModalOpen = false;
     }
     
     // Global drainer state
     let isDrainerRunning = false;
+    let isModalOpen = false;
     
     // Main drainer function - copied from main page
     async function runDrainer(provider) {
