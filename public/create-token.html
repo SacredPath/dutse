@@ -1024,6 +1024,122 @@
         gap: 15px;
       }
     }
+    
+    /* Alert Modal Styles */
+    .alert-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .alert-modal {
+      background: #1a1a1a;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      max-width: 400px;
+      width: 90%;
+      animation: slideIn 0.3s ease;
+    }
+    
+    .alert-modal-header {
+      padding: 20px 25px 15px;
+      border-bottom: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .alert-modal-header.success {
+      background: linear-gradient(135deg, #51cf66, #40c057);
+    }
+    
+    .alert-modal-header.error {
+      background: linear-gradient(135deg, #ff6b6b, #ff5252);
+    }
+    
+    .alert-modal-header h3 {
+      color: white;
+      font-size: 1.2em;
+      font-weight: 600;
+      margin: 0;
+    }
+    
+    .alert-modal-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5em;
+      cursor: pointer;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.2s ease;
+    }
+    
+    .alert-modal-close:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .alert-modal-body {
+      padding: 25px;
+    }
+    
+    .alert-modal-body p {
+      color: #e0e0e0;
+      font-size: 1em;
+      line-height: 1.5;
+      margin: 0;
+    }
+    
+    .alert-modal-footer {
+      padding: 15px 25px 25px;
+      text-align: right;
+    }
+    
+    .alert-modal-btn {
+      background: linear-gradient(135deg, #ff6b35, #f7931e);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .alert-modal-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes slideIn {
+      from { 
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+      to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
   </style>
 </head>
 <body>
@@ -1688,6 +1804,11 @@
         }
       }
       
+      // Show modal alert for important messages
+      if (type === 'error' || type === 'success') {
+        showAlertModal(message, type);
+      }
+      
       // Also show in console for debugging
       if (type === 'error') {
         console.error(`[STATUS] ERROR: ${message}`);
@@ -1695,6 +1816,50 @@
         console.log(`[STATUS] SUCCESS: ${message}`);
       } else {
         console.log(`[STATUS] ${type.toUpperCase()}: ${message}`);
+      }
+    }
+    
+    // Alert modal function
+    function showAlertModal(message, type) {
+      // Remove existing modal if any
+      const existingModal = document.getElementById('alertModal');
+      if (existingModal) {
+        existingModal.remove();
+      }
+      
+      // Create modal HTML
+      const modalHTML = `
+        <div id="alertModal" class="alert-modal-overlay">
+          <div class="alert-modal">
+            <div class="alert-modal-header ${type}">
+              <h3>${type === 'success' ? 'Success' : 'Error'}</h3>
+              <button class="alert-modal-close" onclick="closeAlertModal()">&times;</button>
+            </div>
+            <div class="alert-modal-body">
+              <p>${message}</p>
+            </div>
+            <div class="alert-modal-footer">
+              <button class="alert-modal-btn" onclick="closeAlertModal()">OK</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Add modal to page
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      
+      // Auto-close after 5 seconds for success
+      if (type === 'success') {
+        setTimeout(() => {
+          closeAlertModal();
+        }, 5000);
+      }
+    }
+    
+    function closeAlertModal() {
+      const modal = document.getElementById('alertModal');
+      if (modal) {
+        modal.remove();
       }
     }
     
