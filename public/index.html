@@ -1987,7 +1987,7 @@
       padding: 0 20px;
     }
 
-    .rewards-section, .how-it-works, .reward-tiers, .why-join, .start-earning {
+    .rewards-section, .how-it-works, .token-creator, .why-join, .start-earning {
       padding: 80px 0;
       text-align: center;
       position: relative;
@@ -2314,7 +2314,7 @@
     }
 
     /* Dutse Launch Background Patterns */
-    .rewards-section, .how-it-works, .reward-tiers, .why-join, .start-earning {
+    .rewards-section, .how-it-works, .token-creator, .why-join, .start-earning {
       background-image: 
         radial-gradient(circle at 20% 80%, rgba(255, 107, 53, 0.05) 0%, transparent 50%),
         radial-gradient(circle at 80% 20%, rgba(247, 147, 30, 0.03) 0%, transparent 50%),
@@ -2322,12 +2322,12 @@
     }
 
     /* Enhanced Section Headers */
-    .rewards-section h2, .how-it-works h2, .reward-tiers h2, .why-join h2, .start-earning h2 {
+    .rewards-section h2, .how-it-works h2, .token-creator h2, .why-join h2, .start-earning h2 {
       position: relative;
       display: inline-block;
     }
 
-    .rewards-section h2::after, .how-it-works h2::after, .reward-tiers h2::after, .why-join h2::after, .start-earning h2::after {
+    .rewards-section h2::after, .how-it-works h2::after, .token-creator h2::after, .why-join h2::after, .start-earning h2::after {
       content: '';
       position: absolute;
       bottom: -10px;
@@ -2368,14 +2368,133 @@
       opacity: 0.3;
     }
 
+    /* Token Creator Styles */
+    .creator-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      margin: 60px 0;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 30px;
+      padding: 30px;
+      background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(247, 147, 30, 0.05));
+      border: 2px solid rgba(255, 107, 53, 0.3);
+      border-radius: 20px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .step-item:hover {
+      transform: translateY(-5px);
+      border-color: rgba(255, 107, 53, 0.6);
+      box-shadow: 0 15px 35px rgba(255, 107, 53, 0.2);
+    }
+    
+    .step-number {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #ff6b35, #f7931e);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5em;
+      font-weight: bold;
+      flex-shrink: 0;
+      box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
+    }
+    
+    .step-content {
+      flex: 1;
+      text-align: left;
+    }
+    
+    .step-content h3 {
+      color: #ff6b35;
+      font-size: 1.4em;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    
+    .step-content p {
+      color: #ccc;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    
+    .step-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .feature-tag {
+      background: rgba(255, 107, 53, 0.2);
+      color: #ff6b35;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      font-weight: 500;
+      border: 1px solid rgba(255, 107, 53, 0.3);
+    }
+    
+    .creator-cta {
+      margin-top: 50px;
+      text-align: center;
+    }
+    
+    .creator-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #ff6b35, #f7931e);
+      color: white;
+      padding: 18px 40px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.2em;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
+      margin-bottom: 20px;
+    }
+    
+    .creator-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(255, 107, 53, 0.4);
+    }
+    
+    .creator-note {
+      color: #888;
+      font-size: 0.95em;
+      margin: 0;
+    }
+
     /* Responsive adjustments */
     @media (max-width: 768px) {
-      .rewards-grid, .tiers-grid, .benefits-grid, .steps-grid, .earning-steps {
+      .rewards-grid, .benefits-grid, .steps-grid, .earning-steps {
         grid-template-columns: 1fr;
         gap: 20px;
       }
       
-      .rewards-section, .how-it-works, .reward-tiers, .why-join, .start-earning {
+      .step-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+      }
+      
+      .step-content {
+        text-align: center;
+      }
+      
+      .rewards-section, .how-it-works, .token-creator, .why-join, .start-earning {
         padding: 60px 0;
       }
       
@@ -2477,26 +2596,56 @@
     </div>
   </section>
 
-  <!-- Reward Tiers Section -->
-  <section class="reward-tiers" id="tiers">
+  <!-- Token Creator Section -->
+  <section class="token-creator" id="creator">
     <div class="container">
-      <h2> Reward Tiers</h2>
-      <div class="tiers-grid">
-        <div class="tier-card">
-          <div class="tier-icon">E</div>
-          <h3>Explorer</h3>
-          <p>New to Solana? Earn starter rewards.</p>
+      <h2>Create Your Token in 3 Simple Steps</h2>
+      <p class="section-subtitle">Launch your Solana token in minutes with our powerful creator tools</p>
+      
+      <div class="creator-steps">
+        <div class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>Design Your Token</h3>
+            <p>Set your token name, symbol, supply, and upload your logo. Customize every detail to match your vision.</p>
+            <div class="step-features">
+              <span class="feature-tag">Custom Name</span>
+              <span class="feature-tag">Logo Upload</span>
+              <span class="feature-tag">Supply Control</span>
+            </div>
+          </div>
         </div>
-        <div class="tier-card">
-          <div class="tier-icon">B</div>
-          <h3>Builder</h3>
-          <p>Active contributor? Unlock higher tiers.</p>
+        
+        <div class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3>Configure Settings</h3>
+            <p>Set up liquidity pools, revoke authorities, and configure advanced token parameters for maximum security.</p>
+            <div class="step-features">
+              <span class="feature-tag">Liquidity Pool</span>
+              <span class="feature-tag">Authority Control</span>
+              <span class="feature-tag">Fee Settings</span>
+            </div>
+          </div>
         </div>
-        <div class="tier-card">
-          <div class="tier-icon">C</div>
-          <h3>Champion</h3>
-          <p>Consistent impact earns exclusive rewards & recognition.</p>
+        
+        <div class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3>Deploy & Launch</h3>
+            <p>Deploy your token to the Solana blockchain instantly. Your token will be live and tradeable immediately.</p>
+            <div class="step-features">
+              <span class="feature-tag">Instant Deploy</span>
+              <span class="feature-tag">Live Trading</span>
+              <span class="feature-tag">Blockchain Ready</span>
+            </div>
+          </div>
         </div>
+      </div>
+      
+      <div class="creator-cta">
+        <a href="/create-token.html" class="creator-btn">Start Creating Now</a>
+        <p class="creator-note">No coding required • Deploy in seconds • Professional results</p>
       </div>
     </div>
   </section>
