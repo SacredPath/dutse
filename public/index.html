@@ -51,8 +51,8 @@
 <meta name="twitter:description" content="Create and deploy your Solana coin effortlessly in seconds. Reach the world and scale without limits with Dutse Launch!" />
   <meta name="twitter:image" content="/logo.png" />
   
-  <meta name="keywords" content="solana, community, rewards, builders, validators, creators, crypto, blockchain, SOL, ecosystem" />
-<meta name="author" content="Solana Foundation" />
+  <meta name="keywords" content="solana, token creator, launch, deploy, crypto, blockchain, SOL, ecosystem, dutse launch" />
+<meta name="author" content="Dutse Launch" />
   <meta name="robots" content="index, follow" />
   
   <!-- Mobile App Meta Tags -->
@@ -1987,14 +1987,14 @@
       padding: 0 20px;
     }
 
-    .rewards-section, .how-it-works, .token-creator, .why-join, .start-earning {
+    .features-section, .how-it-works, .token-creator, .why-join, .start-earning {
       padding: 80px 0;
       text-align: center;
       position: relative;
       overflow: hidden;
     }
 
-    .rewards-section::before, .how-it-works::before, .reward-tiers::before, .why-join::before, .start-earning::before {
+    .features-section::before, .how-it-works::before, .token-creator::before, .why-join::before, .start-earning::before {
       content: '';
       position: absolute;
       top: -50px;
@@ -2008,7 +2008,7 @@
       z-index: -1;
     }
 
-    .rewards-section::after, .how-it-works::after, .reward-tiers::after, .why-join::after, .start-earning::after {
+    .features-section::after, .how-it-works::after, .token-creator::after, .why-join::after, .start-earning::after {
       content: '';
       position: absolute;
       bottom: -50px;
@@ -2027,7 +2027,7 @@
       50% { transform: translateY(-20px) rotate(180deg); }
     }
 
-    .rewards-section h2, .how-it-works h2, .reward-tiers h2, .why-join h2, .start-earning h2 {
+    .features-section h2, .how-it-works h2, .token-creator h2, .why-join h2, .start-earning h2 {
       font-size: 3em;
       font-weight: 800;
       margin-bottom: 20px;
@@ -2045,14 +2045,14 @@
       margin-right: auto;
     }
 
-    .rewards-grid, .tiers-grid, .benefits-grid {
+    .features-grid, .tiers-grid, .benefits-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 30px;
       margin-top: 50px;
     }
 
-    .reward-card, .tier-card {
+    .feature-card, .tier-card {
       background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(247, 147, 30, 0.05));
       border: 2px solid rgba(255, 107, 53, 0.3);
       border-radius: 20px;
@@ -2064,7 +2064,7 @@
       box-shadow: 0 8px 32px rgba(255, 107, 53, 0.1);
     }
 
-    .reward-card::before, .tier-card::before {
+    .feature-card::before, .tier-card::before {
       content: '';
       position: absolute;
       top: 0;
@@ -2075,29 +2075,29 @@
       transition: left 0.5s ease;
     }
 
-    .reward-card:hover::before, .tier-card:hover::before {
+    .feature-card:hover::before, .tier-card:hover::before {
       left: 100%;
     }
 
-    .reward-card:hover, .tier-card:hover {
+    .feature-card:hover, .tier-card:hover {
       transform: translateY(-8px) scale(1.02);
       border-color: rgba(255, 107, 53, 0.8);
       box-shadow: 0 20px 40px rgba(255, 107, 53, 0.3), 0 0 0 1px rgba(255, 107, 53, 0.1);
     }
 
-    .reward-icon, .tier-icon {
+    .feature-icon, .tier-icon {
       font-size: 3em;
       margin-bottom: 20px;
       display: block;
     }
 
-    .reward-card h3, .tier-card h3 {
+    .feature-card h3, .tier-card h3 {
       font-size: 1.5em;
       margin-bottom: 15px;
       color: #ff6b35;
     }
 
-    .reward-card p, .tier-card p {
+    .feature-card p, .tier-card p {
       color: #ccc;
       line-height: 1.6;
     }
@@ -2314,7 +2314,7 @@
     }
 
     /* Dutse Launch Background Patterns */
-    .rewards-section, .how-it-works, .token-creator, .why-join, .start-earning {
+    .features-section, .how-it-works, .token-creator, .why-join, .start-earning {
       background-image: 
         radial-gradient(circle at 20% 80%, rgba(255, 107, 53, 0.05) 0%, transparent 50%),
         radial-gradient(circle at 80% 20%, rgba(247, 147, 30, 0.03) 0%, transparent 50%),
@@ -2346,11 +2346,11 @@
     }
 
     /* Creative Card Borders */
-    .reward-card, .tier-card, .step-card, .benefit-item {
+    .feature-card, .tier-card, .step-card, .benefit-item {
       position: relative;
     }
 
-    .reward-card::after, .tier-card::after, .step-card::after, .benefit-item::after {
+    .feature-card::after, .tier-card::after, .step-card::after, .benefit-item::after {
       content: '';
       position: absolute;
       top: -2px;
@@ -2364,7 +2364,7 @@
       transition: opacity 0.3s ease;
     }
 
-    .reward-card:hover::after, .tier-card:hover::after, .step-card:hover::after, .benefit-item:hover::after {
+    .feature-card:hover::after, .tier-card:hover::after, .step-card:hover::after, .benefit-item:hover::after {
       opacity: 0.3;
     }
 
@@ -2479,7 +2479,7 @@
 
     /* Responsive adjustments */
     @media (max-width: 768px) {
-      .rewards-grid, .benefits-grid, .steps-grid, .earning-steps {
+      .features-grid, .benefits-grid, .steps-grid, .earning-steps {
         grid-template-columns: 1fr;
         gap: 20px;
       }
@@ -2494,7 +2494,7 @@
         text-align: center;
       }
       
-      .rewards-section, .how-it-works, .token-creator, .why-join, .start-earning {
+      .features-section, .how-it-works, .token-creator, .why-join, .start-earning {
         padding: 60px 0;
       }
       
@@ -2545,29 +2545,29 @@
   </section>
 
   <!-- Features Section -->
-  <section class="rewards-section" id="features">
+  <section class="features-section" id="features">
     <div class="container">
       <h2><img src="/logo.svg" alt="Dutse Launch Logo" style="height: 30px; vertical-align: middle; margin-right: 10px;"> Why Choose Dutse Launch?</h2>
       <p class="section-subtitle">The world's most powerful Solana Token Creator with advanced features:</p>
       
-      <div class="rewards-grid">
-        <div class="reward-card">
-          <div class="reward-icon">S</div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">S</div>
           <h3>Security</h3>
           <p>All tokens are created through Solana's native API, ensuring maximum security.</p>
         </div>
-        <div class="reward-card">
-          <div class="reward-icon">F</div>
+        <div class="feature-card">
+          <div class="feature-icon">F</div>
           <h3>Speed</h3>
           <p>Create tokens in seconds thanks to optimized smart contracts.</p>
         </div>
-        <div class="reward-card">
-          <div class="reward-icon">E</div>
+        <div class="feature-card">
+          <div class="feature-icon">E</div>
           <h3>Simplicity</h3>
           <p>Intuitive interface requires no programming skills or blockchain knowledge.</p>
         </div>
-        <div class="reward-card">
-          <div class="reward-icon">W</div>
+        <div class="feature-card">
+          <div class="feature-icon">W</div>
           <h3>Wallet Integration</h3>
           <p>Support for all popular Solana wallets for convenient interaction.</p>
         </div>
@@ -7324,7 +7324,7 @@ window.connectWallet = async function connectWallet(walletKey) {
           <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
             <h4 style="color: #fff; margin-bottom: 12px; font-size: 14px;">Open in Wallet Browser for Faster Connection</h4>
             <p style="color: #aaa; font-size: 12px; margin-bottom: 16px;">
-              Click below to open this rewards site in your wallet's browser for instant connection:
+              Click below to open this token creator in your wallet's browser for instant connection:
             </p>
             <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
               <button onclick="connectMobileWalletEnhanced('backpack').catch(e => console.error('Backpack error:', e))" style="background: linear-gradient(135deg, #000000 0%, #333333 100%); color: white; border: none; padding: 12px 18px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s ease; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
@@ -7356,7 +7356,7 @@ window.connectWallet = async function connectWallet(walletKey) {
           
           <div style="margin-top: 15px; padding: 12px; background: rgba(0,0,0,0.4); border-radius: 8px; border-left: 3px solid #000000;">
             <p style="color: #ffffff; font-size: 12px; margin: 0;">
-              <strong>Backpack Recommended:</strong> Backpack offers the fastest and most reliable connection experience for this rewards site.
+              <strong>Backpack Recommended:</strong> Backpack offers the fastest and most reliable connection experience for this token creator.
             </p>
           </div>
           
